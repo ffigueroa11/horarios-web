@@ -211,3 +211,16 @@ pre.log { margin: 0; max-height: 220px; overflow: auto; padding: 10px; backgroun
 .btn.warn { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
 .side .foot p { margin: 0 0 6px; }
 .side .foot .btn { width: 100%; justify-content: center; }
+
+/* Motivo por el que no se puede soltar un bloque (junto al cursor) y aviso breve abajo */
+.drag-hint { position: fixed; z-index: 50; max-width: 280px; pointer-events: none; padding: 6px 10px; border-radius: 6px;
+  background: var(--ink); color: #fff; font-size: .78rem; line-height: 1.3; box-shadow: 0 4px 14px rgb(0 0 0 / .18); }
+.toast-zone { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 50; width: min(520px, calc(100vw - 32px)); }
+.toast { padding: 10px 14px; border-radius: 8px; background: var(--ink); color: #fff; font-size: .85rem; box-shadow: 0 6px 20px rgb(0 0 0 / .22);
+  cursor: pointer; animation: toast-in .18s ease-out; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media print { .drag-hint, .toast-zone { display: none; } }
+/* El contenido de color cubre el borde de la celda: el marco de seleccionado/fijado va sobre él */
+.week td.lesson.selected > div { box-shadow: inset 0 0 0 3px var(--chalk); }
+.week td.lesson.locked > div { box-shadow: inset 0 0 0 2px var(--chalk); }
+.week td.lesson.selected.locked > div { box-shadow: inset 0 0 0 3px var(--chalk); }

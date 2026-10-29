@@ -47,6 +47,22 @@ test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ pa
     await expect(page.locator('td.lesson.locked, .chip-lesson.locked').first()).toBeVisible();
   }
 
+  // Arrastrar a un lugar no válido: el motivo aparece junto al cursor y, al soltar, como aviso breve.
+  const source = page.locator('td.lesson').first();
+  await source.click();
+  const invalid = page.locator('td.lesson.drop-no').first();
+  if (await invalid.count()) {
+    const a = (await source.boundingBox())!, b = (await invalid.boundingBox())!;
+    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 8 });
+    await page.mouse.move(b.x + b.width / 2 + 3, b.y + b.height / 2 + 3, { steps: 2 });
+    if (info.project.name === 'chromium') await expect(page.locator('.drag-hint')).toBeVisible();
+    await page.mouse.up();
+    if (info.project.name === 'chromium') await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
+  }
+  await page.keyboard.press('Escape');
+
   // 2° Medio A: el electivo artístico aparece con sus tres opciones a la misma hora.
   await page.getByLabel('Elegir').selectOption({ label: '2° Medio A' });
   await expect(page.locator('.chip-lesson', { hasText: 'Música' }).first()).toBeVisible();
