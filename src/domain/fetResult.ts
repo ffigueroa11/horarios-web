@@ -27,7 +27,7 @@ export type FetOutcome =
   | { kind: 'ok' }
   | { kind: 'impossible'; activity: ActivityKey | null; placedMax: number | null }
   | { kind: 'timeout'; activity: ActivityKey | null; placedMax: number | null }
-  | { kind: 'invalid'; details: string };
+  | { kind: 'invalid'; details: string; activities: ActivityKey[] };
 
 /** Mensajes de errors.txt / warnings.txt de FET ("Mensaje: ..." en español, "Message: ..." en inglés). */
 export function fetMessages(logTxt: string | undefined): string[] {
@@ -54,7 +54,9 @@ export function parseResult(resultTxt: string, ex: FetExport, consoleLines: stri
   const details = messages.join('\n\n')
     || consoleLines.filter((l) => !/^FET|^Free timetabling|licensed under|^Starting|^$/.test(l)).join('\n')
     || resultTxt.trim();
-  return { kind: 'invalid', details };
+  // Bloques que FET menciona ("Activity with id=4 ..." / "Actividad con id=4 ..."), para mostrarlos con nombre.
+  const activities = [...new Set([...details.matchAll(/\bid\s*[=:]\s*(\d+)/gi)].map((m) => ex.activityById.get(Number(m[1]))).filter((k): k is ActivityKey => !!k))];
+  return { kind: 'invalid', details, activities };
 }
 
 /** Describe una actividad en el idioma del colegio: "Matemática · 1° Medio A · Prof. Soto (bloque 2 de 4, 2 h)". */

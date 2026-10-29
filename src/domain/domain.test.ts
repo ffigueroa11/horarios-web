@@ -144,7 +144,9 @@ describe('mensajes de FET en español', () => {
     expect(parseResult(res, ex, [])).toMatchObject({ kind: 'impossible', placedMax: 30, activity: ex.activityById.get(2) });
     const errors = 'Título: Advertencia de FET\nMensaje: No es posible optimizar para el profesor X.\nTexto botón 0: Saltar el resto\nPresionar el botón predefinido 1\n\nTítulo: Advertencia de FET\nMensaje: Otra cosa\n\nen dos líneas\nTexto botón 0: Saltar el resto\n';
     expect(fetMessages(errors)).toEqual(['No es posible optimizar para el profesor X.', 'Otra cosa\n\nen dos líneas']);
-    expect(parseResult('Cannot precompute - data is wrong - aborting', ex, [], errors)).toEqual({ kind: 'invalid', details: 'No es posible optimizar para el profesor X.\n\nOtra cosa\n\nen dos líneas' });
+    expect(parseResult('Cannot precompute - data is wrong - aborting', ex, [], errors)).toEqual({ kind: 'invalid', details: 'No es posible optimizar para el profesor X.\n\nOtra cosa\n\nen dos líneas', activities: [] });
+    const bad = parseResult('Cannot precompute', ex, ['Activity with id=4 (2/7 - Valentina Soto - Matemática - 1° Medio A) has no allowed slot - please correct that.']);
+    expect(bad).toMatchObject({ kind: 'invalid', activities: [ex.activityById.get(4)] });
   });
 });
 
@@ -154,5 +156,32 @@ describe('bloques', () => {
     expect(parseBlocks('2, 1')).toEqual([2, 1]);
     expect(parseBlocks('0')).toBeNull();
     expect(parseBlocks('abc')).toBeNull();
+  });
+});
+
+describe('bloques fijados que ya no son posibles', () => {
+  it('se detectan, se explican y no se envían a FET', () => {
+    const p = exampleProject();
+    const mat = p.assignments.find((a) => a.courseId === p.courses[0].id && p.subjects.find((s) => s.id === a.subjectId)!.short === 'MAT')!;
+    const classes = p.school.periods.filter((x) => x.kind === 'clase');
+    const key = `${mat.id}#0`;
+    p.locks[key] = { day: 1, periodId: classes[6].id }; // martes, 7° bloque (tarde)
+    expect(validate(p).some((i) => i.locks)).toBe(false);
+    // Después se agrega "Matemática solo en la mañana": el fijado de la tarde ya no es posible.
+    p.rules.subjectWindows.push({ id: newId(), subjectId: mat.subjectId, strength: 'obligatoria', periodIds: classes.slice(0, 4).map((c) => c.id) });
+    const issue = validate(p).find((i) => i.locks)!;
+    expect(issue.level).toBe('error');
+    expect(issue.locks).toEqual([key]);
+    expect(issue.message).toContain('solo puede ir en los bloques permitidos');
+    const ex = exportFet(p);
+    expect(ex.xml).not.toContain('<ConstraintActivityPreferredStartingTime>');
+  });
+  it('detecta dos fijados que chocan entre sí', () => {
+    const p = exampleProject();
+    const [a, b] = p.assignments.filter((x) => x.courseId === p.courses[0].id);
+    const first = p.school.periods.find((x) => x.kind === 'clase')!;
+    p.locks[`${a.id}#0`] = { day: 0, periodId: first.id };
+    p.locks[`${b.id}#0`] = { day: 0, periodId: first.id };
+    expect(validate(p).filter((i) => i.locks).map((i) => i.message).join()).toContain('choca con otro bloque fijado');
   });
 });

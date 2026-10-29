@@ -2,13 +2,17 @@
 import type { Project, Teacher } from './types';
 import { slotKey } from './types';
 import { courseStudentSets, findEffectiveGroup, units, type Unit } from './units';
+import { lockProblems } from './manual';
+import { describeActivity } from './fetResult';
 
-export type Step = 'jornada' | 'cursos' | 'asignaturas' | 'profesores' | 'salas' | 'carga' | 'electivos' | 'reglas';
+export type Step = 'jornada' | 'cursos' | 'asignaturas' | 'profesores' | 'salas' | 'carga' | 'electivos' | 'reglas' | 'horario';
 
 export interface Issue {
   level: 'error' | 'aviso';
   step: Step;
   message: string;
+  /** Bloques fijados que la app puede liberar con un clic para resolver el problema. */
+  locks?: string[];
 }
 
 /** Tramos de clase abiertos por día (sin recreos ni tramos cerrados). */
@@ -189,6 +193,10 @@ export function validate(p: Project): Issue[] {
   }
   if (p.rules.teacherMeetingSlots.length > 0 && p.teachers.length > 0 && p.rules.teacherMeetingSlots.length >= weekSlots)
     err('reglas', 'El consejo de profesores ocupa todos los bloques de la semana.');
+
+  // Bloques fijados que ya no se pueden respetar: FET rechazaría los datos.
+  for (const lp of lockProblems(p, (k) => describeActivity(p, k)))
+    out.push({ level: 'error', step: 'horario', message: `El bloque fijado ${lp.description} ya no es posible: ${lp.reason}`, locks: [lp.key] });
 
   if (p.rules.coursesNoGaps && p.rules.coursesStartFirstBlock)
     for (const c of p.courses) {

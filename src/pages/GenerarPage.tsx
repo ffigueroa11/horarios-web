@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useCurrent } from '../store/projects';
+import { useCurrent, useProjects } from '../store/projects';
+import { units } from '../domain/units';
 import { useGeneration } from '../store/generation';
 import type { Issue } from '../domain/validate';
 import { describeActivity } from '../domain/fetResult';
@@ -8,7 +9,7 @@ import { PageHead } from '../ui/common';
 
 const STEP_LABEL: Record<string, string> = {
   jornada: 'Jornada', cursos: 'Cursos', asignaturas: 'Asignaturas y salas', salas: 'Asignaturas y salas',
-  profesores: 'Profesores', carga: 'Carga académica', reglas: 'Preferencias',
+  profesores: 'Profesores', carga: 'Carga académica', electivos: 'Electivos', reglas: 'Preferencias', horario: 'Ver y ajustar',
 };
 
 function useElapsed(running: boolean, startedAt: number) {
@@ -24,6 +25,7 @@ function useElapsed(running: boolean, startedAt: number) {
 export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) => void }) {
   const p = useCurrent()!;
   const g = useGeneration();
+  const update = useProjects((s) => s.update);
   const [limit, setLimit] = useState(300);
   const busy = g.status === 'loading' || g.status === 'running';
   const mine = g.projectId === p.id;
@@ -31,7 +33,9 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
   const errors = issues.filter((i) => i.level === 'error');
   const warnings = issues.filter((i) => i.level === 'aviso');
   const nLocks = Object.keys(p.locks).length;
-  const nActs = p.assignments.reduce((n, a) => n + a.blocks.length, 0);
+  const nActs = units(p).reduce((n, u) => n + u.blocks.length, 0);
+  const badLocks = issues.flatMap((i) => i.locks ?? []);
+  const releaseLocks = (keys: string[]) => update((d) => { for (const k of keys) delete d.locks[k]; }, { touch: false });
 
   const total = g.total || nActs;
   const cells = Math.min(total, 1500);
@@ -63,10 +67,16 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
             {[...errors, ...warnings].map((i, k) => (
               <li key={k}>
                 <span className={`badge ${i.level === 'error' ? 'bad' : 'warn'}`}>{i.level === 'error' ? 'Corregir' : 'Aviso'}</span>
-                <span>{i.message} <a href={`#${i.step}`}>Ir a {STEP_LABEL[i.step]}</a></span>
+                <span>{i.message}{' '}
+                  {i.locks
+                    ? <button type="button" className="btn small" onClick={() => releaseLocks(i.locks!)}>Liberar este bloque</button>
+                    : <a href={`#${i.step}`}>Ir a {STEP_LABEL[i.step]}</a>}</span>
               </li>
             ))}
           </ul>
+        )}
+        {badLocks.length > 1 && (
+          <div className="row"><button type="button" className="btn small" onClick={() => releaseLocks(badLocks)}>Liberar los {badLocks.length} bloques fijados con problemas</button></div>
         )}
       </section>
 
@@ -125,6 +135,16 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
           <div className="notice bad" role="alert">
             <b>El motor encontró un problema en los datos antes de empezar.</b>
             <span>Mensaje de FET (los nombres son los de tus cursos, profesores y asignaturas):</span>
+            {o.activities.length > 0 && (
+              <ul style={{ margin: 0, paddingLeft: 18 }}>
+                {o.activities.map((k) => (
+                  <li key={k}>
+                    <b>{describeActivity(p, k)}</b>
+                    {p.locks[k] && <> · está fijado <button type="button" className="btn small" onClick={() => releaseLocks([k])}>Liberar y volver a intentar</button></>}
+                  </li>
+                ))}
+              </ul>
+            )}
             <pre className="log wrap">{o.details}</pre>
           </div>
         )}
