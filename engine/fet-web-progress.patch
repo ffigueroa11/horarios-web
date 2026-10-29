@@ -1,0 +1,14 @@
+--- a/src/engine/generate.cpp
++++ b/src/engine/generate.cpp
+@@ -155,6 +155,11 @@
+ 
+ 	startClock=std::chrono::steady_clock::now();
+ 
++#ifdef __EMSCRIPTEN__
++	//FET-web proof of concept: report progress once per second to the JavaScript host
++	std::cout<<"FETPROGRESS "<<nPlacedActivities<<" "<<maxActivitiesPlaced<<" "<<gt.rules.nInternalActivities<<std::endl;
++#endif
++
+ 	if(!QFile::exists(communicationFile))
+ 		return;
+ 

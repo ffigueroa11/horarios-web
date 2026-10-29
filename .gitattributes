@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.sh text eol=lf
+*.wasm binary
+*.qm binary
+*.png binary
+*.woff binary
+*.woff2 binary
+*.xlsx binary

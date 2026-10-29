@@ -1,0 +1,7 @@
+# Cloudflare Pages / Netlify: el motor cambia solo con versiones nuevas; se revalida para no quedar desactualizado.
+/engine/*
+  Cache-Control: public, max-age=0, must-revalidate
+/sw.js
+  Cache-Control: no-cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
