@@ -48,18 +48,20 @@ test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ pa
   }
 
   // Arrastrar a un lugar no válido: el motivo aparece junto al cursor y, al soltar, como aviso breve.
+  // Se envían los eventos de arrastre directamente: el arrastre simulado con el mouse no es confiable en CI.
   const source = page.locator('td.lesson').first();
   await source.click();
   const invalid = page.locator('td.lesson.drop-no').first();
   if (await invalid.count()) {
-    const a = (await source.boundingBox())!, b = (await invalid.boundingBox())!;
-    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 8 });
-    await page.mouse.move(b.x + b.width / 2 + 3, b.y + b.height / 2 + 3, { steps: 2 });
-    if (info.project.name === 'chromium') await expect(page.locator('.drag-hint')).toBeVisible();
-    await page.mouse.up();
-    if (info.project.name === 'chromium') await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
+    const box = (await invalid.boundingBox())!;
+    const at = { clientX: Math.round(box.x + box.width / 2), clientY: Math.round(box.y + box.height / 2) };
+    const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+    await source.dispatchEvent('dragstart', { dataTransfer });
+    await invalid.dispatchEvent('dragover', { dataTransfer, ...at });
+    await expect(page.locator('.drag-hint')).toBeVisible();
+    await source.dispatchEvent('dragend', { dataTransfer, ...at });
+    await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
+    await expect(page.locator('.drag-hint')).toHaveCount(0);
   }
   await page.keyboard.press('Escape');
 
