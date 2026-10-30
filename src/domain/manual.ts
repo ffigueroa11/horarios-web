@@ -1,10 +1,11 @@
 // Ajuste manual del horario: mover un bloque a otro lugar sin crear choques.
 // Revisa lo obligatorio (alumnos, profesor y sala a la misma hora, recreos, tramos cerrados, disponibilidad
-// del profesor y consejo, bloques permitidos obligatorios, máximo de días y de horas diarias).
-// Las preferencias (ventanas, repartir días, reglas "preferibles") no se revisan.
+// del profesor y consejo, bloques permitidos obligatorios, máximo de días y de horas diarias, repartir en
+// días distintos, cursos sin horas libres, empezar en el primer bloque y ventanas de profesores).
+// Las reglas "preferibles" no se revisan.
 import type { ActivityKey, Placement, Project } from './types';
 import { activityKey, slotKey } from './types';
-import { effectiveDivisions, parallelRows, unitById, unitIdOf, type Unit } from './units';
+import { courseStudentSets, effectiveDivisions, parallelRows, unitById, unitIdOf, type Unit } from './units';
 
 export interface Lesson {
   pl: Placement;
@@ -83,7 +84,7 @@ export function slotProblem(p: Project, unit: Unit, idx: number, day: number, pe
 }
 
 /** Revisa si los bloques `keys` (que hoy empiezan juntos) pueden empezar en el día y tramo indicados. */
-export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId: string, all: Lesson[] = lessons(p)): MoveCheck {
+export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId: string, all: Lesson[] = lessons(p), opts: { skipRules?: boolean } = {}): MoveCheck {
   const moving = all.filter((l) => keys.includes(l.pl.key));
   if (moving.length === 0) return { ok: false, reason: 'El bloque ya no existe.' };
   const start = p.school.periods.findIndex((x) => x.id === periodId);
@@ -124,7 +125,87 @@ export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId
       if (hoursThatDay > maxCourse) return { ok: false, reason: `Los alumnos quedarían con más de ${maxCourse} horas ese día.` };
     }
   }
+  if (!opts.skipRules) {
+    const rule = ruleProblem(p, all, withLessonsAt(p, all, keys, day, periodId), moving.map((m) => m.unit));
+    if (rule) return { ok: false, reason: rule };
+  }
   return { ok: true };
+}
+
+/**
+ * Reglas obligatorias que dependen del día completo: repartir en días distintos, cursos sin horas libres,
+ * empezar en el primer bloque y ventanas de profesores. Se compara el horario antes y después del cambio:
+ * solo se rechaza lo que el cambio empeora (si el horario ya incumplía algo, no se culpa al movimiento).
+ */
+export function ruleProblem(p: Project, before: Lesson[], after: Lesson[], moved: Unit[]): string | null {
+  const { rules, school } = p;
+  const days = school.days.map((_, d) => d);
+  const open = (d: number) => school.periods.map((x, i) => ({ x, i }))
+    .filter(({ x }) => x.kind === 'clase' && !school.closed.includes(slotKey(d, x.id))).map(({ i }) => i);
+  const busy = (list: Lesson[], d: number, applies: (l: Lesson) => boolean) => {
+    const set = new Set<number>();
+    for (const l of list) if (l.pl.day === d && applies(l)) for (let k = 0; k < l.dur; k++) set.add(l.startIdx + k);
+    return set;
+  };
+  const gaps = (slots: number[], b: Set<number>) => {
+    const used = slots.filter((i) => b.has(i));
+    if (used.length === 0) return 0;
+    return slots.filter((i) => i > used[0] && i < used[used.length - 1] && !b.has(i)).length;
+  };
+  const dayName = (d: number) => school.days[d]?.toLowerCase() ?? '';
+
+  // Repartir cada asignatura en días distintos (obligatoria).
+  if (rules.spreadSubjectDays && rules.spreadStrength === 'obligatoria')
+    for (const u of moved) {
+      if (u.blocks.length < 2 || u.blocks.length > school.days.length) continue;
+      const repeated = (list: Lesson[]) => {
+        const ds = list.filter((l) => l.unit.id === u.id).map((l) => l.pl.day);
+        return ds.length - new Set(ds).size;
+      };
+      if (repeated(after) > repeated(before))
+        return `${nameOf(p.subjects, u.subjectId)} quedaría dos veces el mismo día, y la regla "repartir cada asignatura en días distintos" es obligatoria.`;
+    }
+
+  // Alumnos: cada combinación de grupos de los cursos involucrados.
+  const courseIds = [...new Set(moved.flatMap((u) => u.audience.map((a) => a.courseId)))];
+  for (const cid of courseIds) {
+    const c = p.courses.find((x) => x.id === cid);
+    if (!c) continue;
+    for (const combo of courseStudentSets(p, c)) {
+      const ids = new Set(combo.map((g) => g.id));
+      const applies = (l: Lesson) => l.unit.audience.some((a) => a.courseId === cid && (!a.groupId || ids.has(a.groupId)));
+      const who = combo.length ? `${c.name} (${combo.map((g) => g.name).join(', ')})` : c.name;
+      for (const d of days) {
+        const slots = open(d);
+        const b0 = busy(before, d, applies), b1 = busy(after, d, applies);
+        if (rules.coursesNoGaps && gaps(slots, b1) > gaps(slots, b0))
+          return `${who} quedaría con una hora libre entre clases el ${dayName(d)}, y la regla "sin horas libres entre clases" está activa.`;
+        const late = (b: Set<number>) => b.size > 0 && slots.length > 0 && !b.has(slots[0]);
+        if (rules.coursesStartFirstBlock && late(b1) && !late(b0))
+          return `${who} empezaría el ${dayName(d)} después del primer bloque, y la regla "todos los días empiezan en el primer bloque" está activa.`;
+      }
+    }
+  }
+
+  // Ventanas de profesores (los bloques no disponibles y el consejo no cuentan como ventana).
+  for (const tid of [...new Set(moved.map((u) => u.teacherId).filter((x): x is string => !!x))]) {
+    const t = p.teachers.find((x) => x.id === tid);
+    if (!t) continue;
+    const blocked = new Set([...t.unavailable, ...rules.teacherMeetingSlots]);
+    const applies = (l: Lesson) => l.unit.teacherId === tid;
+    const perDay = (list: Lesson[]) => days.map((d) => gaps(open(d).filter((i) => !blocked.has(slotKey(d, school.periods[i].id))), busy(list, d, applies)));
+    const g0 = perDay(before), g1 = perDay(after);
+    const maxDay = rules.teacherMaxGapsPerDay;
+    if (maxDay != null) {
+      const d = days.find((x) => g1[x] > maxDay && g1[x] > g0[x]);
+      if (d != null) return `${t.name} quedaría con ${g1[d]} ventanas el ${dayName(d)} (máximo ${maxDay}).`;
+    }
+    const maxWeek = rules.teacherMaxGapsPerWeek;
+    const sum = (g: number[]) => g.reduce((a, b) => a + b, 0);
+    if (maxWeek != null && sum(g1) > maxWeek && sum(g1) > sum(g0))
+      return `${t.name} quedaría con ${sum(g1)} ventanas en la semana (máximo ${maxWeek}).`;
+  }
+  return null;
 }
 
 export interface LockProblem { key: ActivityKey; description: string; reason: string }
@@ -149,8 +230,12 @@ export function lockProblems(p: Project, describe: (key: ActivityKey) => string)
     const clash = placed.find((o) => o.day === me.day && o.from < me.to && me.from < o.to && (
       (unit.teacherId && unit.teacherId === o.unit.teacherId) || shareStudents(p, unit, o.unit)));
     // Clases en paralelo (misma franja o división) sí comparten hora.
+    const sameDay = p.rules.spreadSubjectDays && p.rules.spreadStrength === 'obligatoria' && unit.blocks.length <= p.school.days.length
+      ? placed.find((o) => o.unit.id === unit.id && o.day === me.day) : undefined;
     if (clash && !companions(p, key).includes(clash.key))
       out.push({ key, description: `${describe(key)} (${where})`, reason: `choca con otro bloque fijado: ${describe(clash.key)}.` });
+    else if (sameDay)
+      out.push({ key, description: `${describe(key)} (${where})`, reason: `queda el mismo día que otro bloque fijado de la misma asignatura (${describe(sameDay.key)}), y la regla "repartir cada asignatura en días distintos" es obligatoria.` });
     else placed.push(me);
   }
   return out;
@@ -169,10 +254,14 @@ export function checkSwap(p: Project, a: ActivityKey[], b: ActivityKey[], all: L
   const la = all.find((l) => a.includes(l.pl.key)), lb = all.find((l) => b.includes(l.pl.key));
   if (!la || !lb) return { ok: false, reason: 'El bloque ya no existe.' };
   const subject = (l: Lesson) => nameOf(p.subjects, l.unit.subjectId);
-  const r1 = checkMove(p, a, lb.pl.day, lb.pl.periodId, withLessonsAt(p, all, b, la.pl.day, la.pl.periodId));
+  const r1 = checkMove(p, a, lb.pl.day, lb.pl.periodId, withLessonsAt(p, all, b, la.pl.day, la.pl.periodId), { skipRules: true });
   if (!r1.ok) return r1;
-  const r2 = checkMove(p, b, la.pl.day, la.pl.periodId, withLessonsAt(p, all, a, lb.pl.day, lb.pl.periodId));
+  const r2 = checkMove(p, b, la.pl.day, la.pl.periodId, withLessonsAt(p, all, a, lb.pl.day, lb.pl.periodId), { skipRules: true });
   if (!r2.ok) return { ok: false, reason: `${subject(lb)} no puede ir donde está ${subject(la)}: ${r2.reason.charAt(0).toLowerCase()}${r2.reason.slice(1)}` };
+  const final = withLessonsAt(p, withLessonsAt(p, all, b, la.pl.day, la.pl.periodId), a, lb.pl.day, lb.pl.periodId);
+  const units = [la.unit, lb.unit, ...all.filter((l) => a.includes(l.pl.key) || b.includes(l.pl.key)).map((l) => l.unit)];
+  const rule = ruleProblem(p, all, final, [...new Map(units.map((u) => [u.id, u])).values()]);
+  if (rule) return { ok: false, reason: rule };
   return { ok: true };
 }
 

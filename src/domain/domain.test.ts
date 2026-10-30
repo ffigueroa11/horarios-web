@@ -176,6 +176,15 @@ describe('bloques fijados que ya no son posibles', () => {
     const ex = exportFet(p);
     expect(ex.xml).not.toContain('<ConstraintActivityPreferredStartingTime>');
   });
+  it('detecta dos fijados de la misma asignatura el mismo día si repartir en días es obligatorio', () => {
+    const p = exampleProject();
+    p.rules.spreadSubjectDays = true; p.rules.spreadStrength = 'obligatoria';
+    const mat = p.assignments.find((a) => a.blocks.length >= 2)!;
+    const classes = p.school.periods.filter((x) => x.kind === 'clase');
+    p.locks[`${mat.id}#0`] = { day: 1, periodId: classes[0].id };
+    p.locks[`${mat.id}#1`] = { day: 1, periodId: classes[6].id };
+    expect(validate(p).filter((i) => i.locks).map((i) => i.message).join()).toContain('el mismo día que otro bloque fijado');
+  });
   it('detecta dos fijados que chocan entre sí', () => {
     const p = exampleProject();
     const [a, b] = p.assignments.filter((x) => x.courseId === p.courses[0].id);

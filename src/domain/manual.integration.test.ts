@@ -10,6 +10,7 @@ import { parseActivitiesXml } from './fetResult';
 import { FET_IN, FET_OUT, fetArgs } from '../engine/args';
 import type { Project } from './types';
 import { applyMove, applySwap, checkPlace, companions, lessons, shareStudents } from './manual';
+import { courseStudentSets } from './units';
 
 const engineDir = resolve(__dirname, '../../public/engine');
 
@@ -28,6 +29,31 @@ async function generated(): Promise<Project> {
   return p;
 }
 
+/** Reglas obligatorias del liceo de ejemplo: repartir en días distintos, sin horas libres, empezar en el 1° bloque. */
+function ruleBreaks(p: Project): string[] {
+  const all = lessons(p);
+  const out: string[] = [];
+  if (p.rules.spreadSubjectDays && p.rules.spreadStrength === 'obligatoria')
+    for (const u of new Set(all.map((l) => l.unit))) {
+      const ds = all.filter((l) => l.unit === u).map((l) => l.pl.day);
+      if (u.blocks.length <= p.school.days.length && new Set(ds).size < ds.length) out.push(`${u.id} repetido en un día`);
+    }
+  for (const c of p.courses) for (const combo of courseStudentSets(p, c)) {
+    const ids = new Set(combo.map((g) => g.id));
+    p.school.days.forEach((_, d) => {
+      const open = p.school.periods.map((x, i) => ({ x, i })).filter(({ x }) => x.kind === 'clase' && !p.school.closed.includes(`${d}:${x.id}`)).map(({ i }) => i);
+      const busy = new Set<number>();
+      for (const l of all) if (l.pl.day === d && l.unit.audience.some((a) => a.courseId === c.id && (!a.groupId || ids.has(a.groupId))))
+        for (let k = 0; k < l.dur; k++) busy.add(l.startIdx + k);
+      const used = open.filter((i) => busy.has(i));
+      if (!used.length) return;
+      if (p.rules.coursesStartFirstBlock && used[0] !== open[0]) out.push(`${c.name} empieza tarde el día ${d}`);
+      if (p.rules.coursesNoGaps && open.some((i) => i > used[0] && i < used[used.length - 1] && !busy.has(i))) out.push(`${c.name} con hora libre el día ${d}`);
+    });
+  }
+  return out;
+}
+
 /** Choques: dos clases que se superponen con alumnos, profesor o sala en común. */
 function clashes(p: Project): string[] {
   const all = lessons(p);
@@ -44,7 +70,11 @@ function clashes(p: Project): string[] {
 describe.skipIf(!existsSync(resolve(engineDir, 'fet-cl.wasm')))('ajuste manual sobre un horario real', () => {
   it('motivos verdaderos; movimientos e intercambios aceptados quedan sin choques', async () => {
     const p = await generated();
+    p.rules.coursesNoGaps = true;
+    p.rules.coursesStartFirstBlock = true;
+    p.rules.spreadStrength = 'obligatoria';
     expect(clashes(p)).toEqual([]);
+    expect(ruleBreaks(p)).toEqual([]);
     const all = lessons(p);
     const classes = p.school.periods.filter((x) => x.kind === 'clase');
     let moves = 0, swaps = 0;
@@ -64,12 +94,12 @@ describe.skipIf(!existsSync(resolve(engineDir, 'fet-cl.wasm')))('ajuste manual s
         }
         const copy = structuredClone(p);
         if (r.swapWith) { applySwap(copy, keys, r.swapWith); swaps++; } else { applyMove(copy, keys, d, per.id); moves++; }
-        const c = clashes(copy);
+        const c = [...clashes(copy), ...ruleBreaks(copy)];
         if (c.length) wrong.push(`${r.swapWith ? 'intercambio' : 'movimiento'} ${l.pl.key} → ${d}/${per.label}: ${c[0]}`);
       }
     }
     expect(wrong).toEqual([]);
     expect(moves).toBeGreaterThan(10);
-    expect(swaps).toBeGreaterThan(10);
+    expect(swaps).toBeGreaterThan(3);
   }, 180_000);
 });

@@ -375,7 +375,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
           {toast && <div className="toast" onClick={() => setToast(null)}>No se puede mover aquí: {toast}</div>}
         </div>
         {owner ? grid(mode, owner.id, true) : <div className="empty">No hay elementos para mostrar.</div>}
-        {selected && <p className="small muted">Al mover o intercambiar se respetan los choques, recreos, la disponibilidad de profesores y las reglas obligatorias. Las preferencias (ventanas, repartir en días) no se revisan.</p>}
+        {selected && <p className="small muted">Al mover o intercambiar se revisan los choques, recreos, la disponibilidad de profesores y todas las reglas obligatorias de Preferencias. Las reglas preferibles no se revisan. Las preferencias (ventanas, repartir en días) no se revisan.</p>}
       </section>
 
       <div className="print-only">
