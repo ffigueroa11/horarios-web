@@ -156,6 +156,54 @@ export function lockProblems(p: Project, describe: (key: ActivityKey) => string)
   return out;
 }
 
+/** Resultado de soltar un bloque: mover a un lugar libre o intercambiar con el bloque que está ahí. */
+export type PlaceCheck = { ok: true; swapWith?: ActivityKey[] } | { ok: false; reason: string };
+
+const withLessonsAt = (p: Project, all: Lesson[], keys: ActivityKey[], day: number, periodId: string): Lesson[] => {
+  const startIdx = p.school.periods.findIndex((x) => x.id === periodId);
+  return all.map((l) => (keys.includes(l.pl.key) ? { ...l, startIdx, pl: { ...l.pl, day, periodId } } : l));
+};
+
+/** ¿Se pueden intercambiar los bloques `a` y `b` (cada uno con sus clases en paralelo)? */
+export function checkSwap(p: Project, a: ActivityKey[], b: ActivityKey[], all: Lesson[] = lessons(p)): MoveCheck {
+  const la = all.find((l) => a.includes(l.pl.key)), lb = all.find((l) => b.includes(l.pl.key));
+  if (!la || !lb) return { ok: false, reason: 'El bloque ya no existe.' };
+  const subject = (l: Lesson) => nameOf(p.subjects, l.unit.subjectId);
+  const r1 = checkMove(p, a, lb.pl.day, lb.pl.periodId, withLessonsAt(p, all, b, la.pl.day, la.pl.periodId));
+  if (!r1.ok) return r1;
+  const r2 = checkMove(p, b, la.pl.day, la.pl.periodId, withLessonsAt(p, all, a, lb.pl.day, lb.pl.periodId));
+  if (!r2.ok) return { ok: false, reason: `${subject(lb)} no puede ir donde está ${subject(la)}: ${r2.reason.charAt(0).toLowerCase()}${r2.reason.slice(1)}` };
+  return { ok: true };
+}
+
+/**
+ * Revisa dónde soltar un bloque: si el lugar está libre se mueve; si lo ocupa otro bloque del mismo curso o
+ * profesor, con la misma duración y que empieza ahí, se ofrece intercambiarlos.
+ */
+export function checkPlace(p: Project, keys: ActivityKey[], day: number, periodId: string, all: Lesson[] = lessons(p)): PlaceCheck {
+  const move = checkMove(p, keys, day, periodId, all);
+  if (move.ok) return move;
+  const moving = all.filter((l) => keys.includes(l.pl.key));
+  if (moving.length === 0) return move;
+  const occupant = all.find((o) => !keys.includes(o.pl.key) && o.pl.day === day && o.pl.periodId === periodId && o.dur === moving[0].dur
+    && moving.some((m) => shareStudents(p, m.unit, o.unit) || (!!m.unit.teacherId && m.unit.teacherId === o.unit.teacherId)));
+  if (!occupant) return move;
+  const other = companions(p, occupant.pl.key);
+  const swap = checkSwap(p, keys, other, all);
+  if (swap.ok) return { ok: true, swapWith: other };
+  return { ok: false, reason: `${move.reason} Tampoco se pueden intercambiar: ${swap.reason.charAt(0).toLowerCase()}${swap.reason.slice(1)}` };
+}
+
+/** Intercambia dos bloques y los deja fijados en su nuevo lugar. */
+export function applySwap(d: Project, a: ActivityKey[], b: ActivityKey[]) {
+  const pa = d.timetable?.placements.find((x) => a.includes(x.key));
+  const pb = d.timetable?.placements.find((x) => b.includes(x.key));
+  if (!pa || !pb) return;
+  const [da, ra] = [pa.day, pa.periodId], [db, rb] = [pb.day, pb.periodId];
+  applyMove(d, a, db, rb);
+  applyMove(d, b, da, ra);
+}
+
 /** Mueve los bloques y los fija en su nuevo lugar (para que se mantengan al regenerar). */
 export function applyMove(d: Project, keys: ActivityKey[], day: number, periodId: string) {
   if (!d.timetable) return;

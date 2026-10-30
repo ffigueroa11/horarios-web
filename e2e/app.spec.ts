@@ -43,7 +43,7 @@ test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ pa
   const target = page.locator('td.drop-ok').first();
   if (await target.count()) {
     await target.click();
-    await expect(page.locator('.notice.ok')).toContainText('Movido');
+    await expect(page.locator('.notice.ok')).toContainText(/Movido|Intercambiados/);
     await expect(page.locator('td.lesson.locked, .chip-lesson.locked').first()).toBeVisible();
   }
 

@@ -3,7 +3,7 @@ import { isStale, useCurrent, useProjects } from '../store/projects';
 import type { ActivityKey, Period, Project } from '../domain/types';
 import { slotKey } from '../domain/types';
 import { exportFet } from '../domain/fetExport';
-import { applyMove, checkMove, companions, lessons, type Lesson, type MoveCheck } from '../domain/manual';
+import { applyMove, applySwap, checkPlace, companions, lessons, type Lesson, type PlaceCheck } from '../domain/manual';
 import { findEffectiveGroup } from '../domain/units';
 import { describeActivity } from '../domain/fetResult';
 import type { Route } from '../App';
@@ -71,7 +71,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
   const [message, setMessage] = useState<{ kind: 'ok' | 'bad'; text: string } | null>(null);
   // Motivo por el que no se puede soltar un bloque: junto al cursor mientras se arrastra, y como aviso breve
   // abajo de la pantalla si se suelta igual o se hace clic en un lugar no válido.
-  const [hint, setHint] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [hint, setHint] = useState<{ text: string; x: number; y: number; swap?: boolean } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const lastInvalid = useRef<string | null>(null);
   useEffect(() => {
@@ -83,10 +83,10 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
   const index = useMemo(() => buildIndex(p, all), [p, all]);
   // Lugares válidos para lo seleccionado: se calcula una vez por selección (no en cada celda de cada vista).
   const targets = useMemo(() => {
-    const m = new Map<string, MoveCheck>();
+    const m = new Map<string, PlaceCheck>();
     if (!selected) return m;
     p.school.days.forEach((_, d) => p.school.periods.forEach((per) => {
-      if (per.kind === 'clase') m.set(slotKey(d, per.id), checkMove(p, selected, d, per.id, all));
+      if (per.kind === 'clase') m.set(slotKey(d, per.id), checkPlace(p, selected, d, per.id, all));
     }));
     return m;
   }, [p, all, selected]);
@@ -132,13 +132,19 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
     }
   }, { touch: false });
 
+  const subjectOfKey = (k: ActivityKey) => subject(all.find((l) => l.pl.key === k)?.unit.subjectId ?? '')?.name ?? 'el bloque';
+
   const tryMove = (keys: ActivityKey[], day: number, period: Period) => {
-    const check = checkMove(p, keys, day, period.id, all);
+    const check = checkPlace(p, keys, day, period.id, all);
     if (!check.ok) { setToast(check.reason); return; }
-    update((d) => applyMove(d, keys, day, period.id), { touch: false });
+    const swap = check.swapWith;
+    if (swap) update((d) => applySwap(d, keys, swap), { touch: false });
+    else update((d) => applyMove(d, keys, day, period.id), { touch: false });
     setSelected(null);
     setHint(null);
-    setMessage({ kind: 'ok', text: `Movido al ${p.school.days[day]}, ${period.label} (${period.start}). Quedó fijado 📌.` });
+    setMessage({ kind: 'ok', text: swap
+      ? `Intercambiados: ${subjectOfKey(keys[0])} ↔ ${subjectOfKey(swap[0])}. Ambos quedaron fijados 📌.`
+      : `Movido al ${p.school.days[day]}, ${period.label} (${period.start}). Quedó fijado 📌.` });
   };
 
   const grid = (m: Mode, id: string, interactive: boolean) => {
@@ -188,9 +194,10 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
         const target = interactive && selected ? targets.get(k) : undefined;
         // Motivo junto al cursor: al arrastrar sobre un lugar no válido, o al pasar el mouse con un bloque seleccionado.
         const showReason = (x: number, y: number) => {
-          if (!target || target.ok) { if (hint) setHint(null); return; }
-          if (!hint || hint.text !== target.reason || Math.abs(hint.x - x) + Math.abs(hint.y - y) > 6)
-            setHint({ text: target.reason, x, y });
+          const text = !target ? null : target.ok ? (target.swapWith ? `Soltar para intercambiar con ${subjectOfKey(target.swapWith[0])}` : null) : target.reason;
+          if (!text) { if (hint) setHint(null); return; }
+          if (!hint || hint.text !== text || Math.abs(hint.x - x) + Math.abs(hint.y - y) > 6)
+            setHint({ text, x, y, swap: !!target?.ok });
         };
         const drop = target ? {
           onMouseMove: (e: MouseEvent) => showReason(e.clientX, e.clientY),
@@ -205,14 +212,15 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
           },
           onDrop: (e: DragEvent) => { e.preventDefault(); if (selected) tryMove(selected, d, per); },
         } : {};
-        const targetClass = target ? (target.ok ? ' drop-ok' : ' drop-no') : '';
+        const targetClass = target ? (target.ok ? (target.swapWith ? ' drop-ok drop-swap' : ' drop-ok') : ' drop-no') : '';
+        const targetTitle = target?.ok ? (target.swapWith ? `Intercambiar con ${subjectOfKey(target.swapWith[0])}` : 'Mover aquí') : undefined;
         if (p.school.closed.includes(k)) return { className: 'closed', title: 'Sin clases' };
         const hits = slots?.get(k) ?? [];
         if (hits.length === 0) {
           if (!target) return {};
           return {
             className: targetClass.trim(),
-            title: target.ok ? 'Mover aquí' : target.reason,
+            title: target.ok ? targetTitle : target.reason,
             onClick: () => (target.ok ? tryMove(selected!, d, per) : setToast(target.reason)),
             ...drop,
           };
@@ -224,7 +232,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
           return {
             className: `lesson${x.locked ? ' locked' : ''}${x.sel ? ' selected' : ''}${x.sel ? '' : targetClass}`,
             rowSpan: l.dur,
-            title: target && !x.sel ? (target.ok ? 'Mover aquí' : `${target.reason}\n\n${x.title}`) : x.title,
+            title: target && !x.sel ? (target.ok ? `${targetTitle}\n\n${x.title}` : `${target.reason}\n\n${x.title}`) : x.title,
             onClick: interactive ? () => (target?.ok && !x.sel ? tryMove(selected!, d, per) : select(l)) : undefined,
             ...dragProps(l),
             ...drop,
@@ -311,7 +319,8 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
           <button type="button" className="btn ghost" onClick={() => downloadText(`${fileSafe(p.name)}.fet`, exportFet(p).xml, 'application/xml')} title="Abre los datos en FET de escritorio">Archivo .fet</button>
         </div>
       }>
-        Haz clic en un bloque para <b>seleccionarlo</b>: puedes moverlo a un lugar libre (en verde) o <b>fijarlo</b> 📌. También se puede arrastrar.
+        Haz clic en un bloque para <b>seleccionarlo</b>: puedes moverlo a un lugar libre (en verde), soltarlo sobre otro bloque
+        con borde verde para <b>intercambiarlos</b>, o <b>fijarlo</b> 📌. También se puede arrastrar.
         Al generar de nuevo, los bloques fijados se mantienen y el resto se reorganiza.
       </PageHead>
 
@@ -358,15 +367,15 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
         )}
         {message && <div className={`notice ${message.kind === 'ok' ? 'ok' : 'bad'}`} role="status">{message.text}</div>}
         {hint && selected && (
-          <div className="drag-hint" style={{ left: Math.min(hint.x + 16, innerWidth - 300), top: hint.y + 18 }} aria-hidden="true">
-            🚫 {hint.text}
+          <div className="drag-hint" style={{ left: Math.min(hint.x + 22, innerWidth - 300), top: hint.y + 22 }} aria-hidden="true">
+            {hint.swap ? '⇄' : '🚫'} {hint.text}
           </div>
         )}
         <div className="toast-zone" role="status" aria-live="polite">
           {toast && <div className="toast" onClick={() => setToast(null)}>No se puede mover aquí: {toast}</div>}
         </div>
         {owner ? grid(mode, owner.id, true) : <div className="empty">No hay elementos para mostrar.</div>}
-        {selected && <p className="small muted">Al mover se respetan los choques, recreos y la disponibilidad de profesores. Las preferencias (ventanas, repartir en días) no se revisan.</p>}
+        {selected && <p className="small muted">Al mover o intercambiar se respetan los choques, recreos, la disponibilidad de profesores y las reglas obligatorias. Las preferencias (ventanas, repartir en días) no se revisan.</p>}
       </section>
 
       <div className="print-only">

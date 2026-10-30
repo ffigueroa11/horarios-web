@@ -224,3 +224,5 @@ pre.log { margin: 0; max-height: 220px; overflow: auto; padding: 10px; backgroun
 .week td.lesson.selected > div { box-shadow: inset 0 0 0 3px var(--chalk); }
 .week td.lesson.locked > div { box-shadow: inset 0 0 0 2px var(--chalk); }
 .week td.lesson.selected.locked > div { box-shadow: inset 0 0 0 3px var(--chalk); }
+.week td.lesson.drop-swap > div { opacity: 1; box-shadow: inset 0 0 0 3px var(--ok); }
+.week td.drop-swap { cursor: alias; }
