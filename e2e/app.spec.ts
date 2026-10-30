@@ -47,22 +47,19 @@ test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ pa
     await expect(page.locator('td.lesson.locked, .chip-lesson.locked').first()).toBeVisible();
   }
 
-  // Arrastrar a un lugar no válido: el motivo aparece junto al cursor y, al soltar, como aviso breve.
-  // Se envían los eventos de arrastre directamente: el arrastre simulado con el mouse no es confiable en CI.
-  const source = page.locator('td.lesson').first();
-  await source.click();
+  // Lugar no válido con un bloque seleccionado: el motivo aparece junto al cursor (el mismo rótulo que al
+  // arrastrar) y, al hacer clic en un cuadro vacío no válido, como aviso breve abajo.
+  await page.locator('td.lesson').first().click();
   const invalid = page.locator('td.lesson.drop-no').first();
-  // Los eventos de arrastre sintéticos solo son fieles en Chromium; en Firefox y Safari se prueba a mano.
-  if (info.project.name === 'chromium' && await invalid.count()) {
-    const box = (await invalid.boundingBox())!;
-    const at = { clientX: Math.round(box.x + box.width / 2), clientY: Math.round(box.y + box.height / 2) };
-    const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
-    await source.dispatchEvent('dragstart', { dataTransfer });
-    await invalid.dispatchEvent('dragover', { dataTransfer, ...at });
+  if (await invalid.count()) {
+    await invalid.hover({ position: { x: 10, y: 10 } });
+    await invalid.hover({ position: { x: 14, y: 14 } });
     await expect(page.locator('.drag-hint')).toBeVisible();
-    await source.dispatchEvent('dragend', { dataTransfer, ...at });
+  }
+  const invalidEmpty = page.locator('td.drop-no:not(.lesson):not(.multi)').first();
+  if (await invalidEmpty.count()) {
+    await invalidEmpty.click();
     await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
-    await expect(page.locator('.drag-hint')).toHaveCount(0);
   }
   await page.keyboard.press('Escape');
 

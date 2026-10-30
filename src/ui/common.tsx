@@ -1,4 +1,4 @@
-import { useState, type DragEvent, type ReactNode } from 'react';
+import { useState, type DragEvent, type MouseEvent, type ReactNode } from 'react';
 import { useDraft } from './useDraft';
 import type { Period, School } from '../domain/types';
 
@@ -51,8 +51,11 @@ export interface CellSpec {
   /** Arrastrar y soltar (ajuste manual del horario). */
   draggable?: boolean;
   onDragStart?: (e: DragEvent) => void;
-  onDragEnd?: () => void;
+  onDragEnd?: (e: DragEvent) => void;
   onDragOver?: (e: DragEvent) => void;
+  onDragLeave?: (e: DragEvent) => void;
+  onMouseMove?: (e: MouseEvent) => void;
+  onMouseLeave?: () => void;
   onDrop?: (e: DragEvent) => void;
 }
 
@@ -88,7 +91,8 @@ export function WeekGrid({ school, cell, dayHeader }: {
                     <td key={d} className={c.className} title={c.title} rowSpan={c.rowSpan}
                       onClick={c.onClick} tabIndex={c.onClick ? 0 : undefined}
                       draggable={c.draggable || undefined} onDragStart={c.onDragStart} onDragEnd={c.onDragEnd}
-                      onDragOver={c.onDragOver} onDrop={c.onDrop}
+                      onDragOver={c.onDragOver} onDragLeave={c.onDragLeave} onDrop={c.onDrop}
+                      onMouseMove={c.onMouseMove} onMouseLeave={c.onMouseLeave}
                       onKeyDown={c.onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), c.onClick!()) : undefined}>
                       {c.content}
                     </td>

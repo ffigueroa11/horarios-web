@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from 'react';
 import { isStale, useCurrent, useProjects } from '../store/projects';
 import type { ActivityKey, Period, Project } from '../domain/types';
 import { slotKey } from '../domain/types';
@@ -69,6 +69,16 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
   const [printAll, setPrintAll] = useState(false);
   const [selected, setSelected] = useState<ActivityKey[] | null>(null);
   const [message, setMessage] = useState<{ kind: 'ok' | 'bad'; text: string } | null>(null);
+  // Motivo por el que no se puede soltar un bloque: junto al cursor mientras se arrastra, y como aviso breve
+  // abajo de la pantalla si se suelta igual o se hace clic en un lugar no válido.
+  const [hint, setHint] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const lastInvalid = useRef<string | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4500);
+    return () => clearTimeout(t);
+  }, [toast]);
   const all = useMemo(() => lessons(p), [p]);
   const index = useMemo(() => buildIndex(p, all), [p, all]);
   // Lugares válidos para lo seleccionado: se calcula una vez por selección (no en cada celda de cada vista).
@@ -124,9 +134,10 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
 
   const tryMove = (keys: ActivityKey[], day: number, period: Period) => {
     const check = checkMove(p, keys, day, period.id, all);
-    if (!check.ok) { setMessage({ kind: 'bad', text: check.reason }); return; }
+    if (!check.ok) { setToast(check.reason); return; }
     update((d) => applyMove(d, keys, day, period.id), { touch: false });
     setSelected(null);
+    setHint(null);
     setMessage({ kind: 'ok', text: `Movido al ${p.school.days[day]}, ${period.label} (${period.start}). Quedó fijado 📌.` });
   };
 
@@ -155,6 +166,14 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
     };
     const dragProps = (l: Lesson) => interactive ? {
       draggable: true,
+      onDragEnd: (e: DragEvent) => {
+        // Se soltó sobre un lugar no válido (algunos navegadores no informan la posición: se usa el último motivo).
+        const unknownPos = e.clientX === 0 && e.clientY === 0;
+        const overInvalid = unknownPos || !!document.elementFromPoint(e.clientX, e.clientY)?.closest('td.drop-no');
+        if (lastInvalid.current && overInvalid) setToast(lastInvalid.current);
+        lastInvalid.current = null;
+        setHint(null);
+      },
       onDragStart: (e: DragEvent) => {
         e.stopPropagation();
         e.dataTransfer.setData(DRAG_TYPE, l.pl.key);
@@ -167,8 +186,23 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
       <WeekGrid school={p.school} cell={(d, per): CellSpec => {
         const k = slotKey(d, per.id);
         const target = interactive && selected ? targets.get(k) : undefined;
+        // Motivo junto al cursor: al arrastrar sobre un lugar no válido, o al pasar el mouse con un bloque seleccionado.
+        const showReason = (x: number, y: number) => {
+          if (!target || target.ok) { if (hint) setHint(null); return; }
+          if (!hint || hint.text !== target.reason || Math.abs(hint.x - x) + Math.abs(hint.y - y) > 6)
+            setHint({ text: target.reason, x, y });
+        };
         const drop = target ? {
-          onDragOver: (e: DragEvent) => { if (target.ok) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } },
+          onMouseMove: (e: MouseEvent) => showReason(e.clientX, e.clientY),
+          onMouseLeave: () => setHint(null),
+          onDragOver: (e: DragEvent) => {
+            if (target.ok) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              lastInvalid.current = null;
+            } else lastInvalid.current = target.reason;
+            showReason(e.clientX, e.clientY);
+          },
           onDrop: (e: DragEvent) => { e.preventDefault(); if (selected) tryMove(selected, d, per); },
         } : {};
         const targetClass = target ? (target.ok ? ' drop-ok' : ' drop-no') : '';
@@ -179,7 +213,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
           return {
             className: targetClass.trim(),
             title: target.ok ? 'Mover aquí' : target.reason,
-            onClick: () => (target.ok ? tryMove(selected!, d, per) : setMessage({ kind: 'bad', text: target.reason })),
+            onClick: () => (target.ok ? tryMove(selected!, d, per) : setToast(target.reason)),
             ...drop,
           };
         }
@@ -226,6 +260,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
                 style={{ background: x.s?.color ?? '#777' }} disabled={!interactive}
                 draggable={interactive || undefined}
                 onDragStart={dragProps(l).onDragStart}
+                onDragEnd={dragProps(l).onDragEnd}
                 onClick={(e) => { e.stopPropagation(); if (target?.ok && !anySel) tryMove(selected!, d, per); else select(l); }}>
                 <span className="s">{x.main}{start || together ? '' : ' (cont.)'}</span>
                 {(start || together) && <span className="w">{x.sub}</span>}
@@ -322,6 +357,14 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
           </div>
         )}
         {message && <div className={`notice ${message.kind === 'ok' ? 'ok' : 'bad'}`} role="status">{message.text}</div>}
+        {hint && selected && (
+          <div className="drag-hint" style={{ left: Math.min(hint.x + 16, innerWidth - 300), top: hint.y + 18 }} aria-hidden="true">
+            🚫 {hint.text}
+          </div>
+        )}
+        <div className="toast-zone" role="status" aria-live="polite">
+          {toast && <div className="toast" onClick={() => setToast(null)}>No se puede mover aquí: {toast}</div>}
+        </div>
         {owner ? grid(mode, owner.id, true) : <div className="empty">No hay elementos para mostrar.</div>}
         {selected && <p className="small muted">Al mover se respetan los choques, recreos y la disponibilidad de profesores. Las preferencias (ventanas, repartir en días) no se revisan.</p>}
       </section>
