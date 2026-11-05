@@ -31,6 +31,34 @@ export function lessons(p: Project): Lesson[] {
   return out;
 }
 
+export interface LessonHit { lesson: Lesson; start: boolean }
+
+/**
+ * Índice: para cada curso/profesor/sala, qué clases ocupan cada tramo. Un tramo de un curso puede tener
+ * varias clases a la vez cuando el curso está dividido en grupos o tiene una franja de electivos.
+ */
+export function lessonIndex(p: Project, all: Lesson[]) {
+  const byOwner = new Map<string, Map<string, LessonHit[]>>();
+  const put = (owner: string, k: string, v: LessonHit) => {
+    if (!byOwner.has(owner)) byOwner.set(owner, new Map());
+    const m = byOwner.get(owner)!;
+    m.set(k, [...(m.get(k) ?? []), v]);
+  };
+  for (const lesson of all) {
+    const { pl, unit, dur, startIdx } = lesson;
+    for (let k = 0; k < dur; k++) {
+      const period = p.school.periods[startIdx + k];
+      if (!period) break;
+      const v = { lesson, start: k === 0 };
+      const sk = slotKey(pl.day, period.id);
+      for (const courseId of new Set(unit.audience.map((a) => a.courseId))) put(`curso:${courseId}`, sk, v);
+      if (unit.teacherId) put(`profesor:${unit.teacherId}`, sk, v);
+      if (pl.roomId) put(`sala:${pl.roomId}`, sk, v);
+    }
+  }
+  return byOwner;
+}
+
 /** Bloques que se mueven juntos con este (grupos en paralelo, opciones de una franja de electivos). */
 export function companions(p: Project, key: ActivityKey): ActivityKey[] {
   const uid = unitIdOf(key);

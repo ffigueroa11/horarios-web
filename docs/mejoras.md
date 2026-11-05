@@ -3,8 +3,8 @@
 Revisión del commit `be2f6ec` (noviembre de 2026), pensada para decidir qué hacer a continuación.
 
 > **Estado:** la fase 0 de la [hoja de ruta](#hoja-de-ruta-sugerida) ya se aplicó: E1 a E5, E7 a E11, T1, T2 y T5. El
-> detalle de esos hallazgos se conserva como registro de qué se corrigió y por qué. Las referencias a líneas de código
-> corresponden al commit revisado y pueden haber cambiado.
+> detalle de esos hallazgos se conserva como registro de qué se corrigió y por qué. De la fase 1 ya están F1 y F2. Las
+> referencias a líneas de código corresponden al commit revisado y pueden haber cambiado.
 
 **Cómo se hizo.** Se leyó el dominio, el estado, el motor, las pantallas principales y los flujos de CI. Se ejecutaron
 `npm run lint`, `npm test`, `npm run build`, `npm audit` y `npm outdated`, y se corrieron pruebas temporales contra el
@@ -24,13 +24,11 @@ Los esfuerzos son estimaciones: **S** (menos de un día), **M** (varios días), 
 ## Resumen
 
 La base es sólida: el dominio está separado de la interfaz, el motor se prueba de punta a punta y la app ya se protege
-bien contra la pérdida de datos. Con la fase 0 aplicada, lo más valioso que queda es:
+bien contra la pérdida de datos. Con la fase 0, F1 y F2 aplicados, lo más valioso que queda es:
 
-1. **Mostrar lo que el motor ya entrega** (F1 y F2): el horario parcial al agotarse el tiempo y las preferencias que no
-   se cumplieron.
-2. **Completar el uso sin conexión** (E6).
-3. **Agregar deshacer** (F5). Eliminar ya pide confirmar, pero nada se puede revertir después.
-4. **Convertir los archivos reales en una referencia anonimizada** (T4). Por ahora solo se midieron localmente.
+1. **Completar el uso sin conexión** (E6).
+2. **Agregar deshacer** (F5). Eliminar ya pide confirmar, pero nada se puede revertir después.
+3. **Convertir los archivos reales en una referencia anonimizada** (T4). Por ahora solo se midieron localmente.
 
 ## Errores confirmados
 
@@ -196,7 +194,7 @@ eliminan al instante la carga asociada. Eliminar una franja o un profesor sí pi
 | T2 | No había prueba de arrastrar y soltar: se retiró en `b028558` | Recuperada, con eventos enviados directamente y solo en Chromium | S | Corregido |
 | T3 | `ui/` y `pages/` no tienen pruebas unitarias, y de `store/` solo hay un archivo | Ampliar [`projects.test.ts`](../src/store/projects.test.ts) a migraciones y varias pestañas | S–M | Parcial |
 | T4 | [`large.test.ts`](../src/domain/large.test.ts) no mide un caso difícil: 24 cursos y 84 profesores se resuelven en 0,2–0,6 s | Agregar un colegio real anonimizado como referencia (ver [mediciones](#mediciones-con-archivos-reales)) | M | Pendiente |
-| T5 | [`deploy.yml`](../.github/workflows/deploy.yml) publicaba sin esperar a CI | Publica cuando CI termina bien en un `push` a `main` (`workflow_run`) | S | Corregido; se confirma en el primer `push` |
+| T5 | [`deploy.yml`](../.github/workflows/deploy.yml) publicaba sin esperar a CI | Publica cuando CI termina bien en un `push` a `main` (`workflow_run`) | S | Corregido y confirmado en el `push` de la fase 0 |
 | T6 | Sin política de seguridad de contenido (CSP); [`_headers`](../public/_headers) solo define caché | Agregar una CSP con `wasm-unsafe-eval`, por `<meta>` para que también aplique en GitHub Pages, y probarla con el motor | S–M | Pendiente |
 | T7 | La compilación del motor no verifica el origen: [`build-engine.sh`](../engine/build-engine.sh) no comprueba el `.tar.xz`, y `emsdk` y `aqtinstall` no están fijados | Fijar versiones y registrar SHA-256 de la fuente y del `.wasm` | S | Pendiente |
 | T8 | Las acciones de GitHub usan etiquetas, no commits fijos | Fijarlas por SHA; Dependabot ya está configurado | S | Pendiente |
@@ -240,8 +238,8 @@ Ordenadas por valor frente a esfuerzo. El valor para los colegios es una hipóte
 
 | Id | Función | Por qué | Base técnica | Esfuerzo |
 |---|---|---|---|---|
-| F1 | **Horario parcial al agotarse el tiempo** | Ver qué alcanzó a ubicarse orienta mejor que un mensaje de error | Medido: FET deja `horario-highest/horario_activities.xml` (181 de 480 bloques). `KEEP_OUTPUT` ya lo conserva | S–M |
-| F2 | **Informe de preferencias no cumplidas** | Hoy el mensaje de éxito no dice cuáles fallaron | Medido: con `--writetimetableconflicts=true`, FET escribe `horario_soft_conflicts.txt` con los ids de actividad | S–M |
+| F1 | **Horario parcial al agotarse el tiempo** (aplicada) | Ver qué alcanzó a ubicarse orienta mejor que un mensaje de error | Lee `horario-highest/horario_activities.xml`; en un archivo real, 507 de 517 bloques, igual al máximo que informa FET | S–M |
+| F2 | **Informe de preferencias no cumplidas** (aplicada) | El mensaje de éxito no decía cuáles fallaron | Se calcula desde el horario, no desde `horario_soft_conflicts.txt` (ver [arquitectura](arquitectura.md#resultados)); una prueba contrasta ambos | S–M |
 | F3 | **Asistente "¿qué regla lo impide?"** | Responde la pregunta real cuando no hay horario | Volver a generar quitando una regla a la vez, con tiempo acotado y en otro Worker | M |
 | F4 | **Elegir entre varios horarios** | FET se detiene en el primero válido, no en el mejor | Generar varios con distintas semillas y comparar ventanas y preferencias. Depende de F2 | M |
 
@@ -296,7 +294,7 @@ Se evaluó y por ahora no se justifica:
 | Fase | Contenido | Estimación |
 |---|---|---|
 | **0. Correcciones** (aplicada) | E1 a E5, E7 a E11, T1, T2, T5 | 3–5 días |
-| **1. Mejor diagnóstico** | F1, F2, semilla, E6, T4 | 1–2 semanas |
+| **1. Mejor diagnóstico** (en curso: F1 y F2 aplicadas) | F1, F2, semilla, E6, T4 | 1–2 semanas |
 | **2. Confianza** | F5, F6, T3, T6, T7, T9 | 1–2 semanas |
 | **3. Uso diario** | F3, F13, F14 | 2–3 semanas |
 | **4. Modelo más rico** | F7 a F12, según lo que pidan los colegios | Semanas por función |

@@ -4,8 +4,11 @@ import { units } from '../domain/units';
 import { useGeneration } from '../store/generation';
 import type { Issue } from '../domain/validate';
 import { describeActivity } from '../domain/fetResult';
+import { hasPreferences, unmetPreferences } from '../domain/preferences';
 import type { Route } from '../App';
 import { PageHead } from '../ui/common';
+import { PartialTimetable } from '../ui/PartialTimetable';
+import { UnmetPreferencesReport } from '../ui/UnmetPreferencesReport';
 
 const STEP_LABEL: Record<string, string> = {
   jornada: 'Jornada', cursos: 'Cursos', asignaturas: 'Asignaturas y salas', salas: 'Asignaturas y salas',
@@ -43,6 +46,8 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
   const placed = Math.round((g.progress?.placed ?? 0) * scale);
   const best = Math.round((g.progress?.best ?? 0) * scale);
   const o = g.outcome;
+  const unmet = o?.kind === 'ok' && hasPreferences(p) ? unmetPreferences(p) : null;
+  const allMet = !!unmet && unmet.spread.length + unmet.windows.length === 0;
 
   return (
     <>
@@ -111,10 +116,11 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
         {mine && g.status === 'done' && o?.kind === 'ok' && (
           <div className="notice ok">
             <b>Horario generado en {g.seconds.toFixed(1)} segundos.</b>
-            <span>Todos los bloques quedaron ubicados respetando las reglas obligatorias.</span>
+            <span>Todos los bloques quedaron ubicados respetando las reglas obligatorias.{allMet && ' También se cumplieron todas las preferencias.'}</span>
             <div><button type="button" className="btn primary" onClick={() => go('horario')}>Ver horario</button></div>
           </div>
         )}
+        {mine && g.status === 'done' && o?.kind === 'ok' && <UnmetPreferencesReport project={p} />}
         {mine && g.status === 'done' && o && (o.kind === 'impossible' || o.kind === 'timeout') && (
           <div className="notice bad" role="alert">
             <b>{o.kind === 'impossible' ? 'Con estas reglas el horario es imposible.' : 'No se encontró un horario en el tiempo máximo.'}</b>
@@ -130,6 +136,11 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
               {o.kind === 'timeout' && <li>Volver a intentar con más tiempo: cada intento sigue un camino distinto.</li>}
             </ul>
           </div>
+        )}
+        {mine && g.status === 'done' && g.partial && (
+          p.updatedAt > g.partial.generatedAt
+            ? <div className="notice warn">Los datos cambiaron después de este intento. Genera de nuevo para ver hasta dónde se llega.</div>
+            : <PartialTimetable project={p} partial={g.partial} activity={o && 'activity' in o ? o.activity : null} />
         )}
         {mine && g.status === 'done' && o?.kind === 'invalid' && (
           <div className="notice bad" role="alert">

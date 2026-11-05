@@ -3,43 +3,16 @@ import { isStale, useCurrent, useProjects } from '../store/projects';
 import type { ActivityKey, Period, Project } from '../domain/types';
 import { slotKey } from '../domain/types';
 import { exportFet } from '../domain/fetExport';
-import { applyMove, applySwap, checkPlace, companions, lessons, type Lesson, type PlaceCheck } from '../domain/manual';
+import { applyMove, applySwap, checkPlace, companions, lessonIndex, lessons, type Lesson, type LessonHit, type PlaceCheck } from '../domain/manual';
 import { findEffectiveGroup } from '../domain/units';
 import { describeActivity } from '../domain/fetResult';
 import type { Route } from '../App';
 import { PageHead, WeekGrid, type CellSpec } from '../ui/common';
+import { UnmetPreferencesReport } from '../ui/UnmetPreferencesReport';
 import { downloadText, fileSafe } from '../ui/download';
 import { exportTimetableXlsx } from '../ui/exportXlsx';
 
 type Mode = 'curso' | 'profesor' | 'sala';
-
-interface Hit { lesson: Lesson; start: boolean }
-
-/**
- * Índice: para cada curso/profesor/sala, qué clases ocupan cada tramo. Un tramo de un curso puede tener
- * varias clases a la vez cuando el curso está dividido en grupos o tiene una franja de electivos.
- */
-function buildIndex(p: Project, all: Lesson[]) {
-  const byOwner = new Map<string, Map<string, Hit[]>>();
-  const put = (owner: string, k: string, v: Hit) => {
-    if (!byOwner.has(owner)) byOwner.set(owner, new Map());
-    const m = byOwner.get(owner)!;
-    m.set(k, [...(m.get(k) ?? []), v]);
-  };
-  for (const lesson of all) {
-    const { pl, unit, dur, startIdx } = lesson;
-    for (let k = 0; k < dur; k++) {
-      const period = p.school.periods[startIdx + k];
-      if (!period) break;
-      const v = { lesson, start: k === 0 };
-      const sk = slotKey(pl.day, period.id);
-      for (const courseId of new Set(unit.audience.map((a) => a.courseId))) put(`curso:${courseId}`, sk, v);
-      if (unit.teacherId) put(`profesor:${unit.teacherId}`, sk, v);
-      if (pl.roomId) put(`sala:${pl.roomId}`, sk, v);
-    }
-  }
-  return byOwner;
-}
 
 function countGaps(p: Project, slots: Map<string, unknown> | undefined) {
   if (!slots) return 0;
@@ -80,7 +53,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
     return () => clearTimeout(t);
   }, [toast]);
   const all = useMemo(() => lessons(p), [p]);
-  const index = useMemo(() => buildIndex(p, all), [p, all]);
+  const index = useMemo(() => lessonIndex(p, all), [p, all]);
   // Lugares válidos para lo seleccionado: se calcula una vez por selección (no en cada celda de cada vista).
   const targets = useMemo(() => {
     const m = new Map<string, PlaceCheck>();
@@ -247,7 +220,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
         }
         // Clases en paralelo que empiezan y terminan juntas: una sola celda alta con una ficha por clase.
         const keysAt = (sk: string) => (slots?.get(sk) ?? []).map((h) => h.lesson.pl.key).sort().join(',');
-        const block = (hs: Hit[]) => {
+        const block = (hs: LessonHit[]) => {
           const l0 = hs[0].lesson;
           if (!hs.every((h) => h.lesson.dur === l0.dur && h.lesson.startIdx === l0.startIdx && h.lesson.pl.day === l0.pl.day)) return false;
           const keys = keysAt(slotKey(l0.pl.day, p.school.periods[l0.startIdx].id));
@@ -330,6 +303,8 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
           <span>Puede no reflejar la carga o las reglas actuales. <a href="#generar">Generar de nuevo</a></span>
         </div>
       )}
+
+      <div className="no-print"><UnmetPreferencesReport project={p} /></div>
 
       <section className="card no-print">
         <div className="row">

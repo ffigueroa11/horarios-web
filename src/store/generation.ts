@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import type { Id, Project } from '../domain/types';
 import { exportFet } from '../domain/fetExport';
-import { parseActivitiesXml, parseResult, type FetOutcome } from '../domain/fetResult';
+import { parseActivitiesXml, parsePartial, parseResult, type FetOutcome, type PartialResult } from '../domain/fetResult';
 import { fetArgs } from '../engine/args';
 import { runFet, type FetProgress, type RunHandle } from '../engine/runFet';
 import { useProjects } from './projects';
@@ -18,6 +18,8 @@ interface GenState {
   total: number;
   log: string[];
   outcome: FetOutcome | null;
+  /** Mejor intento de una generación que no terminó. Solo para mostrarlo: no se guarda en el proyecto. */
+  partial: (PartialResult & { generatedAt: string }) | null;
   error: string;
   seconds: number;
   handle: RunHandle | null;
@@ -27,7 +29,7 @@ interface GenState {
 }
 
 export const useGeneration = create<GenState>()((set, get) => ({
-  status: 'idle', projectId: null, startedAt: 0, progress: null, total: 0, log: [], outcome: null, error: '', seconds: 0, handle: null,
+  status: 'idle', projectId: null, startedAt: 0, progress: null, total: 0, log: [], outcome: null, partial: null, error: '', seconds: 0, handle: null,
 
   start: (p, timeLimit) => {
     if (get().status === 'loading' || get().status === 'running') return;
@@ -41,7 +43,7 @@ export const useGeneration = create<GenState>()((set, get) => ({
       progress: (pr) => set({ progress: pr }),
       log: (line) => set((s) => ({ log: s.log.length > 400 ? [...s.log.slice(-300), line] : [...s.log, line] })),
     });
-    set({ status: 'loading', projectId: p.id, startedAt: performance.now(), progress: null, total, log: [], outcome: null, error: '', seconds: 0, handle });
+    set({ status: 'loading', projectId: p.id, startedAt: performance.now(), progress: null, total, log: [], outcome: null, partial: null, error: '', seconds: 0, handle });
 
     handle.promise.then((run) => {
       const resultTxt = Object.entries(run.files).find(([k]) => k.endsWith('logs/result.txt'))?.[1] ?? '';
@@ -59,7 +61,9 @@ export const useGeneration = create<GenState>()((set, get) => ({
           return { projects: { ...s.projects, [p.id]: { ...target, timetable: { generatedAt, seconds, placements } } } };
         });
       }
-      set({ status: 'done', outcome, seconds, handle: null, progress: outcome.kind === 'ok' ? { placed: total, best: total, total } : get().progress });
+      const found = outcome.kind === 'timeout' || outcome.kind === 'impossible' ? parsePartial(run.files, ex) : null;
+      const partial = found && { ...found, generatedAt };
+      set({ status: 'done', outcome, partial, seconds, handle: null, progress: outcome.kind === 'ok' ? { placed: total, best: total, total } : get().progress });
     }).catch((e: Error) => {
       if (e.name === 'AbortError') set({ status: 'cancelled', handle: null });
       else set({ status: 'error', error: e.message, handle: null });
@@ -67,5 +71,5 @@ export const useGeneration = create<GenState>()((set, get) => ({
   },
 
   cancel: () => get().handle?.cancel(),
-  reset: () => set({ status: 'idle', outcome: null, error: '', progress: null, log: [] }),
+  reset: () => set({ status: 'idle', outcome: null, partial: null, error: '', progress: null, log: [] }),
 }));

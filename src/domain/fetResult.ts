@@ -1,7 +1,7 @@
 // Interpreta lo que escribe fet-cl: el horario (activities.xml) y el resultado (logs/result.txt).
 import type { ActivityKey, Placement, Project } from './types';
 import type { FetExport } from './fetExport';
-import { findEffectiveGroup, unitById, unitIdOf } from './units';
+import { findEffectiveGroup, unitById, unitIdOf, type Unit } from './units';
 
 export const unesc = (s: string) =>
   s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
@@ -21,6 +21,26 @@ export function parseActivitiesXml(xml: string, ex: FetExport): Placement[] {
     out.push({ key, day, periodId, roomId: ex.roomByName.get(tag(m[1], 'Room')) ?? null });
   }
   return out;
+}
+
+/** Lo que alcanzó a ubicarse en el mejor intento de una generación que no terminó. */
+export interface PartialResult {
+  placements: Placement[];
+  /** Bloques sin lugar, en el orden de la exportación. */
+  missing: ActivityKey[];
+}
+
+/**
+ * Al no terminar, FET deja dos copias: `horario-current` (el último intento) y `horario-highest` (el mejor, que es
+ * el que corresponde al máximo que informa). En ellas, los bloques sin lugar aparecen sin día ni hora.
+ */
+export function parsePartial(files: Record<string, string>, ex: FetExport): PartialResult | null {
+  const xml = Object.entries(files).find(([k]) => /-highest\/[^/]*_activities\.xml$/.test(k))?.[1];
+  if (!xml) return null;
+  const placements = parseActivitiesXml(xml, ex);
+  if (placements.length === 0) return null;
+  const placed = new Set(placements.map((x) => x.key));
+  return { placements, missing: [...ex.activityById.values()].filter((k) => !placed.has(k)) };
 }
 
 export type FetOutcome =
@@ -61,11 +81,8 @@ export function parseResult(resultTxt: string, ex: FetExport, consoleLines: stri
   return { kind: 'invalid', details, activities };
 }
 
-/** Describe una actividad en el idioma del colegio: "Matemática · 1° Medio A · Prof. Soto (bloque 2 de 4, 2 h)". */
-export function describeActivity(p: Project, key: ActivityKey): string {
-  const idx = Number(key.split('#')[1]);
-  const u = unitById(p).get(unitIdOf(key));
-  if (!u) return 'una actividad eliminada';
+/** Describe una clase en el idioma del colegio: "Matemática · 1° Medio A · Prof. Soto". */
+export function describeUnit(p: Project, u: Unit): string {
   const s = p.subjects.find((x) => x.id === u.subjectId)?.name ?? 'Asignatura';
   const who = u.kind === 'electivo'
     ? `electivo de ${u.audience.map((a) => p.courses.find((c) => c.id === a.courseId)?.name ?? 'curso').join(', ')}`
@@ -75,6 +92,14 @@ export function describeActivity(p: Project, key: ActivityKey): string {
       return (course?.name ?? 'curso') + (grp ? ` (${grp.group.name})` : '');
     }).join(', ');
   const t = p.teachers.find((x) => x.id === u.teacherId)?.name;
+  return `${s} · ${who}${t ? ' · ' + t : ''}`;
+}
+
+/** Describe una actividad: "Matemática · 1° Medio A · Prof. Soto (bloque 2 de 4, 2 h)". */
+export function describeActivity(p: Project, key: ActivityKey): string {
+  const idx = Number(key.split('#')[1]);
+  const u = unitById(p).get(unitIdOf(key));
+  if (!u) return 'una actividad eliminada';
   const part = u.blocks.length > 1 ? ` (bloque ${idx + 1} de ${u.blocks.length}, ${u.blocks[idx]} h)` : ` (${u.blocks[idx]} h)`;
-  return `${s} · ${who}${t ? ' · ' + t : ''}${part}`;
+  return `${describeUnit(p, u)}${part}`;
 }

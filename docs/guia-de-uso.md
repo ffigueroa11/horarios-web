@@ -114,6 +114,9 @@ Cada problema incluye un enlace al paso correspondiente.
 Elige el tiempo máximo y presiona **Generar horario**. El cálculo se hace en tu computador y puedes seguir navegando
 mientras avanza.
 
+Si alguna regla preferible no se cumplió, el resultado lo dice y lista qué clases quedaron con más de un bloque el mismo
+día o fuera de los bloques permitidos. El horario es válido igual.
+
 ### 9. Ver y ajustar
 
 Mira el horario por curso, profesor o sala.
@@ -123,8 +126,8 @@ Mira el horario por curso, profesor o sala.
 - **Fijar 📌:** el bloque se mantiene en su lugar al generar de nuevo. Todo bloque que mueves queda fijado.
 - **Lugar no válido:** al pasar el mouse o hacer clic, la app explica el motivo.
 
-Los movimientos respetan los choques y las reglas obligatorias, pero no revisan las preferibles. Las clases en paralelo
-se mueven juntas.
+Los movimientos respetan los choques y las reglas obligatorias, pero no impiden incumplir las preferibles: las que no se
+cumplen aparecen en un aviso sobre el horario, que se actualiza al mover bloques. Las clases en paralelo se mueven juntas.
 
 **Una buena forma de trabajar:** genera, fija lo que te gusta o lo que debe quedar en un lugar, y genera de nuevo. Los
 bloques fijados se mantienen y el resto se reorganiza.
@@ -160,6 +163,10 @@ Ayuda quitar reglas una a una para descubrir cuál lo impide, y luego volver a p
 
 El mensaje indica qué bloque no se pudo ubicar y cuántos se alcanzaron a ubicar. Empieza revisando ese bloque: su profesor,
 su curso y sus reglas.
+
+Debajo aparece **Hasta dónde se llegó**, cuando el motor deja un intento: la lista de bloques sin ubicar y la grilla de
+cada curso o profesor con lo que alcanzó a ubicarse. Sirve para ver dónde falta espacio, pero es solo de consulta: no se
+guarda ni reemplaza tu horario actual, y desaparece si cambias los datos.
 
 ### "El motor encontró un problema en los datos antes de empezar"
 

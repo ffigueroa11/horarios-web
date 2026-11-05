@@ -138,9 +138,9 @@ Todos son relativos a `/work/out`. "Se conserva" significa que coincide con
 | `logs/difficult_activities.txt` | Se agota el tiempo | Sí | Sí: bloque problemático y cuántos se ubicaron |
 | `logs/max_placed_activities.txt` | En todas las ejecuciones medidas | No | No |
 | `timetables/horario/horario_activities.xml` | Éxito | Sí | Sí |
-| `timetables/horario-highest/horario_activities.xml` | Se agota el tiempo | Sí | No (ver [F1](mejoras.md#aprovechar-lo-que-el-motor-ya-entrega)) |
+| `timetables/horario-highest/horario_activities.xml` | Se agota el tiempo | Sí | Sí: horario parcial, con los bloques sin ubicar sin día ni hora |
 | `timetables/horario-current/horario_activities.xml` | Se agota el tiempo | Sí | No |
-| `timetables/horario/horario_soft_conflicts.txt` | Con `--writetimetableconflicts=true` | No | No (ver [F2](mejoras.md#aprovechar-lo-que-el-motor-ya-entrega)) |
+| `timetables/horario/horario_soft_conflicts.txt` | Con `--writetimetableconflicts=true` | No | Solo en una prueba, para contrastar [`preferences.ts`](../src/domain/preferences.ts) |
 
 ### Resultados
 
@@ -156,6 +156,12 @@ Todos son relativos a `/work/out`. "Se conserva" significa que coincide con
 Las palabras clave de `result.txt` no se traducen, pero las explicaciones de FET sí. Por eso las expresiones regulares
 aceptan inglés y español. El bloque problemático se busca en `result.txt` y en `difficult_activities.txt`, porque al
 agotarse el tiempo solo el segundo lo indica.
+
+El horario parcial ([`parsePartial`](../src/domain/fetResult.ts)) y las preferencias no cumplidas
+([`unmetPreferences`](../src/domain/preferences.ts)) no cambian el modelo de datos: el primero vive solo en
+`store/generation.ts` y las segundas se calculan desde el horario guardado. Se calculan en vez de leer
+`horario_soft_conflicts.txt` porque así siguen siendo ciertas tras un ajuste manual, no dependen de un texto traducido e
+incluyen lo que la exportación omite (repartir en días cuando dos bloques fijados ya caen el mismo día).
 
 ### Pesos en FET
 

@@ -7,7 +7,8 @@ import { resolve } from 'node:path';
 import { exampleProject } from './defaults';
 import { exportFet } from './fetExport';
 import { parseFet } from './fetImport';
-import { describeActivity, parseActivitiesXml, parseResult } from './fetResult';
+import { describeActivity, parseActivitiesXml, parsePartial, parseResult } from './fetResult';
+import { unmetPreferences } from './preferences';
 import { FET_IN, FET_OUT, fetArgs } from '../engine/args';
 import { slotKey, type Project } from './types';
 import { teacherLoad, validate } from './validate';
@@ -48,6 +49,8 @@ async function runEngine(xml: string, args: string[], spanish = false) {
     activities: read(`${FET_OUT}/timetables/horario/horario_activities.xml`),
     errors: read(`${FET_OUT}/logs/errors.txt`),
     difficult: read(`${FET_OUT}/logs/difficult_activities.txt`),
+    files: { 'timetables/horario-highest/horario_activities.xml': read(`${FET_OUT}/timetables/horario-highest/horario_activities.xml`) },
+    softConflicts: read(`${FET_OUT}/timetables/horario/horario_soft_conflicts.txt`),
   };
 }
 
@@ -236,7 +239,38 @@ describe.skipIf(!hasEngine)('motor FET (WebAssembly)', () => {
     expect(outcome.activity).not.toBeNull();
     expect(p.locks[outcome.activity!] ?? describeActivity(p, outcome.activity!)).toBeTruthy();
     expect(outcome.placedMax).toBeGreaterThan(0);
+    // El horario parcial es el del máximo informado, y lo ubicado no tiene choques.
+    const partial = parsePartial(out.files, ex)!;
+    expect(partial.placements).toHaveLength(outcome.placedMax!);
+    expect(partial.placements.length + partial.missing.length).toBe(ex.activityById.size);
+    checkTimetable(p, partial.placements);
   }, 180_000);
+
+  it('las preferencias no cumplidas coinciden con el informe de FET', async () => {
+    const p = exampleProject();
+    p.rules.spreadSubjectDays = true;
+    p.rules.spreadStrength = 'preferible';
+    // Seis bloques en cinco días y una asignatura limitada a un solo bloque: ambas preferencias deben fallar.
+    const a = p.assignments[0];
+    a.blocks = [1, 1, 1, 1, 1, 1];
+    const first = p.school.periods.find((x) => x.kind === 'clase')!;
+    p.rules.subjectWindows = [{ subjectId: a.subjectId, periodIds: [first.id], strength: 'preferible' }];
+    const ex = exportFet(p);
+    const out = await runEngine(ex.xml, fetArgs(60, 5).map((x) => (x.startsWith('--writetimetableconflicts') ? '--writetimetableconflicts=true' : x)));
+    expect(parseResult(out.result, ex, out.lines).kind).toBe('ok');
+    p.timetable = { generatedAt: '', seconds: 0, placements: parseActivitiesXml(out.activities, ex) };
+
+    // El texto de FET se lee aquí solo para contrastar: "id=N (" antes de "preferred time slots" o "min days".
+    const lines = out.softConflicts.split(/\r?\n/);
+    const ids = (l: string) => [...l.matchAll(/\bid\s*=\s*(\d+)\s*\(/gi)].map((m) => ex.activityById.get(Number(m[1]))!);
+    const fetWindows = lines.filter((l) => /preferred time slots/.test(l)).flatMap(ids);
+    const fetSpread = lines.filter((l) => /min days between/.test(l)).flatMap(ids).map((k) => k.split('#')[0]);
+    const unmet = unmetPreferences(p);
+    expect(unmet.windows.length).toBeGreaterThan(0);
+    expect(unmet.spread.length).toBeGreaterThan(0);
+    expect(unmet.windows.map((x) => x.key).sort()).toEqual([...fetWindows].sort());
+    expect(unmet.spread.map((x) => x.unit.id).sort()).toEqual([...new Set(fetSpread)].sort());
+  }, 90_000);
 
   it('más bloques que días con repartir obligatorio: la revisión previa se adelanta al rechazo del motor', async () => {
     const p = exampleProject();

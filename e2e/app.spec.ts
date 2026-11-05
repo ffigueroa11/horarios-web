@@ -197,6 +197,32 @@ test('respaldo: descargar e importar', async ({ page }, info) => {
   await expect(page.getByRole('alert')).toContainText('No se pudo importar');
 });
 
+test('informa las preferencias no cumplidas al generar y en el horario', async ({ page }) => {
+  const errors = watchErrors(page);
+  const hours = ['08:00 - 08:45', '08:45 - 09:30', '09:45 - 10:30'];
+  const act = (id: number) => `<Activity><Teacher>Soto</Teacher><Subject>Matemática</Subject><Students>1°A</Students><Duration>1</Duration><Id>${id}</Id><Activity_Group_Id>1</Activity_Group_Id><Active>true</Active></Activity>`;
+  // Tres bloques en dos días, con "repartir en días" preferible: uno tiene que repetir día.
+  const fet = `<?xml version="1.0" encoding="UTF-8"?><fet version="7.12.0"><Institution_Name>Escuela</Institution_Name>
+    <Days_List><Day><Name>Lunes</Name></Day><Day><Name>Martes</Name></Day></Days_List>
+    <Hours_List>${hours.map((h) => `<Hour><Name>${h}</Name></Hour>`).join('')}</Hours_List>
+    <Students_List><Year><Name>1°A</Name></Year></Students_List>
+    <Teachers_List><Teacher><Name>Soto</Name></Teacher></Teachers_List>
+    <Subjects_List><Subject><Name>Matemática</Name></Subject></Subjects_List>
+    <Activities_List>${act(1)}${act(2)}${act(3)}</Activities_List>
+    <Time_Constraints_List><ConstraintMinDaysBetweenActivities><Weight_Percentage>95</Weight_Percentage><Consecutive_If_Same_Day>true</Consecutive_If_Same_Day><Number_of_Activities>3</Number_of_Activities><Activity_Id>1</Activity_Id><Activity_Id>2</Activity_Id><Activity_Id>3</Activity_Id><MinDays>1</MinDays><Active>true</Active></ConstraintMinDaysBetweenActivities></Time_Constraints_List></fet>`;
+  await page.goto('./');
+  await page.locator('input[type=file]').setInputFiles({ name: 'preferencias.fet', mimeType: 'application/octet-stream', buffer: Buffer.from(fet) });
+  await generate(page);
+  const report = page.locator('details.notice.warn');
+  await expect(report).toContainText('1 preferencia no se cumplió');
+  await report.locator('summary').click();
+  await expect(report).toContainText(/Matemática · 1°A · Soto: más de un bloque el (Lunes|Martes)/);
+
+  await page.getByRole('button', { name: 'Ver horario' }).click();
+  await expect(page.locator('details.notice.warn')).toContainText('1 preferencia no se cumplió');
+  expect(errors).toEqual([]);
+});
+
 test('importa un archivo .fet, informa lo perdido y genera con los bloques fijados', async ({ page }) => {
   const errors = watchErrors(page);
   const hours = ['08:00 - 08:45', '08:45 - 09:30', '09:45 - 10:30'];
