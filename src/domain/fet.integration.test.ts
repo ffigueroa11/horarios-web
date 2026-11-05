@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { exampleProject } from './defaults';
 import { exportFet } from './fetExport';
+import { parseFet } from './fetImport';
 import { parseActivitiesXml, parseResult } from './fetResult';
 import { FET_IN, FET_OUT, fetArgs } from '../engine/args';
 import { slotKey, type Project } from './types';
@@ -48,6 +49,40 @@ async function runEngine(xml: string, args: string[], spanish = false) {
     errors: read(`${FET_OUT}/logs/errors.txt`),
   };
 }
+
+describe.runIf(hasEngine)('importar .fet y generar', () => {
+  it('un proyecto exportado e importado se genera con el motor', async () => {
+    const { project: p } = parseFet(exportFet(exampleProject()).xml, 'ejemplo.fet');
+    const ex = exportFet(p);
+    const { result } = await runEngine(ex.xml, fetArgs(60, 7));
+    expect(parseResult(result, ex, []).kind).toBe('ok');
+  }, 120_000);
+
+  it('un .fet de FET 5 con bloques fijados el mismo día y recreos deducidos conserva los fijados', async () => {
+    const hours = ['08:00 - 08:45', '08:45 - 09:30', '09:45 - 10:30', '10:31 - 11:15'];
+    const act = (id: number, group: number, dur: number, course: string) =>
+      `<Activity><Teacher>Soto ${course}</Teacher><Subject>Matemática</Subject><Students>${course}</Students><Duration>${dur}</Duration><Id>${id}</Id><Activity_Group_Id>${group}</Activity_Group_Id><Active>true</Active></Activity>`;
+    const fix = (id: number, day: string, hour: string) =>
+      `<ConstraintActivityPreferredStartingTime><Weight_Percentage>100</Weight_Percentage><Activity_Id>${id}</Activity_Id><Preferred_Day>${day}</Preferred_Day><Preferred_Hour>${hour}</Preferred_Hour><Active>true</Active></ConstraintActivityPreferredStartingTime>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?><fet version="5.23.1"><Institution_Name>X</Institution_Name>
+      <Days_List><Day><Name>Lunes</Name></Day><Day><Name>Martes</Name></Day></Days_List>
+      <Hours_List>${hours.map((h) => `<Hour><Name>${h}</Name></Hour>`).join('')}</Hours_List>
+      <Students_List><Year><Name>1°A</Name></Year></Students_List>
+      <Teachers_List><Teacher><Name>Soto 1°A</Name></Teacher></Teachers_List>
+      <Subjects_List><Subject><Name>Matemática</Name></Subject></Subjects_List>
+      <Activities_List>${act(1, 1, 2, '1°A')}${act(2, 1, 2, '1°A')}${act(3, 1, 2, '1°A')}</Activities_List>
+      <Time_Constraints_List>${fix(1, 'Lunes', hours[0])}${fix(2, 'Lunes', hours[2])}
+        <ConstraintMinDaysBetweenActivities><Weight_Percentage>95</Weight_Percentage><Consecutive_If_Same_Day>true</Consecutive_If_Same_Day><Number_of_Activities>3</Number_of_Activities><Activity_Id>1</Activity_Id><Activity_Id>2</Activity_Id><Activity_Id>3</Activity_Id><MinDays>1</MinDays><Active>true</Active></ConstraintMinDaysBetweenActivities>
+      </Time_Constraints_List></fet>`;
+    const { project: p } = parseFet(xml);
+    const ex = exportFet(p);
+    const { result, activities } = await runEngine(ex.xml, fetArgs(30, 7));
+    expect(parseResult(result, ex, []).kind).toBe('ok');
+    const placed = new Map(parseActivitiesXml(activities, ex).map((x) => [x.key, x]));
+    expect(placed.size).toBe(3);
+    for (const [key, lock] of Object.entries(p.locks)) expect(placed.get(key)).toMatchObject(lock);
+  }, 60_000);
+});
 
 /** Verifica un horario: sin choques de alumnos, profesores ni salas; sin recreos ni tramos cerrados. */
 function checkTimetable(p: Project, placed: ReturnType<typeof parseActivitiesXml>) {
@@ -187,6 +222,7 @@ describe.skipIf(!hasEngine)('motor FET (WebAssembly)', () => {
   it('detecta un horario imposible durante la búsqueda', async () => {
     const p = exampleProject();
     // Matemática de 1° A en un solo día con 4 bloques y "repartir en días" obligatorio: FET no puede ubicarlo.
+    p.rules.spreadStrength = 'obligatoria';
     const mat = p.assignments.find((a) => a.courseId === p.courses[0].id && p.subjects.find((s) => s.id === a.subjectId)!.short === 'MAT')!;
     const classes = p.school.periods.filter((x) => x.kind === 'clase');
     for (const [i, d] of [0, 0, 0, 0].entries()) p.locks[`${mat.id}#${i}`] = { day: d, periodId: classes[i * 2].id };

@@ -31,7 +31,7 @@ export function JornadaPage() {
   const addPeriod = () => update((d) => {
     const last = d.school.periods[d.school.periods.length - 1];
     const n = d.school.periods.filter((x) => x.kind === 'clase').length + 1;
-    const start = last ? last.end : '08:00';
+    const start = last?.end || '08:00'; // un .fet importado puede traer bloques sin hora
     d.school.periods.push({ id: newId(), label: `${n}° bloque`, start, end: addMinutes(start, 45), kind: 'clase' });
   });
   const setDays = (n: number) => update((d) => {

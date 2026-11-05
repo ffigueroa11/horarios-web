@@ -148,6 +148,14 @@ export interface Timetable {
   placements: Placement[];
 }
 
+/** Qué se traspasó y qué no al importar un archivo de otra aplicación. */
+export interface ImportReport {
+  fileName: string;
+  kept: string[];
+  /** Lo que no se pudo traspasar o se traspasó aproximado. */
+  lost: string[];
+}
+
 export interface Project {
   id: Id;
   name: string;
@@ -166,6 +174,8 @@ export interface Project {
   /** Bloques fijados por el usuario: se mantienen al regenerar. */
   locks: Record<ActivityKey, { day: number; periodId: Id }>;
   timetable: Timetable | null;
+  /** Informe de la importación, hasta que el usuario lo cierre. */
+  importReport?: ImportReport;
 }
 
 /** Combinaciones de grupos (una por división) = los distintos horarios de alumnos que tiene un curso. */

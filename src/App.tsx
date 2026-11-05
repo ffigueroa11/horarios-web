@@ -13,6 +13,7 @@ import { GenerarPage } from './pages/GenerarPage';
 import { HorarioPage } from './pages/HorarioPage';
 import { AcercaPage } from './pages/AcercaPage';
 import { HealthNotices } from './ui/HealthNotices';
+import { ImportReportCard } from './ui/ImportReportCard';
 import { AppFooter } from './ui/AppFooter';
 import { downloadBackup } from './ui/backup';
 
@@ -116,7 +117,7 @@ export default function App() {
           <AppFooter compact />
         </div>
       </aside>
-      <main className="main"><HealthNotices />{page}</main>
+      <main className="main"><HealthNotices /><ImportReportCard />{page}</main>
     </div>
   );
 }

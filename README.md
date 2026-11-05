@@ -24,6 +24,8 @@ cuentas, y los datos del colegio no salen del navegador.
 7. **Ver y ajustar**: vistas por curso, profesor y sala; mover bloques (clic o arrastrar) sin crear choques;
    fijar bloques y regenerar el resto; imprimir; exportar a Excel, CSV y `.fet` (para FET de escritorio).
 8. **Respaldos**: descarga e importación de `.json`, con recordatorio si hay cambios sin respaldar.
+9. **Partir desde FET**: importa un archivo `.fet` de FET de escritorio (versión 5 en adelante) y muestra un informe
+   de lo que se traspasó y lo que no.
 
 ## Desarrollo
 
@@ -60,6 +62,7 @@ src/
     manual.ts        Mover bloques a mano sin choques
     backup.ts        Respaldos .json con validación
     importCarga.ts   Importar la carga desde Excel/CSV/texto pegado
+    fetImport.ts     XML .fet → Project, con informe de lo que no se pudo traspasar
   engine/            Argumentos de fet-cl y Web Worker
   store/             Estado (zustand) guardado en IndexedDB, salud del almacenamiento, service worker
   pages/             Una pantalla por paso del flujo
@@ -96,6 +99,19 @@ e2e/                 Pruebas de navegador (Playwright)
 En "Carga académica" › "Importar desde Excel": archivo `.xlsx`, `.csv` o celdas pegadas. Columnas Curso,
 Asignatura, Profesor, Horas (`6` o `2+2+2`) y Grupo (opcional). Crea los cursos, asignaturas y profesores que
 falten y muestra los errores por fila antes de importar. Hay una plantilla descargable.
+
+### Importar desde FET
+
+En "Importar respaldo o archivo FET…": se crea un horario nuevo con la jornada, los cursos, los grupos, las
+asignaturas, los profesores, su disponibilidad, las salas, la carga y las reglas que tienen equivalente en la app.
+
+- Las actividades fijadas al 100 % en FET quedan como bloques fijados; el resto lo ubica el motor al generar.
+- Si el archivo no declara recreos (`ConstraintBreakTimes`), se deducen de los horarios de las horas: un hueco de
+  5 minutos o más es un recreo y uno de 30 o más, almuerzo, salvo que un bloque fijado lo cruce. Las horas deben llevar su horario en el nombre o el nombre largo.
+- La app no tiene actividades sin curso ni clases con varios profesores: si están fijadas, ocupan al profesor como
+  "no disponible" (la clase queda con el primero); si no están fijadas, las sin curso se omiten.
+- Las restricciones sin equivalente (actividades seguidas, fin del día, sala por curso y otras) no se traspasan.
+  El informe, que se puede descargar, las cuenta por tipo.
 
 ## Publicar gratis
 

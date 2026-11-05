@@ -95,6 +95,30 @@ test('respaldo: descargar e importar', async ({ page }, info) => {
   await expect(page.getByRole('alert')).toContainText('No se pudo importar');
 });
 
+test('importa un archivo .fet, informa lo perdido y genera con los bloques fijados', async ({ page }) => {
+  const errors = watchErrors(page);
+  const hours = ['08:00 - 08:45', '08:45 - 09:30', '09:45 - 10:30'];
+  const fet = `<?xml version="1.0" encoding="UTF-8"?><fet version="5.37.5"><Institution_Name>Escuela</Institution_Name>
+    <Days_List><Day><Name>Lunes</Name></Day><Day><Name>Martes</Name></Day></Days_List>
+    <Hours_List>${hours.map((h) => `<Hour><Name>${h}</Name></Hour>`).join('')}</Hours_List>
+    <Students_List><Year><Name>1°A</Name></Year></Students_List>
+    <Teachers_List><Teacher><Name>Soto</Name></Teacher></Teachers_List>
+    <Subjects_List><Subject><Name>Matemática</Name></Subject></Subjects_List>
+    <Activities_List><Activity><Teacher>Soto</Teacher><Subject>Matemática</Subject><Students>1°A</Students><Duration>2</Duration><Id>1</Id><Activity_Group_Id>0</Activity_Group_Id><Active>true</Active></Activity></Activities_List>
+    <Time_Constraints_List><ConstraintActivityPreferredStartingTime><Weight_Percentage>100</Weight_Percentage><Activity_Id>1</Activity_Id><Preferred_Day>Martes</Preferred_Day><Preferred_Hour>${hours[0]}</Preferred_Hour><Active>true</Active></ConstraintActivityPreferredStartingTime>
+    <ConstraintTwoActivitiesConsecutive><Weight_Percentage>100</Weight_Percentage><Active>true</Active></ConstraintTwoActivitiesConsecutive></Time_Constraints_List></fet>`;
+  await page.goto('./');
+  await page.locator('input[type=file]').setInputFiles({ name: 'horario2019.fet', mimeType: 'application/octet-stream', buffer: Buffer.from(fet) });
+  const report = page.getByRole('status');
+  await expect(report).toContainText('quedó importado');
+  await expect(report).toContainText('1 bloque de clase');
+  await expect(report).toContainText('Dos actividades seguidas');
+  await generate(page);
+  await page.getByRole('button', { name: 'Ver horario' }).click();
+  await expect(page.locator('td.lesson').first()).toContainText('Mat');
+  expect(errors).toEqual([]);
+});
+
 test('en el celular la página no se desplaza hacia el lado', async ({ page }, info) => {
   test.skip(info.project.name !== 'movil', 'solo móvil');
   await openExample(page);

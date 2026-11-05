@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { needsBackup, useProjects } from '../store/projects';
 import { parseBackup } from '../domain/backup';
+import { parseFet } from '../domain/fetImport';
 import { ConfirmButton } from '../ui/common';
 import { downloadBackup } from '../ui/backup';
 import { AppFooter } from '../ui/AppFooter';
@@ -15,11 +16,17 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
   const onImport = async (file: File) => {
     setError('');
     try {
-      const list = parseBackup(await file.text());
+      const text = await file.text();
+      if (/\.fet$/i.test(file.name)) {
+        importProjects([parseFet(text, file.name).project]);
+        onOpen();
+        return;
+      }
+      const list = parseBackup(text);
       importProjects(list);
       if (list.length === 1) onOpen();
     } catch (e) {
-      setError(`No se pudo importar “${file.name}”: ${(e as Error).message}. Usa el .json que se descarga con “Respaldo”.`);
+      setError(`No se pudo importar “${file.name}”: ${(e as Error).message}. Usa un archivo .fet de FET o el .json que se descarga con “Respaldo”.`);
     }
   };
 
@@ -34,8 +41,8 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
       <div className="row">
         <button type="button" className="btn primary" onClick={() => { create('vacio'); onOpen(); }}>Nuevo horario</button>
         <button type="button" className="btn" onClick={() => { create('ejemplo'); onOpen(); }}>Probar con un liceo de ejemplo</button>
-        <button type="button" className="btn ghost" onClick={() => fileRef.current?.click()}>Importar respaldo…</button>
-        <input ref={fileRef} type="file" accept=".json,application/json" hidden
+        <button type="button" className="btn ghost" onClick={() => fileRef.current?.click()}>Importar respaldo o archivo FET…</button>
+        <input ref={fileRef} type="file" accept=".json,.fet,application/json" hidden
           onChange={(e) => { const f = e.target.files?.[0]; if (f) onImport(f); e.target.value = ''; }} />
       </div>
       {error && <div className="notice bad" role="alert">{error}</div>}

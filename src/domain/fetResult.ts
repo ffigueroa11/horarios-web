@@ -3,7 +3,7 @@ import type { ActivityKey, Placement, Project } from './types';
 import type { FetExport } from './fetExport';
 import { findEffectiveGroup, unitById, unitIdOf } from './units';
 
-const unesc = (s: string) =>
+export const unesc = (s: string) =>
   s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
 const tag = (block: string, name: string) => {
   const m = new RegExp(`<${name}>([\\s\\S]*?)</${name}>`).exec(block);

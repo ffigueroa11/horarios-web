@@ -191,6 +191,10 @@ export function exportFet(p: Project): FetExport {
 
   if (rules.spreadSubjectDays)
     for (const ids of spread) {
+      // Una preferencia no debe impedir el horario: si dos bloques fijados caen el mismo día ya no se cumple,
+      // y con ella FET se queda buscando sin terminar. Si es obligatoria, FET debe reportar el problema.
+      const lockedDays = ids.flatMap((id) => { const lock = p.locks[activityById.get(id)!]; return lock ? [lock.day] : []; });
+      if (rules.spreadStrength === 'preferible' && new Set(lockedDays).size < lockedDays.length) continue;
       w(`<ConstraintMinDaysBetweenActivities><Weight_Percentage>${weight(rules.spreadStrength)}</Weight_Percentage><Consecutive_If_Same_Day>true</Consecutive_If_Same_Day><Number_of_Activities>${ids.length}</Number_of_Activities>`);
       for (const id of ids) w(`<Activity_Id>${id}</Activity_Id>`);
       w('<MinDays>1</MinDays><Active>true</Active><Comments></Comments></ConstraintMinDaysBetweenActivities>');
