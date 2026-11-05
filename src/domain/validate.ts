@@ -79,6 +79,14 @@ export function validate(p: Project): Issue[] {
   const slots = openSlots(p);
   const weekSlots = slots.reduce((s, d) => s + d.length, 0);
   const run = longestRun(p);
+  // Con 100 % de peso, FET rechaza los datos si una clase tiene más bloques que días; como preferencia, los acepta.
+  const checkSpread = (step: Step, label: string, blocks: number) => {
+    const days = p.school.days.length;
+    if (!p.rules.spreadSubjectDays || blocks <= days) return;
+    if (p.rules.spreadStrength === 'obligatoria')
+      err(step, `${label} tiene ${blocks} bloques y solo hay ${days} días, pero "repartir cada asignatura en días distintos" es obligatoria. Reduce los bloques o deja la regla como preferible.`);
+    else warn(step, `${label} tiene ${blocks} bloques y solo hay ${days} días: algunos quedarán el mismo día.`);
+  };
 
   if (p.school.days.length === 0) err('jornada', 'La jornada no tiene días.');
   if (weekSlots === 0) err('jornada', 'La jornada no tiene bloques de clase.');
@@ -108,8 +116,7 @@ export function validate(p: Project): Issue[] {
     if (!a.teacherId) warn('carga', `${label} no tiene profesor asignado.`);
     const big = Math.max(0, ...a.blocks);
     if (big > run) err('carga', `${label} tiene un bloque de ${big} horas, pero el tramo más largo sin recreo es de ${run}.`);
-    if (p.rules.spreadSubjectDays && a.blocks.length > p.school.days.length)
-      warn('carga', `${label} tiene ${a.blocks.length} bloques y solo hay ${p.school.days.length} días: algunos quedarán el mismo día.`);
+    checkSpread('carga', label, a.blocks.length);
   }
 
   // Franjas de electivos: varias opciones a la misma hora para alumnos de distintos cursos.
@@ -121,6 +128,7 @@ export function validate(p: Project): Issue[] {
     if (e.blocks.length === 0) err('electivos', `${label} no tiene horas.`);
     const big = Math.max(0, ...e.blocks);
     if (big > run) err('electivos', `${label} tiene un bloque de ${big} horas, pero el tramo más largo sin recreo es de ${run}.`);
+    checkSpread('electivos', label, e.blocks.length);
     if (e.options.length === 1) warn('electivos', `${label} tiene una sola opción; todos sus alumnos tendrán la misma clase.`);
     const byTeacher = new Map<string, number>();
     const byRoom = new Map<string, number>();

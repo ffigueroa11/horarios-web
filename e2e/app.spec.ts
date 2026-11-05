@@ -10,6 +10,8 @@ function watchErrors(page: Page) {
 }
 
 async function openExample(page: Page) {
+  // La semilla del motor sale de Math.random: fijarla da siempre el mismo horario, y las pruebas no dependen del azar.
+  await page.addInitScript(() => { Math.random = () => 0.5; });
   await page.goto('./');
   await page.getByRole('button', { name: 'Probar con un liceo de ejemplo' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
@@ -20,6 +22,20 @@ async function generate(page: Page) {
   await page.getByRole('button', { name: /^Generar (horario|de nuevo)$/ }).last().click();
   await expect(page.locator('.notice.ok, .notice.bad').first()).toBeVisible({ timeout: 200_000 });
   await expect(page.locator('.notice.ok')).toContainText('Horario generado');
+}
+
+/** Selecciona el primer bloque para el que existe `selector` (ej. un destino válido). Falla si ninguno lo tiene. */
+async function selectLessonWith(page: Page, selector: string) {
+  const lessons = page.locator('.card td.lesson'); // .card: la grilla interactiva, no la copia para imprimir
+  const n = await lessons.count();
+  for (let i = 0; i < n; i++) {
+    await lessons.nth(i).click();
+    await expect(page.locator('.selbar')).toBeVisible();
+    if (await page.locator(selector).count()) return;
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.selbar')).toBeHidden();
+  }
+  throw new Error(`Ningún bloque tiene "${selector}"`);
 }
 
 test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ page }, info) => {
@@ -38,29 +54,23 @@ test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ pa
   await expect(page.locator('td.lesson').first()).toBeVisible();
 
   // Seleccionar un bloque y moverlo a un lugar válido: queda fijado.
-  await page.locator('td.lesson').first().click();
-  await expect(page.locator('.selbar')).toBeVisible();
-  const target = page.locator('td.drop-ok').first();
-  if (await target.count()) {
-    await target.click();
-    await expect(page.locator('.notice.ok')).toContainText(/Movido|Intercambiados/);
-    await expect(page.locator('td.lesson.locked, .chip-lesson.locked').first()).toBeVisible();
-  }
+  await selectLessonWith(page, 'td.drop-ok');
+  await page.locator('td.drop-ok').first().click();
+  await expect(page.locator('.notice.ok')).toContainText(/Movido|Intercambiados/);
+  await expect(page.locator('td.lesson.locked, .chip-lesson.locked').first()).toBeVisible();
 
   // Lugar no válido con un bloque seleccionado: el motivo aparece junto al cursor (el mismo rótulo que al
   // arrastrar) y, al hacer clic en un cuadro vacío no válido, como aviso breve abajo.
-  await page.locator('td.lesson').first().click();
+  await selectLessonWith(page, 'td.lesson.drop-no');
   const invalid = page.locator('td.lesson.drop-no').first();
-  if (await invalid.count()) {
-    await invalid.hover({ position: { x: 10, y: 10 } });
-    await invalid.hover({ position: { x: 14, y: 14 } });
-    await expect(page.locator('.drag-hint')).toBeVisible();
-  }
-  const invalidEmpty = page.locator('td.drop-no:not(.lesson):not(.multi)').first();
-  if (await invalidEmpty.count()) {
-    await invalidEmpty.click();
-    await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
-  }
+  await invalid.hover({ position: { x: 10, y: 10 } });
+  await invalid.hover({ position: { x: 14, y: 14 } });
+  await expect(page.locator('.drag-hint')).toBeVisible();
+  await page.keyboard.press('Escape');
+  const emptyInvalid = 'td.drop-no:not(.lesson):not(.multi)';
+  await selectLessonWith(page, emptyInvalid);
+  await page.locator(emptyInvalid).first().click();
+  await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
   await page.keyboard.press('Escape');
 
   // 2° Medio A: el electivo artístico aparece con sus tres opciones a la misma hora.
@@ -71,6 +81,98 @@ test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ pa
   await page.reload();
   await expect(page.locator('td.lesson').first()).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test('arrastrar y soltar: motivo en un lugar no válido y movimiento en uno válido', async ({ page }, info) => {
+  // Los eventos de arrastre enviados directamente solo son fieles en Chromium; en Firefox y Safari se prueba a mano.
+  test.skip(info.project.name !== 'chromium', 'arrastre simulado solo en Chromium');
+  const errors = watchErrors(page);
+  await openExample(page);
+  await generate(page);
+  await page.getByRole('button', { name: 'Ver horario' }).click();
+  const source = page.locator('.card td.lesson.selected');
+  const center = async (selector: string) => {
+    const target = page.locator(selector).first();
+    await target.scrollIntoViewIfNeeded();
+    const box = (await target.boundingBox())!;
+    return { target, at: { clientX: Math.round(box.x + box.width / 2), clientY: Math.round(box.y + box.height / 2) } };
+  };
+
+  await selectLessonWith(page, 'td.lesson.drop-no');
+  const invalid = await center('td.lesson.drop-no');
+  let dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+  await source.dispatchEvent('dragstart', { dataTransfer });
+  await invalid.target.dispatchEvent('dragover', { dataTransfer, ...invalid.at });
+  await expect(page.locator('.drag-hint')).toBeVisible();
+  await source.dispatchEvent('dragend', { dataTransfer, ...invalid.at });
+  await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
+  await expect(page.locator('.drag-hint')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+
+  await selectLessonWith(page, 'td.drop-ok');
+  const valid = await center('td.drop-ok');
+  dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+  await source.dispatchEvent('dragstart', { dataTransfer });
+  await valid.target.dispatchEvent('dragover', { dataTransfer, ...valid.at });
+  await valid.target.dispatchEvent('drop', { dataTransfer, ...valid.at });
+  await expect(page.locator('.notice.ok')).toContainText(/Movido|Intercambiados/);
+  await expect(page.locator('td.lesson.locked, .chip-lesson.locked').first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('eliminar un curso o una asignatura pide confirmar y dice cuánta carga se pierde', async ({ page }, info) => {
+  test.skip(info.project.name === 'movil', 'igual que en escritorio');
+  await openExample(page);
+  await page.locator('a[href="#cursos"]').click();
+  await page.getByRole('button', { name: 'Eliminar 1° Medio A' }).click();
+  await expect(page.getByLabel('Nombre del curso').first()).toHaveValue('1° Medio A');
+  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(page.getByLabel('Nombre del curso').first()).toHaveValue('1° Medio A');
+  await page.getByRole('button', { name: 'Eliminar 1° Medio A' }).click();
+  await page.getByRole('button', { name: /Sí, eliminar con \d+ clases de la carga/ }).click();
+  await expect(page.getByLabel('Nombre del curso').first()).not.toHaveValue('1° Medio A');
+
+  await page.locator('a[href="#asignaturas"]').click();
+  const before = await page.getByLabel('Sigla').count();
+  await page.getByRole('button', { name: /^Eliminar / }).first().click();
+  await expect(page.getByLabel('Sigla')).toHaveCount(before);
+  await page.getByRole('button', { name: /^Sí, eliminar/ }).click();
+  await expect(page.getByLabel('Sigla')).toHaveCount(before - 1);
+});
+
+test('un horario guardado con datos dañados no deja la app atascada', async ({ page }, info) => {
+  test.skip(info.project.name === 'movil', 'igual que en escritorio');
+  await openExample(page);
+  // Espera a que esté guardado y lo daña directamente en IndexedDB: validate falla con un fijado vacío.
+  await expect.poll(() => page.evaluate(() => new Promise<boolean>((resolve) => {
+    const open = indexedDB.open('keyval-store');
+    open.onsuccess = () => {
+      const read = open.result.transaction('keyval').objectStore('keyval').get('horarios-web');
+      read.onsuccess = () => { open.result.close(); resolve(!!read.result); };
+    };
+  }))).toBe(true);
+  await page.evaluate(() => new Promise<void>((resolve, reject) => {
+    const open = indexedDB.open('keyval-store');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const store = open.result.transaction('keyval', 'readwrite').objectStore('keyval');
+      const read = store.get('horarios-web');
+      read.onsuccess = () => {
+        const data = JSON.parse(read.result);
+        const project = data.state.projects[data.state.currentId];
+        project.locks[`${project.assignments[0].id}#0`] = null;
+        const write = store.put(JSON.stringify(data), 'horarios-web');
+        write.onsuccess = () => { open.result.close(); resolve(); };
+      };
+    };
+  }));
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
+  await page.goto('./#generar');
+  await expect(page.locator('.issues')).toContainText('No se pudieron revisar los datos');
+  await expect(page.getByRole('button', { name: 'Generar horario' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Cambiar de horario' }).click();
+  await expect(page.locator('.project')).toHaveCount(1);
 });
 
 test('respaldo: descargar e importar', async ({ page }, info) => {

@@ -4,6 +4,7 @@ import { exportFet } from './fetExport';
 import { describeActivity, fetMessages, parseActivitiesXml, parseResult } from './fetResult';
 import { courseLoad, longestRun, openSlots, parseBlocks, teacherLoad, validate } from './validate';
 import { units } from './units';
+import { checkMove } from './manual';
 import { migrateProject, newId, slotKey } from './types';
 
 describe('jornada', () => {
@@ -39,6 +40,57 @@ describe('revisión previa', () => {
     p.assignments.push({ id: newId(), courseId: p.courses[0].id, groupId: null, subjectId: p.subjects[0].id, teacherId: null, blocks: [2, 2] });
     expect(validate(p).some((i) => i.level === 'error' && i.message.includes('40 horas'))).toBe(true);
   });
+  it('más bloques que días es error si repartir en días es obligatorio, y aviso si es preferible', () => {
+    const p = exampleProject();
+    p.rules.spreadSubjectDays = true;
+    p.assignments[0].blocks = [1, 1, 1, 1, 1, 1];
+    p.electives[0].blocks = [1, 1, 1, 1, 1, 1];
+    const about = () => validate(p).filter((i) => /6 bloques y solo hay 5 días/.test(i.message));
+    p.rules.spreadStrength = 'obligatoria';
+    expect(about().map((i) => [i.level, i.step])).toEqual([['error', 'carga'], ['error', 'electivos']]);
+    p.rules.spreadStrength = 'preferible';
+    expect(about().map((i) => [i.level, i.step])).toEqual([['aviso', 'carga'], ['aviso', 'electivos']]);
+  });
+});
+
+describe('máximo de horas diarias de un curso al mover un bloque', () => {
+  /** Un curso con un electivo de 2 horas y 3 opciones el lunes, y Matemática de 1 hora el martes. */
+  function withElective(max: number) {
+    const p = emptyProject();
+    p.rules = { ...p.rules, coursesNoGaps: false, coursesStartFirstBlock: false, spreadSubjectDays: false, courseMaxHoursDaily: max };
+    p.courses = [{ id: 'c', name: '3° A', level: '3°', divisions: [] }];
+    p.subjects = ['s0', 's1', 's2', 's3'].map((id) => ({ id, name: id, short: id, color: '#333333', roomId: null }));
+    p.teachers = ['t0', 't1', 't2', 't3'].map((id) => ({ id, name: id, maxHours: null, maxDays: null, unavailable: [] }));
+    p.assignments = [{ id: 'mat', courseId: 'c', groupId: null, subjectId: 's0', teacherId: 't0', blocks: [1] }];
+    p.electives = [{ id: 'e', name: 'Franja', courseIds: ['c'], blocks: [2], options: [1, 2, 3].map((i) => ({ id: `o${i}`, subjectId: `s${i}`, teacherId: `t${i}` })) }];
+    const [first, , third] = p.school.periods.filter((x) => x.kind === 'clase');
+    p.timetable = { generatedAt: '', seconds: 0, placements: [
+      ...['o1', 'o2', 'o3'].map((o) => ({ key: `e:${o}#0`, day: 0, periodId: first.id, roomId: null })),
+      { key: 'mat#0', day: 1, periodId: first.id, roomId: null },
+    ] };
+    return { p, target: third };
+  }
+  it('las opciones simultáneas de un electivo no se suman', () => {
+    const { p, target } = withElective(3);
+    expect(checkMove(p, ['mat#0'], 0, target.id)).toEqual({ ok: true }); // 2 del electivo + 1 = 3 horas reales
+  });
+  it('sigue rechazando lo que de verdad supera el máximo', () => {
+    const { p, target } = withElective(2);
+    expect(checkMove(p, ['mat#0'], 0, target.id)).toEqual({ ok: false, reason: 'Los alumnos quedarían con más de 2 horas ese día.' });
+  });
+});
+
+describe('identificadores', () => {
+  it('no dependen de randomUUID, que no existe en sitios servidos por HTTP', () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+    try {
+      expect(newId()).toMatch(/^[0-9a-f]{8}$/);
+      expect(new Set(Array.from({ length: 200 }, newId)).size).toBe(200);
+    } finally {
+      Object.defineProperty(crypto, 'randomUUID', { value: original, configurable: true });
+    }
+  });
 });
 
 describe('exportador .fet', () => {
@@ -56,6 +108,16 @@ describe('exportador .fet', () => {
     p.school.name = 'Colegio "Santa María" & <Anexo>';
     expect(exportFet(p).xml).toContain('Colegio &quot;Santa María&quot; &amp; &lt;Anexo&gt;');
   });
+  it('quita los caracteres que XML no admite y sigue reconociendo los nombres en el resultado', () => {
+    const p = exampleProject();
+    p.courses[0].name = 'Curso\u000bX';
+    p.school.periods[0].label = 'Bloque\u0001 uno';
+    const ex = exportFet(p);
+    expect(ex.xml).toContain('<Name>CursoX</Name>');
+    expect(ex.xml).not.toContain('\u000b');
+    expect(ex.xml).not.toContain('\u0001');
+    expect(ex.periodByName.get('Bloque uno')).toBe(p.school.periods[0].id);
+  });
   it('lee el horario y traduce el error de FET', () => {
     const p = exampleProject();
     const ex = exportFet(p);
@@ -66,6 +128,14 @@ describe('exportador .fet', () => {
     const out = parseResult(res, ex, []);
     expect(out).toMatchObject({ kind: 'impossible', placedMax: 12, activity: ex.activityById.get(1) });
     expect(describeActivity(p, ex.activityById.get(1)!)).toMatch(/^Lengua y Literatura · 1° Medio A · Carolina Muñoz \(bloque 1 de 3, 2 h\)$/);
+  });
+  it('al agotarse el tiempo toma la actividad problemática de difficult_activities.txt', () => {
+    const ex = exportFet(exampleProject());
+    const difficult = 'FET logró programar correctamente las primeras 30 actividades más difíciles. ... Esta actividad se muestra a continuación:\n\nId: 3 (    2/4 - Profesor - Asignatura - Curso)\n\n----------\n\nId: 9';
+    expect(parseResult('Starting timetable generation...\nTime exceeded', ex, [], undefined, difficult))
+      .toEqual({ kind: 'timeout', placedMax: 30, activity: ex.activityById.get(3) });
+    expect(parseResult('Starting timetable generation...\nTime exceeded', ex, []))
+      .toEqual({ kind: 'timeout', placedMax: null, activity: null });
   });
 });
 

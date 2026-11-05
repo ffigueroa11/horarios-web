@@ -219,4 +219,5 @@ export function migrateProject(p: Project): Project {
 
 export const slotKey = (day: number, periodId: Id) => `${day}:${periodId}`;
 export const activityKey = (assignmentId: Id, index: number): ActivityKey => `${assignmentId}#${index}`;
-export const newId = () => crypto.randomUUID().slice(0, 8);
+// getRandomValues, a diferencia de randomUUID, también existe en sitios servidos por HTTP (ej. la red de un colegio).
+export const newId = () => [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, '0')).join('');

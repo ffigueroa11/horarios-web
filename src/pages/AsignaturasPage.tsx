@@ -1,7 +1,8 @@
 import { useCurrent, useProjects } from '../store/projects';
 import { newId } from '../domain/types';
 import { SUBJECT_COLORS } from '../domain/defaults';
-import { PageHead, TextInput } from '../ui/common';
+import { ConfirmButton, PageHead, TextInput } from '../ui/common';
+import { rowsLabel } from '../ui/rowsLabel';
 
 const COMMON: [string, string][] = [
   ['Lenguaje y Comunicación', 'LEN'], ['Matemática', 'MAT'], ['Inglés', 'ING'],
@@ -57,7 +58,8 @@ export function AsignaturasPage() {
                         {p.rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                       </select>
                     </td>
-                    <td><button type="button" className="icon-btn" aria-label={`Eliminar ${s.name}`} onClick={() => removeSubject(s.id)}>✕</button></td>
+                    <td><ConfirmButton label="✕" className="icon-btn" ariaLabel={`Eliminar ${s.name}`} onConfirm={() => removeSubject(s.id)}
+                      confirmLabel={rowsLabel(p.assignments.filter((a) => a.subjectId === s.id).length + p.electives.flatMap((e) => e.options).filter((o) => o.subjectId === s.id).length)} /></td>
                   </tr>
                 ))}
               </tbody>

@@ -39,4 +39,4 @@ export function fetArgs(timeLimitSeconds: number, seed?: number): string[] {
 }
 
 /** Archivos de salida que interesan, relativos a FET_OUT. */
-export const KEEP_OUTPUT = /(_activities\.xml|logs\/result\.txt|logs\/warnings\.txt|logs\/errors\.txt)$/;
+export const KEEP_OUTPUT = /(_activities\.xml|logs\/result\.txt|logs\/warnings\.txt|logs\/errors\.txt|logs\/difficult_activities\.txt)$/;

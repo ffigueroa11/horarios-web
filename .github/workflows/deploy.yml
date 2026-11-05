@@ -1,9 +1,12 @@
-# Publica la app en GitHub Pages en cada cambio a main.
+# Publica la app en GitHub Pages cuando CI termina bien en un cambio a main. A mano (workflow_dispatch) publica
+# la rama elegida sin esperar a CI.
 # Requisito (una vez): Settings → Pages → Build and deployment → Source: "GitHub Actions".
 name: Publicar en GitHub Pages
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -18,10 +21,14 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Publica exactamente el commit que CI aprobó, no el último de la rama.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v7
         with:
           node-version: 22

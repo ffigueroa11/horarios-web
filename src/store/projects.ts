@@ -66,7 +66,8 @@ export const useProjects = create<State>()(
       },
       duplicate: (id) => {
         const src = getState().projects[id];
-        const p: Project = { ...structuredClone(src), id: newId(), name: `${src.name} (copia)`, updatedAt: new Date().toISOString(), backupAt: undefined };
+        // Se conservan las fechas: los datos son los mismos, así que el horario sigue tan vigente como el original.
+        const p: Project = { ...structuredClone(src), id: newId(), name: `${src.name} (copia)` };
         setState((s) => ({ projects: { ...s.projects, [p.id]: p }, currentId: p.id }));
         return p.id;
       },
@@ -77,7 +78,8 @@ export const useProjects = create<State>()(
         }),
       importProjects: (list) => {
         const now = new Date().toISOString();
-        const added = list.map((src) => migrateProject({ ...structuredClone(src), id: newId(), updatedAt: now, backupAt: now }));
+        // updatedAt se conserva: restaurar no cambia los datos, y con la fecha actual el horario parecería desactualizado.
+        const added = list.map((src) => migrateProject({ ...structuredClone(src), id: newId(), backupAt: now }));
         if (added.length === 0) return null;
         setState((s) => ({ projects: { ...s.projects, ...Object.fromEntries(added.map((p) => [p.id, p])) }, currentId: added[0].id }));
         return added[0].id;

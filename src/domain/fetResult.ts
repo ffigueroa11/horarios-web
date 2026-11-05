@@ -40,13 +40,15 @@ export function fetMessages(logTxt: string | undefined): string[] {
   return [...new Set(out)];
 }
 
-export function parseResult(resultTxt: string, ex: FetExport, consoleLines: string[], errorsTxt?: string): FetOutcome {
+export function parseResult(resultTxt: string, ex: FetExport, consoleLines: string[], errorsTxt?: string, difficultTxt?: string): FetOutcome {
   // Las palabras clave de result.txt no se traducen; la explicación de FET sí (inglés o español).
   if (/Generation successful/.test(resultTxt)) return { kind: 'ok' };
-  // FET indica la actividad más probable de causar el problema: "...listed below:\n\nId: 17 (...)"
-  const idm = /(?:listed below|muestra a continuaci[oó]n):\s*Id:\s*(\d+)/.exec(resultTxt);
+  // FET indica la actividad más probable de causar el problema: "...listed below:\n\nId: 17 (...)".
+  // Al agotarse el tiempo, result.txt solo dice "Time exceeded" y la explicación queda en difficult_activities.txt.
+  const explanation = `${resultTxt}\n${difficultTxt ?? ''}`;
+  const idm = /(?:listed below|muestra a continuaci[oó]n):\s*Id:\s*(\d+)/.exec(explanation);
   const activity = idm ? ex.activityById.get(Number(idm[1])) ?? null : null;
-  const pm = /(?:schedule correctly the first|programar correctamente las primeras) (\d+)/.exec(resultTxt);
+  const pm = /(?:schedule correctly the first|programar correctamente las primeras) (\d+)/.exec(explanation);
   const placedMax = pm ? Number(pm[1]) : null;
   if (/Impossible/.test(resultTxt)) return { kind: 'impossible', activity, placedMax };
   if (/Time exceeded|Generation interrupted/.test(resultTxt)) return { kind: 'timeout', activity, placedMax };

@@ -126,7 +126,7 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
               <li>La disponibilidad y el máximo de días del profesor de ese bloque.</li>
               <li>Si la asignatura tiene una regla de bloques permitidos o una sala especial muy ocupada.</li>
               <li>Si es parte de una franja de electivos o de grupos en paralelo: todas sus opciones deben caber a la misma hora.</li>
-              <li>Cambiar alguna regla de “obligatoria” a “preferible”, o subir el máximo de ventanas.</li>
+              <li>Dejar como “preferible” la regla de repartir en días distintos o la de bloques permitidos (las demás son siempre obligatorias), o subir el máximo de ventanas.</li>
               {o.kind === 'timeout' && <li>Volver a intentar con más tiempo: cada intento sigue un camino distinto.</li>}
             </ul>
           </div>

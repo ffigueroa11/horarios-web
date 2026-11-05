@@ -4,6 +4,7 @@ import type { Course, Division, Project } from '../domain/types';
 import { newId } from '../domain/types';
 import { courseLoad, openSlots } from '../domain/validate';
 import { ConfirmButton, PageHead, TextInput } from '../ui/common';
+import { rowsLabel } from '../ui/rowsLabel';
 
 const LEVELS = [
   '1° Básico', '2° Básico', '3° Básico', '4° Básico', '5° Básico', '6° Básico', '7° Básico', '8° Básico',
@@ -151,7 +152,8 @@ export function CursosPage() {
                             {c.divisions.length ? c.divisions.map((d) => `${d.name} (${d.groups.length})`).join(', ') : 'Sin divisiones'} ▾
                           </button>
                         </td>
-                        <td><button type="button" className="icon-btn" aria-label={`Eliminar ${c.name}`} onClick={() => removeCourse(c.id)}>✕</button></td>
+                        <td><ConfirmButton label="✕" className="icon-btn" ariaLabel={`Eliminar ${c.name}`} onConfirm={() => removeCourse(c.id)}
+                          confirmLabel={rowsLabel(p.assignments.filter((a) => a.courseId === c.id).length)} /></td>
                       </tr>
                       {open === c.id && (
                         <tr><td colSpan={5}><DivisionsEditor course={c} /></td></tr>

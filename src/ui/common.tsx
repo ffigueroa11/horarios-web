@@ -108,11 +108,11 @@ export function WeekGrid({ school, cell, dayHeader }: {
 }
 
 /** Confirmación dentro de la página (sin diálogos del navegador). */
-export function ConfirmButton({ label, confirmLabel, onConfirm, className = 'btn small danger' }: {
-  label: string; confirmLabel: string; onConfirm: () => void; className?: string;
+export function ConfirmButton({ label, confirmLabel, onConfirm, className = 'btn small danger', ariaLabel }: {
+  label: string; confirmLabel: string; onConfirm: () => void; className?: string; ariaLabel?: string;
 }) {
   const [asking, setAsking] = useState(false);
-  if (!asking) return <button type="button" className={className} onClick={() => setAsking(true)}>{label}</button>;
+  if (!asking) return <button type="button" className={className} aria-label={ariaLabel} onClick={() => setAsking(true)}>{label}</button>;
   return (
     <span className="row">
       <button type="button" className="btn small danger" onClick={() => { setAsking(false); onConfirm(); }}>{confirmLabel}</button>

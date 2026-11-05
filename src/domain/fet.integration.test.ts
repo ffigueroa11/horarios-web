@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { exampleProject } from './defaults';
 import { exportFet } from './fetExport';
 import { parseFet } from './fetImport';
-import { parseActivitiesXml, parseResult } from './fetResult';
+import { describeActivity, parseActivitiesXml, parseResult } from './fetResult';
 import { FET_IN, FET_OUT, fetArgs } from '../engine/args';
 import { slotKey, type Project } from './types';
 import { teacherLoad, validate } from './validate';
@@ -47,6 +47,7 @@ async function runEngine(xml: string, args: string[], spanish = false) {
     result: read(`${FET_OUT}/logs/result.txt`),
     activities: read(`${FET_OUT}/timetables/horario/horario_activities.xml`),
     errors: read(`${FET_OUT}/logs/errors.txt`),
+    difficult: read(`${FET_OUT}/logs/difficult_activities.txt`),
   };
 }
 
@@ -227,8 +228,34 @@ describe.skipIf(!hasEngine)('motor FET (WebAssembly)', () => {
     const classes = p.school.periods.filter((x) => x.kind === 'clase');
     for (const [i, d] of [0, 0, 0, 0].entries()) p.locks[`${mat.id}#${i}`] = { day: d, periodId: classes[i * 2].id };
     const ex = exportFet(p);
-    const out = await runEngine(ex.xml, fetArgs(15, 5), true);
-    const outcome = parseResult(out.result, ex, out.lines, out.errors);
-    expect(outcome.kind).not.toBe('ok');
+    const out = await runEngine(ex.xml, fetArgs(5, 5), true);
+    const outcome = parseResult(out.result, ex, out.lines, out.errors, out.difficult);
+    expect(['impossible', 'timeout']).toContain(outcome.kind);
+    // Sea cual sea el motivo, se identifica el bloque problemático y cuántos se alcanzaron a ubicar.
+    if (outcome.kind === 'invalid' || outcome.kind === 'ok') return;
+    expect(outcome.activity).not.toBeNull();
+    expect(p.locks[outcome.activity!] ?? describeActivity(p, outcome.activity!)).toBeTruthy();
+    expect(outcome.placedMax).toBeGreaterThan(0);
   }, 180_000);
+
+  it('más bloques que días con repartir obligatorio: la revisión previa se adelanta al rechazo del motor', async () => {
+    const p = exampleProject();
+    p.rules.spreadSubjectDays = true;
+    p.rules.spreadStrength = 'obligatoria';
+    p.assignments[0].blocks = [1, 1, 1, 1, 1, 1];
+    expect(validate(p).some((i) => i.level === 'error' && /6 bloques y solo hay 5 días/.test(i.message))).toBe(true);
+    const ex = exportFet(p);
+    const out = await runEngine(ex.xml, fetArgs(15, 5));
+    expect(parseResult(out.result, ex, out.lines, out.errors).kind).toBe('invalid');
+  }, 60_000);
+
+  it('un carácter de control en un nombre no impide generar', async () => {
+    const p = exampleProject();
+    p.courses[0].name = '1° Medio\u000b A';
+    p.teachers[0].name = `${p.teachers[0].name}\u0001`;
+    const ex = exportFet(p);
+    const out = await runEngine(ex.xml, fetArgs(30, 5));
+    expect(parseResult(out.result, ex, out.lines, out.errors).kind).toBe('ok');
+    expect(parseActivitiesXml(out.activities, ex)).toHaveLength(ex.activityById.size);
+  }, 60_000);
 });

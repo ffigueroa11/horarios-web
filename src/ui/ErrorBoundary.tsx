@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
           <pre className="log">{error.message}</pre>
           <div className="row">
             <button type="button" className="btn primary" onClick={() => this.setState({ error: null })}>Volver a intentar</button>
-            <button type="button" className="btn" onClick={() => { location.hash = 'proyectos'; this.setState({ error: null }); }}>Ir al inicio</button>
+            <button type="button" className="btn" onClick={() => { useProjects.getState().select(null); location.hash = 'proyectos'; this.setState({ error: null }); }}>Ir al inicio</button>
             {projects.length > 0 && <button type="button" className="btn" onClick={() => downloadBackup(projects)}>Descargar respaldo de todo</button>}
             <button type="button" className="btn ghost" onClick={() => location.reload()}>Recargar la página</button>
           </div>

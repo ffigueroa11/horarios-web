@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "description": "Generador de horarios escolares que funciona en el navegador, basado en el motor de FET",
   "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ffigueroa11/horarios-web.git"
+  },
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

@@ -16,15 +16,18 @@ export interface FetExport {
   roomByName: Map<string, string>;
 }
 
+/** Quita caracteres que XML no admite (pueden llegar al pegar desde otras aplicaciones) y que FET rechazaría. */
+const xmlSafe = (s: string) => s.replace(/(?![\t\n\r])[\p{Cc}\p{Cs}￾￿]/gu, '');
 const esc = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  xmlSafe(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** Asigna nombres únicos (FET no admite dos profesores, cursos o asignaturas con el mismo nombre). */
 function uniqueNames<T extends { id: string }>(items: T[], name: (t: T) => string): Map<string, string> {
   const used = new Set<string>();
   const out = new Map<string, string>();
   for (const it of items) {
-    const base = name(it).trim() || 'Sin nombre';
+    // Se limpia antes de comparar: al leer el resultado de FET, los nombres deben coincidir con los exportados.
+    const base = xmlSafe(name(it)).trim() || 'Sin nombre';
     let n = base, i = 2;
     while (used.has(n.toLowerCase())) n = `${base} (${i++})`;
     used.add(n.toLowerCase());
@@ -82,7 +85,8 @@ export function exportFet(p: Project): FetExport {
   // ---------- Alumnos: cursos, grupos (divisiones y franjas de electivos) y subgrupos ----------
   // Cursos, grupos y subgrupos comparten el mismo espacio de nombres en FET.
   const usedStudentNames = new Set([...courseNames.values()].map((n) => n.toLowerCase()));
-  const uniqueStudent = (base: string) => {
+  const uniqueStudent = (raw: string) => {
+    const base = xmlSafe(raw);
     let n = base, i = 2;
     while (usedStudentNames.has(n.toLowerCase())) n = `${base} (${i++})`;
     usedStudentNames.add(n.toLowerCase());

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { needsBackup, useCurrent, useProjects } from './store/projects';
-import { validate, type Step } from './domain/validate';
+import { validate, type Issue, type Step } from './domain/validate';
 import { ProyectosPage } from './pages/ProyectosPage';
 import { JornadaPage } from './pages/JornadaPage';
 import { CursosPage } from './pages/CursosPage';
@@ -52,7 +52,16 @@ export default function App() {
   const project = useCurrent();
   const select = useProjects((s) => s.select);
   const [route, go] = useHashRoute();
-  const issues = useMemo(() => (project ? validate(project) : []), [project]);
+  // Un error aquí no debe impedir abrir la app: corre antes de elegir la pantalla y el horario actual queda guardado.
+  const issues = useMemo<Issue[]>(() => {
+    if (!project) return [];
+    try {
+      return validate(project);
+    } catch (e) {
+      console.error('Horarios Web:', e);
+      return [{ level: 'error', step: 'jornada', message: `No se pudieron revisar los datos de este horario (${(e as Error).message}). Descarga un respaldo y avisa del problema.` }];
+    }
+  }, [project]);
 
   useEffect(() => { window.scrollTo(0, 0); }, [route]);
 

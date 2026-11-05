@@ -47,7 +47,8 @@ export const useGeneration = create<GenState>()((set, get) => ({
       const resultTxt = Object.entries(run.files).find(([k]) => k.endsWith('logs/result.txt'))?.[1] ?? '';
       const xml = Object.entries(run.files).find(([k]) => k.endsWith('_activities.xml'))?.[1] ?? '';
       const errorsTxt = Object.entries(run.files).find(([k]) => k.endsWith('logs/errors.txt'))?.[1];
-      const outcome = parseResult(resultTxt, ex, run.lines, errorsTxt);
+      const difficultTxt = Object.entries(run.files).find(([k]) => k.endsWith('logs/difficult_activities.txt'))?.[1];
+      const outcome = parseResult(resultTxt, ex, run.lines, errorsTxt, difficultTxt);
       const seconds = run.genMs / 1000;
       if (outcome.kind === 'ok') {
         const placements = parseActivitiesXml(xml, ex);

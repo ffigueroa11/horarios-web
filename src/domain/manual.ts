@@ -120,10 +120,24 @@ export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId
       if (max != null && hoursThatDay > max) return { ok: false, reason: `${t.name} quedaría con ${hoursThatDay} horas ese día (máximo ${max}).` };
     }
     const maxCourse = p.rules.courseMaxHoursDaily;
-    if (maxCourse != null) {
-      const hoursThatDay = others.filter((o) => o.pl.day === day && shareStudents(p, m.unit, o.unit)).reduce((n, o) => n + o.dur, 0) + m.dur;
-      if (hoursThatDay > maxCourse) return { ok: false, reason: `Los alumnos quedarían con más de ${maxCourse} horas ese día.` };
-    }
+    // Se cuentan los tramos ocupados de cada combinación de alumnos: las opciones simultáneas de un electivo
+    // o los grupos en paralelo ocupan las mismas horas, no se suman.
+    if (maxCourse != null)
+      for (const a of m.unit.audience) {
+        const course = p.courses.find((c) => c.id === a.courseId);
+        if (!course) continue;
+        for (const combo of courseStudentSets(p, course)) {
+          const ids = new Set(combo.map((g) => g.id));
+          if (a.groupId && !ids.has(a.groupId)) continue;
+          const busy = new Set<number>();
+          for (let k = 0; k < m.dur; k++) busy.add(start + k);
+          for (const o of others) {
+            if (o.pl.day !== day || !o.unit.audience.some((x) => x.courseId === a.courseId && (!x.groupId || ids.has(x.groupId)))) continue;
+            for (let k = 0; k < o.dur; k++) busy.add(o.startIdx + k);
+          }
+          if (busy.size > maxCourse) return { ok: false, reason: `Los alumnos quedarían con más de ${maxCourse} horas ese día.` };
+        }
+      }
   }
   if (!opts.skipRules) {
     const rule = ruleProblem(p, all, withLessonsAt(p, all, keys, day, periodId), moving.map((m) => m.unit));
