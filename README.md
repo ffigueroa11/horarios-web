@@ -18,7 +18,8 @@ cuentas, y los datos del colegio no salen del navegador.
 4. **Electivos**: franjas que juntan alumnos de varios cursos (ej. 3° y 4° Medio) en opciones a la misma hora.
 5. **Preferencias**: sin horas libres para los cursos, empezar en el primer bloque, repartir asignaturas en días
    distintos, ventanas y horas diarias máximas de profesores, horas diarias máximas de cursos, consejo de
-   profesores, bloques permitidos por asignatura. Cada regla puede ser obligatoria o preferible.
+   profesores, bloques permitidos por asignatura. Repartir en días y bloques permitidos pueden ser obligatorios o
+   preferibles; las demás reglas son siempre obligatorias.
 6. **Generar**: revisión previa con errores y avisos claros, cálculo con progreso, y explicación del problema
    (con los mensajes de FET en español) cuando el horario no es posible.
 7. **Ver y ajustar**: vistas por curso, profesor y sala; mover bloques (clic o arrastrar) sin crear choques;
@@ -26,6 +27,13 @@ cuentas, y los datos del colegio no salen del navegador.
 8. **Respaldos**: descarga e importación de `.json`, con recordatorio si hay cambios sin respaldar.
 9. **Partir desde FET**: importa un archivo `.fet` de FET de escritorio (versión 5 en adelante) y muestra un informe
    de lo que se traspasó y lo que no.
+
+## Documentación
+
+- [Guía de uso](docs/guia-de-uso.md): para quienes arman el horario de un colegio.
+- [Arquitectura](docs/arquitectura.md): cómo funciona por dentro, para quien modifica el código.
+- [Análisis de mejoras](docs/mejoras.md): errores detectados, propuestas y hoja de ruta.
+- [Motor de generación](engine/README.md): cómo se compila FET a WebAssembly.
 
 ## Desarrollo
 
@@ -123,7 +131,8 @@ de servidor.
 
 1. Sube el repositorio a GitHub.
 2. En el repositorio: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Cada `push` a `main` corre las pruebas y publica en `https://<usuario>.github.io/<repositorio>/`.
+3. Cada `push` a `main` corre CI (lint, pruebas y navegadores) y, si termina bien, publica ese commit en
+   `https://<usuario>.github.io/<repositorio>/`. También se puede publicar a mano desde la pestaña Actions.
 
 La ruta base se calcula sola a partir del nombre del repositorio. Con un dominio propio, crea la variable de
 repositorio `BASE_PATH` con el valor `/` (Settings → Secrets and variables → Actions → Variables).
@@ -131,8 +140,9 @@ repositorio `BASE_PATH` con el valor `/` (Settings → Secrets and variables →
 ### Cloudflare Pages (alternativa, sin límite de ancho de banda)
 
 Conecta el repositorio en Cloudflare Pages con: comando `npm run build`, carpeta `dist`, variable
-`NODE_VERSION=22`. Para que el pie de página enlace al código fuente, agrega la variable
-`VITE_SOURCE_URL=https://github.com/<usuario>/<repositorio>`. El archivo `public/_headers` ya define el caché.
+`NODE_VERSION=22`. El pie de página enlaza al repositorio indicado en `package.json`; si publicas una copia
+modificada, define `VITE_SOURCE_URL=https://github.com/<usuario>/<repositorio>` para que enlace a tu código. El archivo
+`public/_headers` ya define el caché.
 
 ## Datos y privacidad
 
@@ -145,4 +155,5 @@ actualiza con los cambios de la primera.
 
 GNU AGPL v3 o posterior, la misma de FET, cuyo motor se incluye en `public/engine/`. Ver `LICENSE` y
 `engine/README.md`. Si publicas una versión modificada, debes ofrecer su código fuente a quienes la usen: el pie
-de la app enlaza al repositorio automáticamente cuando se compila en GitHub Actions.
+de la app enlaza al repositorio automáticamente cuando se compila en GitHub Actions, y en otros casos usa
+`VITE_SOURCE_URL` o el repositorio de `package.json`.
