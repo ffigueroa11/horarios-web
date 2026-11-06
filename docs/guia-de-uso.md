@@ -180,7 +180,7 @@ El horario se generó antes de tu último cambio. Genera de nuevo para actualiza
 
 ## Respaldos y cambio de computador
 
-Desde **Cambiar de horario** puedes descargar un respaldo de un horario o de todos. La app te avisa si llevas más de una
+Desde **Inicio**, en el menú lateral, puedes descargar un respaldo de un horario o de todos. La app te avisa si llevas más de una
 semana con cambios sin respaldar.
 
 **Para pasar a otro computador:** descarga el respaldo, llévalo y usa **Importar respaldo o archivo FET…**.
@@ -216,7 +216,7 @@ de texto se guardan al salir del campo. Si intentas cerrar la pestaña con cambi
 
 **Sin internet** puedes seguir trabajando: los cambios se suben al volver la conexión.
 
-**Cerrar sesión** está en la tarjeta **Tu cuenta**, en la pantalla de inicio. Se llega con **Cambiar de horario**.
+**Cerrar sesión** está en el menú lateral, junto a tu correo, y en la tarjeta **Tu cuenta** de la pantalla de inicio.
 
 **Si editas el mismo horario en dos computadores a la vez,** no se pierde nada: se conservan las dos versiones y la tuya
 aparece como una copia con la palabra "conflicto" en el nombre. Compáralas y elimina la que no necesites.

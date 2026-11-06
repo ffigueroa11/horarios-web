@@ -17,6 +17,7 @@ import { ImportReportCard } from './ui/ImportReportCard';
 import { AppFooter } from './ui/AppFooter';
 import { downloadBackup } from './ui/backup';
 import { SyncStatus } from './ui/SyncStatus';
+import { SidebarAccount } from './ui/AccountCard';
 
 export type Route = Step | 'generar' | 'horario' | 'proyectos' | 'acerca';
 
@@ -98,15 +99,21 @@ export default function App() {
   return (
     <div className="app">
       <aside className="side no-print">
-        <div className="brand"><img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />Horarios Web</div>
+        <a className="brand" href="#proyectos" title="Ir al inicio" onClick={() => select(null)}><img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />Horarios Web</a>
         <div className="project-switch">
           <span className="small muted">Horario {project.year}</span>
           <span className="name">{project.name}</span>
-          <button type="button" onClick={() => { select(null); go('proyectos'); }}>Cambiar de horario</button>
           <SyncStatus />
         </div>
         <nav aria-label="Pasos">
           <ul className="steps">
+            <li className="home">
+              <a href="#proyectos" title="Tus horarios y tu cuenta" onClick={() => select(null)}>
+                <span className="num" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11.5 12 4l9 7.5" /><path d="M5.5 10v9.5h13V10" /></svg>
+                </span>Inicio
+              </a>
+            </li>
             {STEPS.map((ph) => [
               <li key={ph.phase} className="phase">{ph.phase}</li>,
               ...ph.items.map((it) => (
@@ -120,6 +127,7 @@ export default function App() {
           </ul>
         </nav>
         <div className="foot">
+          <SidebarAccount />
           <button type="button" className={`btn small ${needsBackup(project) ? 'warn' : 'ghost'}`} onClick={() => downloadBackup([project])}
             title={project.backupAt ? `Último respaldo: ${new Date(project.backupAt).toLocaleString('es-CL')}` : 'Aún no hay respaldos de este horario'}>
             {needsBackup(project) ? 'Descargar respaldo (pendiente)' : 'Descargar respaldo'}

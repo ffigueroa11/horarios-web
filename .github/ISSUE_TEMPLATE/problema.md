@@ -16,5 +16,5 @@ labels: bug
 
 **Navegador y sistema** (ej. Chrome 130 en Windows 11):
 
-Si puedes, adjunta el respaldo `.json` del horario (Cambiar de horario → Respaldo).
+Si puedes, adjunta el respaldo `.json` del horario (Inicio → Respaldo).
 Revisa que no tenga datos que no quieras publicar: el repositorio es público.

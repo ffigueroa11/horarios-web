@@ -53,7 +53,10 @@ button, input, select { font: inherit; color: inherit; }
 .brand img { width: 26px; height: 26px; }
 .project-switch { display: grid; gap: 2px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
 .project-switch .name { font-weight: 700; }
-.project-switch button { justify-self: start; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-size: .85rem; }
+.side a.brand { color: inherit; text-decoration: none; }
+.side-account { display: grid; gap: 6px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.side-account .notice { font-size: .75rem; padding: 8px; }
+.side-account .notice .row { display: grid; gap: 6px; }
 .project-switch .sync-status { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .sync-status { display: inline-flex; align-items: baseline; gap: 7px; font-size: .82rem; font-weight: 700; color: var(--muted); }
 .sync-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }

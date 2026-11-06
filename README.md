@@ -132,8 +132,10 @@ de servidor.
 
 ### Vercel
 
-El proyecto ya está conectado a este repositorio: cada `push` a `main` publica en producción y cada rama genera una
-vista previa. Vercel detecta Vite solo y [`vercel.json`](vercel.json) define el caché. Su plan Hobby es solo para uso
+El proyecto ya está conectado a este repositorio: cada rama genera una vista previa, y cada `push` a `main` se publica
+en producción cuando CI termina bien. Eso lo controlan los Deployment Checks de Vercel (Settings › Build and Deployment),
+que exigen estos trabajos de GitHub: `Lint, tipos, pruebas y build` y `Navegadores (chromium)`, `(firefox)`, `(webkit)` y
+`(movil)`. Vercel detecta Vite solo y [`vercel.json`](vercel.json) define el caché. Su plan Hobby es solo para uso
 personal y no comercial.
 
 ### Cuentas con Firebase (opcional)
@@ -167,7 +169,7 @@ modificada, define `VITE_SOURCE_URL=https://github.com/<usuario>/<repositorio>` 
 ## Datos y privacidad
 
 Todo se guarda en IndexedDB del navegador; la app pide al navegador guardarlo de forma persistente. No usa
-cookies ni analítica. Desde "Cambiar de horario" se descarga un respaldo `.json` (uno o todos los
+cookies ni analítica. Desde "Inicio" se descarga un respaldo `.json` (uno o todos los
 horarios) que se puede importar en otro equipo. Si la app está abierta en dos pestañas, la segunda se
 actualiza con los cambios de la primera.
 

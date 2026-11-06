@@ -173,14 +173,25 @@ test('un horario guardado con datos dañados no deja la app atascada', async ({ 
   await page.goto('./#generar');
   await expect(page.locator('.issues')).toContainText('No se pudieron revisar los datos');
   await expect(page.getByRole('button', { name: 'Generar horario' })).toBeDisabled();
-  await page.getByRole('button', { name: 'Cambiar de horario' }).click();
+  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
   await expect(page.locator('.project')).toHaveCount(1);
+});
+
+test('desde el menú se vuelve al inicio con "Inicio" o con el logo', async ({ page }) => {
+  await openExample(page);
+  for (const name of ['Inicio', 'Horarios Web']) {
+    await page.getByRole('link', { name, exact: true }).click();
+    await expect(page.getByRole('heading', { level: 2, name: 'Tus horarios' })).toBeVisible();
+    await expect(page.locator('aside')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Abrir' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
+  }
 });
 
 test('respaldo: descargar e importar', async ({ page }, info) => {
   test.skip(info.project.name === 'movil', 'igual que en escritorio');
   await openExample(page);
-  await page.getByRole('button', { name: 'Cambiar de horario' }).click();
+  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Respaldo', exact: true }).click()]);
   const file = await download.path();
   const data = JSON.parse(readFileSync(file, 'utf8'));
@@ -194,7 +205,7 @@ test('respaldo: descargar e importar', async ({ page }, info) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
 
   // Un archivo que no es respaldo muestra un error claro.
-  await page.getByRole('button', { name: 'Cambiar de horario' }).click();
+  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
   await page.locator('input[type=file]').setInputFiles({ name: 'otro.json', mimeType: 'application/json', buffer: Buffer.from('{"hola": 1}') });
   await expect(page.getByRole('alert')).toContainText('No se pudo importar');
 });

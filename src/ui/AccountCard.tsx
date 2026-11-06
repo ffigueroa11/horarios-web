@@ -94,6 +94,8 @@ function DeleteAccount() {
 function SignOutButton() {
   const [unsynced, setUnsynced] = useState(0);
   const { busy, error, run } = useAction();
+  // Cerrar sesión recarga la página y detendría el cálculo.
+  const generating = useGeneration((s) => s.status === 'loading' || s.status === 'running');
   if (unsynced > 0) {
     return (
       <div className="notice warn" role="alert">
@@ -108,13 +110,27 @@ function SignOutButton() {
     );
   }
   return <>
-    <button type="button" className="btn small" disabled={busy} onClick={() => void run(async () => {
+    <button type="button" className="btn small" disabled={busy || generating}
+      title={generating ? 'Espera a que termine la generación del horario' : undefined} onClick={() => void run(async () => {
       const n = await unsyncedCount();
       if (n > 0) setUnsynced(n);
       else await signOut();
     })}>Cerrar sesión</button>
     <Messages error={error} info="" />
   </>;
+}
+
+/** Con quién se entró y cómo salir, en el menú lateral. Sin sesión no muestra nada. */
+export function SidebarAccount() {
+  const phase = useAccount((s) => s.phase);
+  const email = useAccount((s) => s.email);
+  if (!cloudEnabled || phase === 'local') return null;
+  return (
+    <div className="side-account">
+      <span title={email}>{email}</span>
+      <SignOutButton />
+    </div>
+  );
 }
 
 /** Cuenta opcional en la pantalla de inicio. No aparece si el sitio se publicó sin Firebase. */

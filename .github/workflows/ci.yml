@@ -10,6 +10,8 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Vercel retiene cada publicación hasta que pasen estos trabajos, que identifica por su nombre: al cambiar uno, actualiza
+# la lista en Vercel (Settings > Build and Deployment > Deployment Checks).
 jobs:
   check:
     name: Lint, tipos, pruebas y build
