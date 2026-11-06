@@ -239,8 +239,8 @@ test('importa un archivo .fet, informa lo perdido y genera con los bloques fijad
     <ConstraintTwoActivitiesConsecutive><Weight_Percentage>100</Weight_Percentage><Active>true</Active></ConstraintTwoActivitiesConsecutive></Time_Constraints_List></fet>`;
   await page.goto('./');
   await page.locator('input[type=file]').setInputFiles({ name: 'horario2019.fet', mimeType: 'application/octet-stream', buffer: Buffer.from(fet) });
-  const report = page.getByRole('status');
-  await expect(report).toContainText('quedó importado');
+  const report = page.getByRole('status').filter({ hasText: 'quedó importado' }); // También es "status" el indicador de guardado.
+  await expect(report).toBeVisible();
   await expect(report).toContainText('1 bloque de clase');
   await expect(report).toContainText('Dos actividades seguidas');
   await generate(page);
