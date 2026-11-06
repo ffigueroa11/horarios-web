@@ -178,5 +178,4 @@ en Chile.
 
 GNU AGPL v3 o posterior, la misma de FET, cuyo motor se incluye en `public/engine/`. Ver `LICENSE` y
 `engine/README.md`. Si publicas una versión modificada, debes ofrecer su código fuente a quienes la usen: el pie
-de la app enlaza al repositorio automáticamente: usa
-`VITE_SOURCE_URL` o el repositorio de `package.json`.
+de la app enlaza automáticamente a `VITE_SOURCE_URL` o, si no está definida, al repositorio de `package.json`.
