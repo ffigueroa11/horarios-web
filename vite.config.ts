@@ -5,8 +5,7 @@ import { readFileSync } from 'node:fs'
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string; repository?: { url?: string } }
 
-// Ruta base del sitio: "/" en un dominio propio (Cloudflare Pages, Vercel) o "/<repositorio>/" en GitHub Pages.
-// Se define con BASE_PATH; el flujo de GitHub Pages la calcula a partir del nombre del repositorio.
+// Ruta base del sitio: "/" salvo que se publique en una subcarpeta, con BASE_PATH (ej. "/<repositorio>/").
 const base = process.env.BASE_PATH || '/'
 
 // Enlace al código fuente (la licencia AGPL exige ofrecerlo a quien use la app).

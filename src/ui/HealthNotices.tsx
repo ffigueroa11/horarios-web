@@ -1,12 +1,21 @@
 import { useHealth } from '../store/health';
 import { useSw } from '../store/sw';
+import { useAccount } from '../store/account';
 
-/** Avisos globales: errores de guardado, otra pestaña abierta, versión nueva disponible. */
+/** Avisos globales: errores de guardado, otra pestaña abierta, versión nueva disponible, conflictos entre equipos. */
 export function HealthNotices() {
   const { storageError, saveError, otherTab, setOtherTab } = useHealth();
   const { updateReady, apply } = useSw();
+  const notices = useAccount((s) => s.notices);
+  const dismissNotice = useAccount((s) => s.dismissNotice);
   return (
     <div className="health no-print">
+      {notices.map((message, i) => (
+        <div key={message} className="notice warn" role="status">
+          <span>{message}</span>
+          <button type="button" className="btn small ghost" onClick={() => dismissNotice(i)}>Entendido</button>
+        </div>
+      ))}
       {storageError && (
         <div className="notice bad" role="alert">
           <b>{storageError}</b>

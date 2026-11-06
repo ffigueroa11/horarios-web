@@ -5,7 +5,9 @@ documento explica cómo funciona por dentro y qué hay que cuidar.
 
 ## Principios
 
-- **Sin servidor.** El sitio es estático y el cálculo ocurre en el navegador. Los datos del colegio no salen de él.
+- **Sin servidor propio.** El sitio es estático y el cálculo ocurre en el navegador. Sin cuenta, los datos del colegio
+  no salen de él y Firebase ni siquiera se carga.
+- **Primero lo local.** Con cuenta, la app sigue editando en IndexedDB y la nube se sincroniza en segundo plano.
 - **El dominio no conoce la interfaz.** `src/domain/` no importa React y se prueba en Node.
 - **El motor es una caja negra.** Se le entrega un `.fet` y se leen sus archivos de salida. Los cambios a FET se limitan
   a la línea de progreso y a ajustes de compilación que no alteran el algoritmo ([detalle](../engine/README.md)).
@@ -20,6 +22,8 @@ flowchart TD
   store --> domain
   store --> engine["engine/<br/>argumentos y Worker"]
   store --> idb[("IndexedDB")]
+  store --> cloud["cloud/<br/>sincronización"]
+  cloud --> firebase[("Firebase<br/>opcional")]
   engine --> worker["public/engine/fet-worker.js"]
   worker --> wasm["fet-cl.wasm"]
 ```
@@ -28,7 +32,8 @@ flowchart TD
 |---|---|
 | [`src/domain/`](../src/domain/) | Modelo, validación, conversión a FET y desde FET, ajuste manual, respaldos |
 | [`src/engine/`](../src/engine/) | Argumentos de `fet-cl` y comunicación con el Worker |
-| [`src/store/`](../src/store/) | Proyectos guardados, generación en curso, salud del almacenamiento, service worker |
+| [`src/cloud/`](../src/cloud/) | Motor de sincronización sin dependencias de Firebase, y el adaptador que sí lo usa |
+| [`src/store/`](../src/store/) | Proyectos guardados, cuenta, generación en curso, salud del almacenamiento, service worker |
 | [`src/pages/`](../src/pages/) | Una pantalla por paso, elegida por el hash de la URL ([`App.tsx`](../src/App.tsx)) |
 | [`src/ui/`](../src/ui/) | Componentes compartidos, exportación a Excel, descargas |
 | [`public/engine/`](../public/engine/) | Motor compilado, Worker y traducción al español |
@@ -209,6 +214,65 @@ Tres decisiones de diseño:
 - **Cambiar la forma de los datos:** agrega el valor por defecto en `migrateProject`. Si el cambio requiere transformar
   datos, sube `version` en `projects.ts` y, si corresponde, `BACKUP_VERSION`.
 
+## Cuenta y sincronización
+
+Es opcional. Sin las variables `VITE_FIREBASE_*`, `cloudEnabled` es falso y nada de esto aparece. El SDK se carga con un
+`import()` solo al iniciar sesión o si hay una sesión guardada.
+
+### Espacios de datos
+
+- Cada cuenta usa su propia clave en IndexedDB, `horarios-web:<uid>`, y sin cuenta se usa `horarios-web`. Así, en un
+  computador compartido una cuenta no ve los horarios de otra.
+- La clave se decide al cargar [`projects.ts`](../src/store/projects.ts), según `horarios-web-cuenta` en `localStorage`.
+  Por eso iniciar y cerrar sesión **recargan la página**, y las demás pestañas también lo hacen con el evento `storage`.
+- Cerrar sesión borra la copia local de esa cuenta, y antes avisa si hay cambios sin subir.
+- Al entrar, los horarios creados sin cuenta no se mezclan por sí solos: la app ofrece traspasarlos.
+
+### Documentos
+
+`users/{uid}/projects/{projectId}`, con estos campos:
+
+| Campo | Contenido |
+|---|---|
+| `revision` | Entero que sube de uno en uno |
+| `schema` | `BACKUP_VERSION` con que se escribió |
+| `data` | El proyecto en JSON, sin `backupAt`, o `null` si se eliminó |
+| `updatedAt` | Hora del servidor |
+
+El proyecto se guarda como texto y no como campos de Firestore: siempre se lee y se escribe completo, y así pasa por la
+misma validación que un respaldo. Los horarios reales medidos ocupan unos 113 KB, frente al límite de 1 MiB. **No se usa
+`.fet`** porque no conserva el horario generado, las horas de contrato ni todas las restricciones.
+
+### Algoritmo
+
+[`SyncEngine`](../src/cloud/engine.ts) no conoce Firebase ni React, y se prueba con una nube en memoria. Compara un hash
+del contenido con el último sincronizado en vez de usar `updatedAt`, porque `touch: false` no lo cambia y mover bloques o
+generar también debe subirse.
+
+| Situación | Resultado |
+|---|---|
+| Solo cambió lo local | Se sube cuando el usuario hace una pausa (5 s, máximo 60 s), y también al salir de la pestaña |
+| Solo cambió la nube | Reemplaza la copia local, conservando su `backupAt` |
+| Cambiaron los dos | La versión local queda como copia nueva "(conflicto fecha)" y el usuario sigue en ella; la de la nube conserva el id |
+| Eliminado aquí y editado en otro equipo | Se recupera la versión editada |
+| Eliminado en otro equipo y editado aquí | La versión local queda como copia |
+| Sin horarios locales al abrir, pero con registro de haberlos tenido | Se vuelven a descargar: nunca se interpreta como eliminarlos |
+| Documento dañado o de una versión más nueva | Se avisa, no se aplica y ese horario no se sube |
+
+Reglas que hay que mantener:
+
+- **Nada se sube antes de conocer lo que hay en la nube.** Se espera una respuesta confirmada por el servidor, no por el
+  caché de Firestore.
+- **No se sincroniza si falló la lectura local** (`readFailed`), porque todo parecería eliminado.
+- **Primero se guardan los horarios y luego el registro de lo sincronizado** (`storeFlushed`). En el orden inverso, un
+  cierre a medio camino haría que la versión antigua se suba como si fuera un cambio.
+- **Los horarios eliminados quedan con `data: null`** para que la eliminación llegue a los demás equipos.
+- **Solo una pestaña sincroniza** (`navigator.locks`). Las demás reciben los cambios por el `BroadcastChannel`.
+- **La seguridad está en [`firestore.rules`](../firestore.rules).** La configuración web es pública. Las reglas exigen
+  correo confirmado y la revisión exactamente siguiente.
+- **Al cambiar la forma de los datos,** sube `BACKUP_VERSION`: un equipo con una versión anterior no debe interpretar lo
+  que no conoce.
+
 ## Service worker
 
 [`sw.js`](../public/sw.js) recibe la versión en la URL de registro y usa un caché por versión.
@@ -230,10 +294,14 @@ al instalar ([E6](mejoras.md#e6-sin-conexión-incompleto)).
 | [`backup.test.ts`](../src/domain/backup.test.ts), [`importCarga.test.ts`](../src/domain/importCarga.test.ts), [`fetImport.test.ts`](../src/domain/fetImport.test.ts) | Importaciones y respaldos | `npm test` |
 | [`fet.integration.test.ts`](../src/domain/fet.integration.test.ts), [`manual.integration.test.ts`](../src/domain/manual.integration.test.ts) | Generación real con el motor en Node, y sus resultados verificados | `npm test` |
 | [`projects.test.ts`](../src/store/projects.test.ts) | Cuándo un horario queda desactualizado al importar, duplicar y editar | `npm test` |
+| [`engine.test.ts`](../src/cloud/engine.test.ts), [`account.test.ts`](../src/store/account.test.ts) | Sincronización con una nube en memoria, y espacios de datos por cuenta | `npm test` |
 | [`large.test.ts`](../src/domain/large.test.ts) | Tiempos en un colegio sintético | `LARGE=1 npx vitest run src/domain/large.test.ts` |
 | [`e2e/app.spec.ts`](../e2e/app.spec.ts) | Flujos en navegadores reales | `npm run build`, luego `npm run e2e` |
 
-Las pruebas de integración se omiten solas si falta el motor. `ui/` y `pages/` no tienen pruebas unitarias.
+Las pruebas de integración se omiten solas si falta el motor. `ui/` y `pages/` no tienen pruebas unitarias. El adaptador
+[`firebase.ts`](../src/cloud/firebase.ts) y las reglas no tienen pruebas automáticas, porque requieren los emuladores de
+Firebase, que necesitan Java. Se comprobaron una vez contra el proyecto real, con cuentas desechables: **al cambiar las
+reglas o el adaptador, repite a mano el flujo con dos navegadores.**
 
 Las pruebas de navegador fijan `Math.random` para que la semilla, y por lo tanto el horario, sea siempre la misma. Sus
 pasos deben fallar si no encuentran lo que buscan, no saltarse la comprobación. La grilla interactiva se selecciona con
@@ -260,6 +328,7 @@ pasos deben fallar si no encuentran lo que buscan, no saltarse la comprobación.
 - Una clase tiene un solo profesor, y no hay actividades sin curso.
 - Las salas son solo las especiales, una por asignatura y sin disponibilidad propia.
 - Las ventanas y las horas diarias son iguales para todos los profesores.
-- Los datos viven en un solo navegador, sin sincronización.
+- Sin cuenta, los datos viven en un solo navegador.
+- Con cuenta, cada horario pertenece a una sola persona: no se comparte entre usuarios.
 
 El análisis completo y las propuestas están en [mejoras.md](mejoras.md).

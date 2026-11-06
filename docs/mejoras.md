@@ -4,7 +4,9 @@ Revisión del commit `be2f6ec` (noviembre de 2026), pensada para decidir qué ha
 
 > **Estado:** la fase 0 de la [hoja de ruta](#hoja-de-ruta-sugerida) ya se aplicó: E1 a E5, E7 a E11, T1, T2 y T5. El
 > detalle de esos hallazgos se conserva como registro de qué se corrigió y por qué. De la fase 1 ya están F1 y F2. Las
-> referencias a líneas de código corresponden al commit revisado y pueden haber cambiado.
+> referencias a líneas de código corresponden al commit revisado y pueden haber cambiado. Después de esta revisión se
+> agregaron cuentas opcionales con sincronización ([arquitectura](arquitectura.md#cuenta-y-sincronización)), que cubren
+> parte del riesgo de F6.
 
 **Cómo se hizo.** Se leyó el dominio, el estado, el motor, las pantallas principales y los flujos de CI. Se ejecutaron
 `npm run lint`, `npm test`, `npm run build`, `npm audit` y `npm outdated`, y se corrieron pruebas temporales contra el
@@ -194,8 +196,8 @@ eliminan al instante la carga asociada. Eliminar una franja o un profesor sí pi
 | T2 | No había prueba de arrastrar y soltar: se retiró en `b028558` | Recuperada, con eventos enviados directamente y solo en Chromium | S | Corregido |
 | T3 | `ui/` y `pages/` no tienen pruebas unitarias, y de `store/` solo hay un archivo | Ampliar [`projects.test.ts`](../src/store/projects.test.ts) a migraciones y varias pestañas | S–M | Parcial |
 | T4 | [`large.test.ts`](../src/domain/large.test.ts) no mide un caso difícil: 24 cursos y 84 profesores se resuelven en 0,2–0,6 s | Agregar un colegio real anonimizado como referencia (ver [mediciones](#mediciones-con-archivos-reales)) | M | Pendiente |
-| T5 | [`deploy.yml`](../.github/workflows/deploy.yml) publicaba sin esperar a CI | Publica cuando CI termina bien en un `push` a `main` (`workflow_run`) | S | Corregido y confirmado en el `push` de la fase 0 |
-| T6 | Sin política de seguridad de contenido (CSP); [`_headers`](../public/_headers) solo define caché | Agregar una CSP con `wasm-unsafe-eval`, por `<meta>` para que también aplique en GitHub Pages, y probarla con el motor | S–M | Pendiente |
+| T5 | `deploy.yml` publicaba en GitHub Pages sin esperar a CI | Publicaba cuando CI terminaba bien en un `push` a `main`. Se retiró al pasar a Vercel, que publica `main` sin esperar a CI | S | Reabierto: falta exigir CI en Vercel |
+| T6 | Sin política de seguridad de contenido (CSP); [`_headers`](../public/_headers) solo define caché | Agregar una CSP con `wasm-unsafe-eval`, en `vercel.json`, permitiendo los dominios de Firebase, y probarla con el motor | S–M | Pendiente |
 | T7 | La compilación del motor no verifica el origen: [`build-engine.sh`](../engine/build-engine.sh) no comprueba el `.tar.xz`, y `emsdk` y `aqtinstall` no están fijados | Fijar versiones y registrar SHA-256 de la fuente y del `.wasm` | S | Pendiente |
 | T8 | Las acciones de GitHub usan etiquetas, no commits fijos | Fijarlas por SHA; Dependabot ya está configurado | S | Pendiente |
 | T9 | No se ha hecho una auditoría de accesibilidad | Agregar `@axe-core/playwright` a e2e y probar a mano el ajuste con teclado | S | Pendiente |

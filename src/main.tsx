@@ -8,6 +8,7 @@ import App from './App';
 import { ErrorBoundary } from './ui/ErrorBoundary';
 import { missingFeatures, requestPersistence } from './store/health';
 import { registerServiceWorker } from './store/sw';
+import { initAccount } from './store/account';
 
 const root = createRoot(document.getElementById('root')!);
 const missing = missingFeatures();
@@ -24,6 +25,7 @@ if (missing.length > 0) {
 } else {
   void requestPersistence();
   registerServiceWorker();
+  void initAccount();
   root.render(
     <StrictMode>
       <ErrorBoundary>

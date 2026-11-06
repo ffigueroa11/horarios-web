@@ -2,8 +2,8 @@
 
 Generador de horarios escolares que funciona completamente en el navegador. El usuario ingresa la jornada,
 los cursos, las asignaturas, los profesores y la carga académica; el horario se calcula en su propio computador
-con el motor de [FET](https://lalescu.ro/liviu/fet/) compilado a WebAssembly. No hay servidor de cálculo ni
-cuentas, y los datos del colegio no salen del navegador.
+con el motor de [FET](https://lalescu.ro/liviu/fet/) compilado a WebAssembly. No hay servidor de cálculo. Sin
+cuenta, los datos del colegio no salen del navegador; con una cuenta opcional, se respaldan en la nube.
 
 - Gratis y de código abierto (AGPL v3, igual que FET).
 - Sin instalación: un sitio estático. Después de la primera visita funciona también sin conexión.
@@ -27,6 +27,8 @@ cuentas, y los datos del colegio no salen del navegador.
 8. **Respaldos**: descarga e importación de `.json`, con recordatorio si hay cambios sin respaldar.
 9. **Partir desde FET**: importa un archivo `.fet` de FET de escritorio (versión 5 en adelante) y muestra un informe
    de lo que se traspasó y lo que no.
+10. **Cuenta opcional**: con correo y contraseña, los horarios se sincronizan entre equipos y sobreviven a borrar los
+    datos del navegador.
 
 ## Documentación
 
@@ -72,7 +74,8 @@ src/
     importCarga.ts   Importar la carga desde Excel/CSV/texto pegado
     fetImport.ts     XML .fet → Project, con informe de lo que no se pudo traspasar
   engine/            Argumentos de fet-cl y Web Worker
-  store/             Estado (zustand) guardado en IndexedDB, salud del almacenamiento, service worker
+  cloud/             Sincronización con la nube (engine.ts) y único contacto con Firebase (firebase.ts)
+  store/             Estado (zustand) guardado en IndexedDB, cuenta, salud del almacenamiento, service worker
   pages/             Una pantalla por paso del flujo
   ui/                Componentes compartidos, exportación a Excel, respaldos
 public/engine/       Motor FET en WebAssembly + Worker + traducción al español
@@ -127,15 +130,29 @@ El resultado de `npm run build` es un sitio estático (`dist/`). Los horarios se
 cada colegio, así que el hosting solo entrega archivos: aunque la app se use en muchos colegios, no hay costo
 de servidor.
 
-### GitHub Pages (incluido)
+### Vercel
 
-1. Sube el repositorio a GitHub.
-2. En el repositorio: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Cada `push` a `main` corre CI (lint, pruebas y navegadores) y, si termina bien, publica ese commit en
-   `https://<usuario>.github.io/<repositorio>/`. También se puede publicar a mano desde la pestaña Actions.
+El proyecto ya está conectado a este repositorio: cada `push` a `main` publica en producción y cada rama genera una
+vista previa. Vercel detecta Vite solo y [`vercel.json`](vercel.json) define el caché. Su plan Hobby es solo para uso
+personal y no comercial.
 
-La ruta base se calcula sola a partir del nombre del repositorio. Con un dominio propio, crea la variable de
-repositorio `BASE_PATH` con el valor `/` (Settings → Secrets and variables → Actions → Variables).
+### Cuentas con Firebase (opcional)
+
+Sin esta configuración, la app funciona solo en el navegador y no muestra la opción de cuenta. El sitio oficial usa el
+proyecto `horarios-web-ff`. Para activarla en otro proyecto:
+
+1. **Crear la app web:** `npx firebase-tools apps:create WEB horarios-web --project <id>`. Copia lo que entrega
+   `apps:sdkconfig` a las variables de [`.env.example`](.env.example), en Vercel o en `.env.local`, y vuelve a publicar.
+2. **Crear la base de datos:**
+   `npx firebase-tools firestore:databases:create "(default)" --location southamerica-west1 --project <id>`. **Hazlo
+   antes del paso siguiente:** si no existe, publicar las reglas la crea en Estados Unidos, y la ubicación no se puede
+   cambiar después.
+3. **Publicar las reglas y activar el acceso con correo:**
+   `npx firebase-tools deploy --only firestore:rules,auth --project <id>`. Sin las reglas, nadie puede sincronizar.
+
+Mantén el proyecto en el plan **Spark**: al agotarse la cuota gratuita, las operaciones se rechazan en vez de generar
+cobros, y la app sigue guardando en el navegador. No uses Cloud Storage, que exige el plan de pago. Las cuentas usan
+contraseña y no enlace por correo porque el plan Spark solo permite 5 de esos correos al día en todo el proyecto.
 
 ### Cloudflare Pages (alternativa, sin límite de ancho de banda)
 
@@ -147,13 +164,19 @@ modificada, define `VITE_SOURCE_URL=https://github.com/<usuario>/<repositorio>` 
 ## Datos y privacidad
 
 Todo se guarda en IndexedDB del navegador; la app pide al navegador guardarlo de forma persistente. No usa
-cookies, cuentas ni analítica. Desde "Cambiar de horario" se descarga un respaldo `.json` (uno o todos los
+cookies ni analítica. Desde "Cambiar de horario" se descarga un respaldo `.json` (uno o todos los
 horarios) que se puede importar en otro equipo. Si la app está abierta en dos pestañas, la segunda se
 actualiza con los cambios de la primera.
+
+**Sin cuenta**, la app no carga Firebase ni envía los datos a ningún servidor. **Con una cuenta**, el correo y los
+horarios, con los nombres de los profesores, se guardan en Firebase (Google). Firebase Authentication procesa sus datos
+en Estados Unidos, y quien administra el proyecto de Firebase puede leer los horarios desde la consola. Quien publique
+una instancia con cuentas es responsable de cumplir la normativa de datos personales que le aplique, como la Ley 21.719
+en Chile.
 
 ## Licencia
 
 GNU AGPL v3 o posterior, la misma de FET, cuyo motor se incluye en `public/engine/`. Ver `LICENSE` y
 `engine/README.md`. Si publicas una versión modificada, debes ofrecer su código fuente a quienes la usen: el pie
-de la app enlaza al repositorio automáticamente cuando se compila en GitHub Actions, y en otros casos usa
+de la app enlaza al repositorio automáticamente: usa
 `VITE_SOURCE_URL` o el repositorio de `package.json`.

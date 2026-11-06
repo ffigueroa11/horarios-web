@@ -7,10 +7,33 @@ import { migrateProject, newId } from '../domain/types';
 import { emptyProject, exampleProject } from '../domain/defaults';
 import { useHealth } from './health';
 
-const STORE_KEY = 'horarios-web';
+export const ANON_KEY = 'horarios-web';
+const ACCOUNT_KEY = 'horarios-web-cuenta';
+
+/** La cuenta con que se abrió este navegador por última vez. Decide qué datos locales se usan, antes de cargar Firebase. */
+export function savedAccount(): { uid: string; email: string } | null {
+  try {
+    const raw = typeof localStorage === 'undefined' ? null : localStorage.getItem(ACCOUNT_KEY);
+    const parsed = raw ? JSON.parse(raw) as { uid?: unknown; email?: unknown } : null;
+    return parsed && typeof parsed.uid === 'string' ? { uid: parsed.uid, email: typeof parsed.email === 'string' ? parsed.email : '' } : null;
+  } catch {
+    return null;
+  }
+}
+export const setAccount = (account: { uid: string; email: string }) => localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+export const clearAccount = () => localStorage.removeItem(ACCOUNT_KEY);
+
+// Cada cuenta tiene su propio espacio: en un computador compartido, una cuenta no ve los horarios de otra.
+const account = savedAccount();
+export const STORE_KEY = account ? `${ANON_KEY}:${account.uid}` : ANON_KEY;
+
 // Avisa a otras pestañas abiertas de la app que hay datos nuevos, para que los recarguen.
 const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(STORE_KEY) : null;
 const TAB_ID = newId();
+
+let lastWrite: Promise<unknown> = Promise.resolve();
+/** Se cumple cuando lo último que cambió en los horarios ya está en IndexedDB. */
+export const storeFlushed = () => lastWrite.then(() => undefined, () => undefined);
 
 const idbStorage: StateStorage = {
   getItem: async (name) => {
@@ -25,7 +48,8 @@ const idbStorage: StateStorage = {
     // Si no se pudo leer al iniciar, no se escribe: se sobrescribirían los datos guardados con un estado vacío.
     if (useHealth.getState().readFailed) return;
     try {
-      await set(name, value);
+      lastWrite = set(name, value);
+      await lastWrite;
       useHealth.getState().setSaveError(null);
       channel?.postMessage({ type: 'saved', from: TAB_ID });
     } catch (e) {

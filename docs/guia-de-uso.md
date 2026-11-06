@@ -3,8 +3,9 @@
 Para quienes arman el horario de un colegio. No necesitas conocimientos técnicos ni instalar nada: basta un navegador
 actualizado en un computador.
 
-> **Importante:** tus datos se guardan solo en el navegador que estás usando. No se envían a ningún servidor. Si borras
-> los datos de navegación o cambias de computador, no estarán ahí. **Descarga un respaldo cada vez que avances bastante.**
+> **Importante:** sin una cuenta, tus datos se guardan solo en el navegador que estás usando. Si borras los datos de
+> navegación o cambias de computador, no estarán ahí. **Descarga un respaldo cada vez que avances bastante**, o usa una
+> [cuenta](#cuenta-opcional), si este sitio la ofrece.
 
 ## Antes de empezar
 
@@ -188,6 +189,27 @@ semana con cambios sin respaldar.
 
 **Trabaja en una sola pestaña.** Si abres la app en dos, la segunda se actualiza con los cambios de la primera, pero
 editar en ambas a la vez puede sobrescribir lo último que hiciste.
+
+## Cuenta (opcional)
+
+Con una cuenta, tus horarios se guardan también en la nube: no se pierden si borras los datos del navegador, y los abres
+en otro computador con solo iniciar sesión. Sin cuenta, todo sigue funcionando igual.
+
+1. En la pantalla de inicio, elige **Iniciar sesión o crear cuenta**, escribe tu correo y una contraseña, y elige
+   **Crear cuenta**.
+2. Abre el enlace que te llega por correo. Hasta entonces, tus horarios quedan solo en ese navegador.
+3. Si ya tenías horarios sin cuenta, elige **Pasarlos a mi cuenta**.
+
+**Sin internet** puedes seguir trabajando: los cambios se suben al volver la conexión. El menú lateral indica el estado.
+
+**Si editas el mismo horario en dos computadores a la vez,** no se pierde nada: se conservan las dos versiones y la tuya
+aparece como una copia con la palabra "conflicto" en el nombre. Compáralas y elimina la que no necesites.
+
+**Al cerrar sesión,** tus horarios se borran de ese navegador y siguen en tu cuenta. Hazlo siempre en un computador
+compartido.
+
+**Antes de usarla:** tu correo y tus horarios, con los nombres de los profesores, quedan en Firebase, un servicio de
+Google. Confirma que tu colegio lo autoriza. Puedes eliminar tu cuenta y sus horarios desde la pantalla de inicio.
 
 ## Partir desde FET de escritorio
 

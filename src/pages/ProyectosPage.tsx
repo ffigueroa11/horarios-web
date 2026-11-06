@@ -5,9 +5,12 @@ import { parseFet } from '../domain/fetImport';
 import { ConfirmButton } from '../ui/common';
 import { downloadBackup } from '../ui/backup';
 import { AppFooter } from '../ui/AppFooter';
+import { AccountCard } from '../ui/AccountCard';
+import { useAccount } from '../store/account';
 
 export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
   const { projects, create, duplicate, remove, select, importProjects } = useProjects();
+  const inCloud = useAccount((s) => s.phase === 'ready');
   const list = Object.values(projects).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
@@ -35,7 +38,7 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
       <header className="page-head">
         <div className="brand"><img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />Horarios Web</div>
         <h1>Arma el horario de tu colegio</h1>
-        <p>Ingresa la jornada, los cursos, los profesores y la carga académica. El horario se calcula en este computador con el motor de FET; los datos no salen de tu navegador.</p>
+        <p>Ingresa la jornada, los cursos, los profesores y la carga académica. El horario se calcula en este computador con el motor de FET{inCloud ? '; tus datos se guardan en este navegador y en tu cuenta.' : '; los datos no salen de tu navegador.'}</p>
       </header>
 
       <div className="row">
@@ -46,6 +49,8 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) onImport(f); e.target.value = ''; }} />
       </div>
       {error && <div className="notice bad" role="alert">{error}</div>}
+
+      <AccountCard />
 
       {list.length > 0 && (
         <section className="card">
@@ -76,7 +81,7 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
           </div>
         </section>
       )}
-      <p className="small muted">Los horarios se guardan en este navegador. Si borras los datos de navegación se pierden: descarga un respaldo de vez en cuando.</p>
+      {!inCloud && <p className="small muted">Los horarios se guardan en este navegador. Si borras los datos de navegación se pierden: descarga un respaldo de vez en cuando.</p>}
       <AppFooter />
     </div>
   );

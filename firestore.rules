@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// Cada persona solo accede a sus propios horarios, y solo con el correo confirmado.
+// Una escritura debe ser exactamente la revisión siguiente: así un equipo desactualizado no puede pisar lo que otro subió.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.email_verified == true;
+    }
+
+    function isValidDoc() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['revision', 'schema', 'data', 'updatedAt'])
+        && d.keys().hasAll(['revision', 'schema', 'data', 'updatedAt'])
+        && d.revision is int
+        && d.schema is int
+        && d.updatedAt == request.time
+        && (d.data == null || (d.data is string && d.data.size() <= 1000000));
+    }
+
+    match /users/{uid}/projects/{projectId} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && isValidDoc() && request.resource.data.revision == 1;
+      allow update: if isOwner(uid) && isValidDoc() && request.resource.data.revision == resource.data.revision + 1;
+      // Solo para eliminar la cuenta. Eliminar un horario es una escritura con data = null, para que llegue a los demás equipos.
+      allow delete: if isOwner(uid);
+    }
+  }
+}
