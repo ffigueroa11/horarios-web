@@ -54,6 +54,15 @@ button, input, select { font: inherit; color: inherit; }
 .project-switch { display: grid; gap: 2px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
 .project-switch .name { font-weight: 700; }
 .project-switch button { justify-self: start; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-size: .85rem; }
+.project-switch .sync-status { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.sync-status { display: inline-flex; align-items: baseline; gap: 7px; font-size: .82rem; font-weight: 700; color: var(--muted); }
+.sync-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+.sync-status.ok { color: var(--ok); }
+.sync-status.warn { color: var(--warn); }
+.sync-status.bad { color: var(--bad); }
+.sync-status.busy .sync-dot { animation: sync-pulse 1.1s ease-in-out infinite; }
+@keyframes sync-pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .sync-status.busy .sync-dot { animation: none; } }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .steps .phase { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 12px 10px 4px; }
 .steps a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; text-decoration: none; color: var(--ink); }

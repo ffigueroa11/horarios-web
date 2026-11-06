@@ -41,6 +41,8 @@ export type SyncStatus = 'connecting' | 'saved' | 'pending' | 'saving' | 'offlin
 export interface SyncEvents {
   status(s: SyncStatus, detail?: string): void;
   notice(message: string): void;
+  /** La nube confirmó una subida de este navegador. */
+  saved?(at: number): void;
 }
 
 /** Lo que se sube: `backupAt` es de cada equipo, y sin él descargar un respaldo no cuenta como un cambio. */
@@ -260,6 +262,7 @@ export class SyncEngine {
         if (await this.backend.put(doc)) {
           this.meta[doc.id] = deleted ? { rev: doc.revision, hash: '', deleted: true } : { rev: doc.revision, hash: h };
           await this.local.saveMeta(this.meta);
+          this.events.saved?.(Date.now());
         }
       }
       this.offline = false;

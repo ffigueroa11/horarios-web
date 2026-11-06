@@ -19,6 +19,8 @@ interface AccountState {
   email: string;
   sync: SyncStatus;
   syncDetail: string;
+  /** Última subida confirmada por la nube desde este navegador. */
+  savedAt: number | null;
   /** Avisos de la sincronización, como un conflicto entre equipos. */
   notices: string[];
   /** Horarios guardados en este navegador sin cuenta que se pueden pasar a la cuenta. */
@@ -28,11 +30,21 @@ interface AccountState {
   dismissNotice: (i: number) => void;
 }
 
+const SAVED_AT_KEY = `${STORE_KEY}:guardado`;
+function readSavedAt(): number | null {
+  try {
+    return Number(localStorage.getItem(SAVED_AT_KEY)) || null;
+  } catch {
+    return null;
+  }
+}
+
 export const useAccount = create<AccountState>()((setState) => ({
   phase: savedAccount() ? 'loading' : 'local',
   email: savedAccount()?.email ?? '',
   sync: 'connecting',
   syncDetail: '',
+  savedAt: readSavedAt(),
   notices: [],
   anonCount: 0,
   hasPassword: true,
@@ -42,10 +54,44 @@ export const useAccount = create<AccountState>()((setState) => ({
 const META_KEY = `${STORE_KEY}:sync`;
 const SKIP_ADOPT_KEY = `${STORE_KEY}:sin-traspaso`;
 let engine: SyncEngine | null = null;
+/** Al salir por cerrar sesión o cambiar de cuenta no se pregunta por lo que falta subir. */
+let leaving = false;
 
 /** Otra pestaña inició o cerró sesión: esta debe usar los datos de esa cuenta. */
 if (typeof addEventListener !== 'undefined') {
-  addEventListener('storage', (e) => { if (e.key === 'horarios-web-cuenta') location.reload(); });
+  addEventListener('storage', (e) => {
+    if (e.key === 'horarios-web-cuenta') { leaving = true; location.reload(); }
+  });
+}
+
+type TabMessage = { type: 'ask' } | { type: 'status'; sync: SyncStatus; syncDetail: string; savedAt: number | null };
+let tabs: BroadcastChannel | null = null;
+
+/** Solo una pestaña sincroniza: comparte su estado con las demás para que todas muestren lo mismo. */
+function shareStatus() {
+  if (!engine) return;
+  const { sync, syncDetail, savedAt } = useAccount.getState();
+  tabs?.postMessage({ type: 'status', sync, syncDetail, savedAt } satisfies TabMessage);
+}
+
+function connectTabs() {
+  if (tabs || typeof BroadcastChannel === 'undefined') return;
+  tabs = new BroadcastChannel(`${STORE_KEY}:estado`);
+  tabs.addEventListener('message', (e: MessageEvent<TabMessage>) => {
+    if (e.data.type === 'ask') shareStatus();
+    else if (!engine) useAccount.setState({ sync: e.data.sync, syncDetail: e.data.syncDetail, savedAt: e.data.savedAt });
+  });
+  tabs.postMessage({ type: 'ask' } satisfies TabMessage);
+}
+
+/** Avisa al cerrar la pestaña si faltan cambios por subir. Sin conexión no pregunta: no serviría de nada esperar. */
+function warnBeforeClosing() {
+  addEventListener('beforeunload', (e) => {
+    const { phase, sync } = useAccount.getState();
+    if (leaving || phase !== 'ready' || (sync !== 'pending' && sync !== 'saving')) return;
+    void engine?.flush();
+    e.preventDefault();
+  });
 }
 
 function startSync(fb: Firebase, uid: string) {
@@ -68,8 +114,12 @@ function startSync(fb: Firebase, uid: string) {
     saveMeta: async (meta: SyncMeta) => { await storeFlushed(); await set(META_KEY, meta); },
   };
   const current = new SyncEngine(fb.cloudBackend(uid), local, {
-    status: (sync, detail) => useAccount.setState({ sync, syncDetail: detail ?? '' }),
+    status: (sync, detail) => { useAccount.setState({ sync, syncDetail: detail ?? '' }); shareStatus(); },
     notice: (message) => useAccount.setState((s) => (s.notices.includes(message) ? s : { notices: [...s.notices, message] })),
+    saved: (savedAt) => {
+      useAccount.setState({ savedAt });
+      try { localStorage.setItem(SAVED_AT_KEY, String(savedAt)); } catch { /* Solo se pierde la hora al recargar. */ }
+    },
   });
   engine = current;
   useProjects.subscribe((s, prev) => { if (s.projects !== prev.projects) current.schedule(); });
@@ -81,6 +131,8 @@ function startSync(fb: Firebase, uid: string) {
 
 /** Solo una pestaña sincroniza; las demás reciben los cambios por el aviso entre pestañas de store/projects.ts. */
 function startSyncInOneTab(fb: Firebase, uid: string) {
+  if (!tabs) warnBeforeClosing();
+  connectTabs();
   if (!navigator.locks) return startSync(fb, uid);
   void navigator.locks.request(`${STORE_KEY}:sync`, () => {
     startSync(fb, uid);
@@ -189,9 +241,11 @@ export async function unsyncedCount(): Promise<number> {
 }
 
 async function forgetLocalAccount() {
+  leaving = true;
   engine?.stop();
   await Promise.all([del(STORE_KEY), del(META_KEY)]);
   localStorage.removeItem(SKIP_ADOPT_KEY);
+  localStorage.removeItem(SAVED_AT_KEY);
   clearAccount();
   location.reload();
 }
@@ -219,24 +273,43 @@ export async function adoptAnonProjects() {
   useAccount.setState({ anonCount: 0 });
 }
 
-const SYNC_TEXT: Record<SyncStatus, string> = {
-  connecting: 'Conectando…',
-  saved: 'Todo guardado en tu cuenta',
-  pending: 'Hay cambios por subir',
-  saving: 'Guardando en tu cuenta…',
-  offline: 'Sin conexión: tus cambios se subirán al volver',
-  error: 'No se pudo sincronizar',
-};
-export const syncText = (s: SyncStatus) => SYNC_TEXT[s];
+function savedText(at: number | null): string {
+  if (!at) return 'Todo guardado en tu cuenta';
+  const date = new Date(at);
+  const hour = date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  if (date.toDateString() === new Date().toDateString()) return `Guardado en tu cuenta a las ${hour}`;
+  return `Guardado en tu cuenta el ${date.toLocaleDateString('es-CL')} a las ${hour}`;
+}
 
-/** Texto breve del estado, para el menú lateral. Devuelve null si no hay cuenta. */
-export function useSyncLabel(): string | null {
+export interface SyncView {
+  tone: 'ok' | 'busy' | 'warn' | 'bad' | 'neutral';
+  text: string;
+  /** Explicación más larga, al dejar el cursor encima. */
+  detail: string;
+}
+
+const ONLY_HERE = 'Tus cambios están seguros en este navegador, pero todavía no en tu cuenta.';
+
+/** Dónde está guardado lo último que hizo el usuario. */
+export function useSyncView(): SyncView {
   const phase = useAccount((s) => s.phase);
   const sync = useAccount((s) => s.sync);
-  if (phase === 'local' || phase === 'loading') return null;
-  if (phase === 'unverified') return 'Confirma tu correo para guardar en tu cuenta.';
-  if (phase === 'expired') return 'La sesión se cerró: los cambios solo quedan en este navegador.';
-  return SYNC_TEXT[sync];
+  const syncDetail = useAccount((s) => s.syncDetail);
+  const savedAt = useAccount((s) => s.savedAt);
+  if (phase === 'local') {
+    return { tone: 'neutral', text: 'Guardado solo en este navegador', detail: 'Si borras los datos de navegación se pierde. Descarga un respaldo de vez en cuando.' };
+  }
+  if (phase === 'loading') return { tone: 'busy', text: 'Revisando tu sesión…', detail: 'Tus horarios están en este navegador.' };
+  if (phase === 'unverified') return { tone: 'warn', text: 'Confirma tu correo para guardar en tu cuenta', detail: ONLY_HERE };
+  if (phase === 'expired') return { tone: 'warn', text: 'Sesión cerrada: guardado solo en este navegador', detail: 'Vuelve a iniciar sesión en la pantalla de inicio para subir tus cambios.' };
+  switch (sync) {
+    case 'saved': return { tone: 'ok', text: savedText(savedAt), detail: 'Tus horarios están en tu cuenta y en este navegador.' };
+    case 'pending': return { tone: 'busy', text: 'Cambios por subir…', detail: `${ONLY_HERE} Se suben en unos segundos.` };
+    case 'saving': return { tone: 'busy', text: 'Guardando en tu cuenta…', detail: ONLY_HERE };
+    case 'connecting': return { tone: 'busy', text: 'Conectando con tu cuenta…', detail: ONLY_HERE };
+    case 'offline': return { tone: 'warn', text: 'Sin conexión: se subirá al volver', detail: ONLY_HERE };
+    case 'error': return { tone: 'bad', text: 'No se pudo guardar en tu cuenta', detail: `${syncDetail ? `${syncDetail} ` : ''}${ONLY_HERE}` };
+  }
 }
 
 export function skipAdoption() {

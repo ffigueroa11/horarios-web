@@ -201,7 +201,22 @@ en otro computador con solo iniciar sesión. Sin cuenta, todo sigue funcionando 
    por correo. Hasta entonces, tus horarios quedan solo en ese navegador.
 3. Si ya tenías horarios sin cuenta, elige **Pasarlos a mi cuenta**.
 
-**Sin internet** puedes seguir trabajando: los cambios se suben al volver la conexión. El menú lateral indica el estado.
+**Cómo saber si está guardado.** Arriba en el menú lateral, bajo el nombre del horario, verás uno de estos estados:
+
+| Estado | Qué significa |
+|---|---|
+| Guardado en tu cuenta a las 16:32 | Ya está en la nube. La hora es la de la última subida desde este navegador |
+| Cambios por subir… / Guardando en tu cuenta… | Está en este navegador y se sube en unos segundos |
+| Sin conexión: se subirá al volver | Está en este navegador y se sube cuando vuelva internet |
+| No se pudo guardar en tu cuenta | Está en este navegador, pero no en la nube. Deja el cursor encima para ver el motivo y descarga un respaldo |
+| Guardado solo en este navegador | No has iniciado sesión |
+
+Cada cambio se guarda de inmediato en el navegador y se sube unos 5 segundos después de que dejas de editar. Los campos
+de texto se guardan al salir del campo. Si intentas cerrar la pestaña con cambios por subir, el navegador te avisa.
+
+**Sin internet** puedes seguir trabajando: los cambios se suben al volver la conexión.
+
+**Cerrar sesión** está en la tarjeta **Tu cuenta**, en la pantalla de inicio. Se llega con **Cambiar de horario**.
 
 **Si editas el mismo horario en dos computadores a la vez,** no se pierde nada: se conservan las dos versiones y la tuya
 aparece como una copia con la palabra "conflicto" en el nombre. Compáralas y elimina la que no necesites.

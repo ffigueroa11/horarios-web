@@ -2,8 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { cloudEnabled } from '../cloud/config';
 import {
   adoptAnonProjects, authErrorMessage, checkVerified, deleteAccount, resendVerification, resetPassword, signIn,
-  signInWithGoogle, signOut, signUp, skipAdoption, syncText, unsyncedCount, useAccount,
+  signInWithGoogle, signOut, signUp, skipAdoption, unsyncedCount, useAccount,
 } from '../store/account';
+import { SyncStatus } from './SyncStatus';
 import { useGeneration } from '../store/generation';
 
 function useAction() {
@@ -168,7 +169,7 @@ export function AccountCard() {
           <Messages error={verify.error} info={verify.info} />
         </div>
       ) : (
-        <p className="small"><span className={`badge ${sync === 'saved' ? 'ok' : sync === 'error' ? 'bad' : sync === 'offline' ? 'warn' : ''}`} role="status">{syncText(sync)}</span>
+        <p className="small"><SyncStatus />
           {sync === 'error' && syncDetail && <span className="muted"> {syncDetail}</span>}</p>
       )}
       {phase === 'ready' && anonCount > 0 && (

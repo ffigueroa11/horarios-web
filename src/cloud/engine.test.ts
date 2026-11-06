@@ -39,6 +39,7 @@ class Device {
   notices: string[] = [];
   statuses: SyncStatus[] = [];
   moved: Record<Id, Id> = {};
+  savedAt: number[] = [];
   engine: SyncEngine;
 
   constructor(cloud: CloudBackend, seed: Project[] = [], meta: SyncMeta = {}) {
@@ -57,6 +58,7 @@ class Device {
     }, {
       status: (s) => this.statuses.push(s),
       notice: (n) => this.notices.push(n),
+      saved: (at) => this.savedAt.push(at),
     }, { debounceMs: 0, maxWaitMs: 0, retryMs: 1_000_000 });
   }
   async open() { await this.engine.start(); await this.engine.flush(); }
@@ -269,6 +271,26 @@ describe('sincronización', () => {
     expect(cloud.docs.has(p.id)).toBe(true);
     expect(a.statuses.at(-1)).toBe('saved');
     expect(a.notices[0]).toMatch(/demasiado grande/);
+  });
+
+  it('la hora de guardado solo se informa cuando la nube confirmó la escritura', async () => {
+    const a = new Device(cloud, [p]);
+    await a.open();
+    expect(a.savedAt).toHaveLength(1);
+    await a.engine.flush(); // Nada que subir.
+    expect(a.savedAt).toHaveLength(1);
+
+    a.edit(p.id, 'Sin red');
+    cloud.failWith = new Error('sin red');
+    await a.engine.flush();
+    expect(a.savedAt).toHaveLength(1);
+    cloud.failWith = null;
+
+    // La nube avanzó: la escritura se rechaza y no cuenta como guardada.
+    cloud.docs.set(p.id, { id: p.id, revision: 9, schema: BACKUP_VERSION, data: payload({ ...p, name: 'Otro equipo' }) });
+    await a.engine.flush();
+    expect(a.savedAt).toHaveLength(1);
+    a.engine.stop();
   });
 
   it('cuenta los horarios con cambios sin subir', () => {

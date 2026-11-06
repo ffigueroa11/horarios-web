@@ -271,7 +271,9 @@ Reglas que hay que mantener:
 - **Primero se guardan los horarios y luego el registro de lo sincronizado** (`storeFlushed`). En el orden inverso, un
   cierre a medio camino haría que la versión antigua se suba como si fuera un cambio.
 - **Los horarios eliminados quedan con `data: null`** para que la eliminación llegue a los demás equipos.
-- **Solo una pestaña sincroniza** (`navigator.locks`). Las demás reciben los cambios por el `BroadcastChannel`.
+- **Solo una pestaña sincroniza** (`navigator.locks`). Las demás reciben los cambios y el estado por `BroadcastChannel`.
+- **"Guardado" significa confirmado por la nube.** La hora que se muestra sale del evento `saved` del motor, nunca de
+  una escritura rechazada o sin conexión.
 - **La seguridad está en [`firestore.rules`](../firestore.rules).** La configuración web es pública. Las reglas exigen
   correo confirmado y la revisión exactamente siguiente.
 - **Al cambiar la forma de los datos,** sube `BACKUP_VERSION`: un equipo con una versión anterior no debe interpretar lo

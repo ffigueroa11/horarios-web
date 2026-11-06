@@ -16,7 +16,7 @@ import { HealthNotices } from './ui/HealthNotices';
 import { ImportReportCard } from './ui/ImportReportCard';
 import { AppFooter } from './ui/AppFooter';
 import { downloadBackup } from './ui/backup';
-import { useSyncLabel } from './store/account';
+import { SyncStatus } from './ui/SyncStatus';
 
 export type Route = Step | 'generar' | 'horario' | 'proyectos' | 'acerca';
 
@@ -53,7 +53,6 @@ export default function App() {
   const project = useCurrent();
   const select = useProjects((s) => s.select);
   const [route, go] = useHashRoute();
-  const syncLabel = useSyncLabel();
   // Un error aquí no debe impedir abrir la app: corre antes de elegir la pantalla y el horario actual queda guardado.
   const issues = useMemo<Issue[]>(() => {
     if (!project) return [];
@@ -104,6 +103,7 @@ export default function App() {
           <span className="small muted">Horario {project.year}</span>
           <span className="name">{project.name}</span>
           <button type="button" onClick={() => { select(null); go('proyectos'); }}>Cambiar de horario</button>
+          <SyncStatus />
         </div>
         <nav aria-label="Pasos">
           <ul className="steps">
@@ -120,7 +120,6 @@ export default function App() {
           </ul>
         </nav>
         <div className="foot">
-          <p>{syncLabel ?? 'Los datos se guardan solo en este navegador.'}</p>
           <button type="button" className={`btn small ${needsBackup(project) ? 'warn' : 'ghost'}`} onClick={() => downloadBackup([project])}
             title={project.backupAt ? `Último respaldo: ${new Date(project.backupAt).toLocaleString('es-CL')}` : 'Aún no hay respaldos de este horario'}>
             {needsBackup(project) ? 'Descargar respaldo (pendiente)' : 'Descargar respaldo'}
