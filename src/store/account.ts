@@ -23,6 +23,8 @@ interface AccountState {
   notices: string[];
   /** Horarios guardados en este navegador sin cuenta que se pueden pasar a la cuenta. */
   anonCount: number;
+  /** Entró con contraseña. Si no, confirma su identidad con Google. */
+  hasPassword: boolean;
   dismissNotice: (i: number) => void;
 }
 
@@ -33,6 +35,7 @@ export const useAccount = create<AccountState>()((setState) => ({
   syncDetail: '',
   notices: [],
   anonCount: 0,
+  hasPassword: true,
   dismissNotice: (i) => setState((s) => ({ notices: s.notices.filter((_, n) => n !== i) })),
 }));
 
@@ -116,7 +119,7 @@ export async function initAccount() {
     fb.onUser((user) => {
       if (!user) return useAccount.setState({ phase: 'expired' });
       if (user.uid !== saved.uid) { setAccount({ uid: user.uid, email: user.email }); location.reload(); return; }
-      useAccount.setState({ email: user.email, phase: user.verified ? 'ready' : 'unverified' });
+      useAccount.setState({ email: user.email, hasPassword: user.hasPassword, phase: user.verified ? 'ready' : 'unverified' });
       void refreshAnonCount();
       // Nunca se sincroniza si no se pudo leer lo local: se tomaría como si todo se hubiera eliminado.
       if (user.verified && !healthReadFailed()) startSyncInOneTab(fb, user.uid);
@@ -137,6 +140,14 @@ export async function initAccount() {
 export async function signIn(email: string, password: string) {
   const fb = await loadFirebase();
   const user = await fb.signIn(email, password);
+  await storeFlushed();
+  setAccount({ uid: user.uid, email: user.email });
+  location.reload();
+}
+
+export async function signInWithGoogle() {
+  const fb = await loadFirebase();
+  const user = await fb.signInWithGoogle();
   await storeFlushed();
   setAccount({ uid: user.uid, email: user.email });
   location.reload();
@@ -192,7 +203,7 @@ export async function signOut() {
 }
 
 /** Elimina los horarios de la nube, la cuenta y la copia local de esa cuenta. */
-export async function deleteAccount(password: string) {
+export async function deleteAccount(password: string | null) {
   // La sincronización se detiene solo tras confirmar la contraseña: con una incorrecta, todo sigue igual.
   await (await loadFirebase()).deleteAccount(password, () => engine?.stop());
   await forgetLocalAccount();

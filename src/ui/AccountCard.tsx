@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { cloudEnabled } from '../cloud/config';
 import {
-  adoptAnonProjects, authErrorMessage, checkVerified, deleteAccount, resendVerification, resetPassword, signIn, signOut,
-  signUp, skipAdoption, syncText, unsyncedCount, useAccount,
+  adoptAnonProjects, authErrorMessage, checkVerified, deleteAccount, resendVerification, resetPassword, signIn,
+  signInWithGoogle, signOut, signUp, skipAdoption, syncText, unsyncedCount, useAccount,
 } from '../store/account';
 import { useGeneration } from '../store/generation';
 
@@ -43,12 +43,16 @@ function SignInForm({ expiredEmail }: { expiredEmail?: string }) {
   };
   return (
     <form className="account-form" onSubmit={submit}>
+      <div className="row">
+        <button type="button" className="btn primary small" disabled={busy || generating} onClick={() => void run(signInWithGoogle)}>Continuar con Google</button>
+      </div>
+      <p className="small muted">O con tu correo y una contraseña:</p>
       <label className="field"><span>Correo</span>
         <input className="input" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
       <label className="field"><span>Contraseña</span>
         <input className="input" type="password" autoComplete="current-password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></label>
       <div className="row">
-        <button type="submit" className="btn primary small" disabled={busy || generating}>Iniciar sesión</button>
+        <button type="submit" className="btn small" disabled={busy || generating}>Iniciar sesión</button>
         {!expiredEmail && <button type="button" className="btn small" disabled={busy || generating} onClick={() => {
           if (!email.trim() || password.length < 6) return setError('Para crear la cuenta, escribe tu correo y una contraseña de al menos 6 caracteres.');
           void run(() => signUp(email.trim(), password));
@@ -68,12 +72,15 @@ function DeleteAccount() {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const { busy, error, run } = useAction();
+  const hasPassword = useAccount((s) => s.hasPassword);
   if (!open) return <button type="button" className="btn small danger" onClick={() => setOpen(true)}>Eliminar mi cuenta</button>;
   return (
-    <form className="account-form" onSubmit={(e) => { e.preventDefault(); void run(() => deleteAccount(password)); }}>
+    <form className="account-form" onSubmit={(e) => { e.preventDefault(); void run(() => deleteAccount(hasPassword ? password : null)); }}>
       <p>Se eliminarán tu cuenta, tus horarios en la nube y su copia en este navegador. <b>No se puede deshacer</b>: descarga antes un respaldo si quieres conservarlos.</p>
-      <label className="field"><span>Tu contraseña, para confirmar</span>
-        <input className="input" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+      {hasPassword
+        ? <label className="field"><span>Tu contraseña, para confirmar</span>
+          <input className="input" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+        : <p className="small muted">Para confirmar, Google te pedirá elegir tu cuenta.</p>}
       <div className="row">
         <button type="submit" className="btn small danger" disabled={busy}>Eliminar definitivamente</button>
         <button type="button" className="btn small ghost" onClick={() => setOpen(false)}>Cancelar</button>

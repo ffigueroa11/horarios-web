@@ -195,9 +195,10 @@ editar en ambas a la vez puede sobrescribir lo último que hiciste.
 Con una cuenta, tus horarios se guardan también en la nube: no se pierden si borras los datos del navegador, y los abres
 en otro computador con solo iniciar sesión. Sin cuenta, todo sigue funcionando igual.
 
-1. En la pantalla de inicio, elige **Iniciar sesión o crear cuenta**, escribe tu correo y una contraseña, y elige
-   **Crear cuenta**.
-2. Abre el enlace que te llega por correo. Hasta entonces, tus horarios quedan solo en ese navegador.
+1. En la pantalla de inicio, elige **Iniciar sesión o crear cuenta** y luego **Continuar con Google**. Si el navegador
+   bloquea la ventana de Google, permite las ventanas emergentes de este sitio.
+2. Si prefieres no usar Google, escribe tu correo y una contraseña, elige **Crear cuenta** y abre el enlace que te llega
+   por correo. Hasta entonces, tus horarios quedan solo en ese navegador.
 3. Si ya tenías horarios sin cuenta, elige **Pasarlos a mi cuenta**.
 
 **Sin internet** puedes seguir trabajando: los cambios se suben al volver la conexión. El menú lateral indica el estado.

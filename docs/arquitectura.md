@@ -219,6 +219,10 @@ Tres decisiones de diseño:
 Es opcional. Sin las variables `VITE_FIREBASE_*`, `cloudEnabled` es falso y nada de esto aparece. El SDK se carga con un
 `import()` solo al iniciar sesión o si hay una sesión guardada.
 
+Se entra con Google o con correo y contraseña. Google ya entrega el correo confirmado, así que esas cuentas sincronizan de
+inmediato. Eliminar una cuenta exige volver a autenticarse: con la contraseña si la tiene y, si no, con la ventana de
+Google. La ventana solo funciona en los dominios autorizados en Firebase.
+
 ### Espacios de datos
 
 - Cada cuenta usa su propia clave en IndexedDB, `horarios-web:<uid>`, y sin cuenta se usa `horarios-web`. Así, en un

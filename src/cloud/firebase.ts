@@ -2,8 +2,9 @@
 // conecta a Google.
 import { initializeApp } from 'firebase/app';
 import {
-  createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, getAuth, onAuthStateChanged, reauthenticateWithCredential,
-  sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, type User,
+  createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, getAuth, GoogleAuthProvider, onAuthStateChanged,
+  reauthenticateWithCredential, reauthenticateWithPopup, sendEmailVerification, sendPasswordResetEmail,
+  signInWithEmailAndPassword, signInWithPopup, signOut, type User,
 } from 'firebase/auth';
 import {
   collection, deleteDoc, doc, getDocs, getFirestore, onSnapshot, runTransaction, serverTimestamp,
@@ -16,14 +17,31 @@ const auth = getAuth(app);
 auth.languageCode = 'es';
 const db = getFirestore(app);
 
-export interface AccountUser { uid: string; email: string; verified: boolean }
+export interface AccountUser {
+  uid: string;
+  email: string;
+  verified: boolean;
+  /** Tiene contraseña. Si no, entró solo con Google y se confirma su identidad con Google. */
+  hasPassword: boolean;
+}
 
-const toUser = (u: User): AccountUser => ({ uid: u.uid, email: u.email ?? '', verified: u.emailVerified });
+const toUser = (u: User): AccountUser => ({
+  uid: u.uid,
+  email: u.email ?? '',
+  verified: u.emailVerified,
+  hasPassword: u.providerData.some((p) => p.providerId === EmailAuthProvider.PROVIDER_ID),
+});
 
 export const onUser = (cb: (u: AccountUser | null) => void) => onAuthStateChanged(auth, (u) => cb(u && toUser(u)));
 
 export async function signIn(email: string, password: string): Promise<AccountUser> {
   return toUser((await signInWithEmailAndPassword(auth, email, password)).user);
+}
+
+export async function signInWithGoogle(): Promise<AccountUser> {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' }); // En un computador compartido, no entrar con la cuenta de otro.
+  return toUser((await signInWithPopup(auth, provider)).user);
 }
 
 export async function signUp(email: string, password: string): Promise<AccountUser> {
@@ -49,10 +67,11 @@ export async function refreshVerified(): Promise<boolean> {
 }
 
 /** Elimina los horarios de la nube y luego la cuenta. Firebase exige una autenticación reciente para hacerlo. */
-export async function deleteAccount(password: string, onConfirmed: () => void) {
+export async function deleteAccount(password: string | null, onConfirmed: () => void) {
   const user = auth.currentUser;
   if (!user?.email) throw new Error('No hay una sesión iniciada.');
-  await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+  if (password != null) await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+  else await reauthenticateWithPopup(user, new GoogleAuthProvider());
   onConfirmed();
   if (user.emailVerified) {
     const docs = await getDocs(collection(db, 'users', user.uid, 'projects'));
@@ -95,6 +114,12 @@ export function authErrorMessage(e: unknown): string {
     case 'auth/network-request-failed': return 'No hay conexión. Revisa internet y vuelve a probar.';
     case 'auth/operation-not-allowed': case 'auth/configuration-not-found': return 'Las cuentas todavía no están habilitadas en este sitio.';
     case 'auth/quota-exceeded': return 'Se alcanzó el límite diario de correos. Vuelve a probar mañana.';
+    case 'auth/popup-blocked': return 'El navegador bloqueó la ventana de Google. Permite las ventanas emergentes de este sitio y vuelve a probar.';
+    case 'auth/popup-closed-by-user': case 'auth/cancelled-popup-request': case 'auth/user-cancelled':
+      return 'Se cerró la ventana de Google antes de terminar. Vuelve a probar.';
+    case 'auth/unauthorized-domain': return 'Este sitio todavía no está autorizado para entrar con Google.';
+    case 'auth/account-exists-with-different-credential': return 'Ya existe una cuenta con ese correo. Entra con tu contraseña.';
+    case 'auth/user-mismatch': return 'Elige la misma cuenta de Google con que entraste.';
     default: return `No se pudo completar la operación (${code || (e as Error).message}).`;
   }
 }

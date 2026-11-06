@@ -27,8 +27,8 @@ cuenta, los datos del colegio no salen del navegador; con una cuenta opcional, s
 8. **Respaldos**: descarga e importación de `.json`, con recordatorio si hay cambios sin respaldar.
 9. **Partir desde FET**: importa un archivo `.fet` de FET de escritorio (versión 5 en adelante) y muestra un informe
    de lo que se traspasó y lo que no.
-10. **Cuenta opcional**: con correo y contraseña, los horarios se sincronizan entre equipos y sobreviven a borrar los
-    datos del navegador.
+10. **Cuenta opcional**: con Google o con correo y contraseña, los horarios se sincronizan entre equipos y sobreviven a
+    borrar los datos del navegador.
 
 ## Documentación
 
@@ -149,6 +149,9 @@ proyecto `horarios-web-ff`. Para activarla en otro proyecto:
    cambiar después.
 3. **Publicar las reglas y activar el acceso con correo:**
    `npx firebase-tools deploy --only firestore:rules,auth --project <id>`. Sin las reglas, nadie puede sincronizar.
+4. **Activar el acceso con Google:** en la consola, Authentication › Método de acceso › Google. Después, en
+   Authentication › Configuración › Dominios autorizados, agrega el dominio del sitio: sin eso, la ventana de Google se
+   rechaza. Las vistas previas de Vercel tienen otro dominio, así que ahí solo funciona el correo y la contraseña.
 
 Mantén el proyecto en el plan **Spark**: al agotarse la cuota gratuita, las operaciones se rechazan en vez de generar
 cobros, y la app sigue guardando en el navegador. No uses Cloud Storage, que exige el plan de pago. Las cuentas usan
