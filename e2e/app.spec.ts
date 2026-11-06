@@ -27,6 +27,7 @@ async function generate(page: Page) {
 /** Selecciona el primer bloque para el que existe `selector` (ej. un destino válido). Falla si ninguno lo tiene. */
 async function selectLessonWith(page: Page, selector: string) {
   const lessons = page.locator('.card td.lesson'); // .card: la grilla interactiva, no la copia para imprimir
+  await expect(lessons.first()).toBeVisible(); // count() no espera: justo tras cambiar de pantalla daría 0.
   const n = await lessons.count();
   for (let i = 0; i < n; i++) {
     await lessons.nth(i).click();
@@ -133,6 +134,7 @@ test('eliminar un curso o una asignatura pide confirmar y dice cuánta carga se 
   await expect(page.getByLabel('Nombre del curso').first()).not.toHaveValue('1° Medio A');
 
   await page.locator('a[href="#asignaturas"]').click();
+  await expect(page.getByLabel('Sigla').first()).toBeVisible(); // count() no espera a que se dibuje la pantalla.
   const before = await page.getByLabel('Sigla').count();
   await page.getByRole('button', { name: /^Eliminar / }).first().click();
   await expect(page.getByLabel('Sigla')).toHaveCount(before);
