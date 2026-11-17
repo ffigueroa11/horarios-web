@@ -337,4 +337,5 @@ pasos deben fallar si no encuentran lo que buscan, no saltarse la comprobación.
 - Sin cuenta, los datos viven en un solo navegador.
 - Con cuenta, cada horario pertenece a una sola persona: no se comparte entre usuarios.
 
-El análisis completo y las propuestas están en [mejoras.md](mejoras.md).
+El análisis completo y las propuestas están en [mejoras.md](mejoras.md). Los cuellos de botella y el plan de acción
+vigente están en [revision-arquitectura.md](revision-arquitectura.md).

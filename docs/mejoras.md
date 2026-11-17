@@ -6,7 +6,8 @@ Revisión del commit `be2f6ec` (noviembre de 2026), pensada para decidir qué ha
 > detalle de esos hallazgos se conserva como registro de qué se corrigió y por qué. De la fase 1 ya están F1 y F2. Las
 > referencias a líneas de código corresponden al commit revisado y pueden haber cambiado. Después de esta revisión se
 > agregaron cuentas opcionales con sincronización ([arquitectura](arquitectura.md#cuenta-y-sincronización)), que cubren
-> parte del riesgo de F6.
+> parte del riesgo de F6. La [revisión de arquitectura](revision-arquitectura.md) del 15 de noviembre de 2026 agrega los
+> cuellos de botella, las mejoras R1 a R6 y un plan de acción que reordena lo pendiente.
 
 **Cómo se hizo.** Se leyó el dominio, el estado, el motor, las pantallas principales y los flujos de CI. Se ejecutaron
 `npm run lint`, `npm test`, `npm run build`, `npm audit` y `npm outdated`, y se corrieron pruebas temporales contra el
