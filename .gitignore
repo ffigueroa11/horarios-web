@@ -30,3 +30,6 @@ blob-report
 
 # Claude Code: ajustes personales
 .claude/settings.local.json
+
+# Devlog local (Portfolio Hub)
+.devlog/
