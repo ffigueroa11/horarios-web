@@ -12,8 +12,8 @@
   --accent-soft: #e2efe9;
   --chalk: #e3a53a;
   --chalk-soft: #fbf0db;
-  --ok: #2e7d4f;
-  --warn: #a8670d;
+  --ok: #256b44;
+  --warn: #8a560b;
   --warn-soft: #fdf2df;
   --bad: #b3412f;
   --bad-soft: #fbe7e3;
@@ -161,6 +161,7 @@ table.data.teacher-list tr[aria-selected='true'] td .btn { font-weight: 700; }
 .btn.big { padding: 12px 22px; font-size: 1.05rem; }
 details.advanced summary { cursor: pointer; color: var(--muted); }
 details.advanced[open] summary { margin-bottom: 8px; }
+table.data.versions td:first-child { white-space: nowrap; }
 .first-steps ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
 .first-steps li.done { color: var(--muted); }
 .first-steps li.done a { color: var(--muted); text-decoration: line-through; }
@@ -200,17 +201,17 @@ details.advanced[open] summary { margin-bottom: 8px; }
 .week td.off { background: var(--bad-soft); border-color: transparent; }
 .week td.off:empty::after { content: 'No disponible'; color: var(--bad); font-size: .72rem; }
 .week td.allowed { background: var(--accent-soft); border-color: transparent; }
-.week td.lesson { color: #fff; border: 0; cursor: pointer; }
+.week td.lesson { border: 0; cursor: pointer; }
 .week td.lesson .s { font-weight: 700; display: block; line-height: 1.2; }
-.week td.lesson .w { opacity: .9; font-size: .72rem; display: block; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.week td.lesson .w { font-size: .72rem; display: block; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .week td.lesson .lock { position: absolute; top: 3px; right: 5px; font-size: .75rem; }
 .week td.lesson.locked { box-shadow: inset 0 0 0 2px var(--chalk); }
 .week td.multi { padding: 2px; background: transparent; border-color: transparent; vertical-align: top; }
 .week td.multi[rowspan] .chip-lesson { padding-block: 6px; }
-.chip-lesson { display: block; width: 100%; text-align: left; border: 0; border-radius: 4px; padding: 2px 6px; margin-bottom: 2px; color: #fff; cursor: pointer; font: inherit; font-size: .74rem; line-height: 1.2; }
+.chip-lesson { display: block; width: 100%; text-align: left; border: 0; border-radius: 4px; padding: 2px 6px; margin-bottom: 2px; cursor: pointer; font: inherit; font-size: .74rem; line-height: 1.2; }
 .chip-lesson:last-child { margin-bottom: 0; }
 .chip-lesson .s { font-weight: 700; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chip-lesson .w { display: block; opacity: .9; font-size: .7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip-lesson .w { display: block; font-size: .7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chip-lesson.locked { box-shadow: inset 0 0 0 2px var(--chalk); }
 .chip-lesson:disabled { cursor: default; }
 
@@ -278,7 +279,10 @@ pre.log { margin: 0; max-height: 220px; overflow: auto; padding: 10px; backgroun
 .week td.lesson.selected, .chip-lesson.selected { outline: 3px solid var(--ink); outline-offset: -3px; }
 .week td.drop-ok { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--ok); cursor: copy; }
 .week td.drop-no:not(.lesson):not(.multi) { cursor: not-allowed; }
-.week td.lesson.drop-no > div, .week td.multi.drop-no .chip-lesson { opacity: .4; }
+/* Atenuado sin transparencia: el fondo se mezcla con el de la página y el texto pasa al color normal, para que se siga
+   leyendo (con opacidad, el texto quedaba bajo el contraste mínimo). */
+.week td.lesson.drop-no > div, .week td.multi.drop-no .chip-lesson {
+  background: color-mix(in srgb, var(--subject) 22%, var(--surface)) !important; color: var(--ink) !important; }
 .selbar .sel-status { display: block; margin-top: 2px; min-height: 1.5em; }
 .selbar .sel-status.no { color: var(--bad); }
 /* Barra de selección: fija abajo mientras se ve la grilla, para que su texto no la desplace. */

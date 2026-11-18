@@ -7,6 +7,7 @@ import { parseActivitiesXml, parsePartial, parseResult, type FetOutcome, type Pa
 import { fetArgs } from '../engine/args';
 import { runFet, type FetProgress, type RunHandle } from '../engine/runFet';
 import { useProjects } from './projects';
+import { saveVersion } from './versions';
 
 type Status = 'idle' | 'loading' | 'running' | 'done' | 'error' | 'cancelled';
 
@@ -55,6 +56,8 @@ export const useGeneration = create<GenState>()((set, get) => ({
       if (outcome.kind === 'ok') {
         const placements = parseActivitiesXml(xml, ex);
         useProjects.getState().saveTimetable(p.id, { generatedAt, seconds, placements, seed });
+        const saved = useProjects.getState().projects[p.id];
+        if (saved) void saveVersion(saved, 'Horario generado');
       }
       const found = outcome.kind === 'timeout' || outcome.kind === 'impossible' ? parsePartial(run.files, ex) : null;
       const partial = found && { ...found, generatedAt };

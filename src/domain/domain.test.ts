@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyProject, exampleProject } from './defaults';
 import { exportFet } from './fetExport';
+import { addVersion, needsAutosave, versionsOf } from './versions';
 import { describeActivity, fetMessages, parseActivitiesXml, parseResult } from './fetResult';
 import { courseLoad, describeBlocks, longestRun, openSlots, parseBlocks, stepsDone, teacherLoad, validate } from './validate';
 import { units } from './units';
@@ -344,5 +345,39 @@ describe('pasos listos', () => {
     const p = exampleProject();
     p.assignments = p.assignments.filter((a) => a.courseId !== p.courses[0].id);
     expect(stepsDone(p).carga).toBe(false);
+  });
+});
+
+describe('horas de la jornada', () => {
+  it('avisa tramos que terminan antes de empezar o se cruzan con el anterior', () => {
+    const p = exampleProject();
+    expect(validate(p).filter((i) => i.step === 'jornada')).toEqual([]);
+    p.school.periods[0].end = '07:50';
+    p.school.periods[2].start = '09:00';
+    const msgs = validate(p).filter((i) => i.step === 'jornada').map((i) => i.message);
+    expect(msgs.some((m) => m.includes('termina (07:50) antes de empezar'))).toBe(true);
+    expect(msgs.some((m) => m.includes('empieza a las 09:00, antes de que termine'))).toBe(true);
+    expect(validate(p).filter((i) => i.step === 'jornada').every((i) => i.level === 'aviso')).toBe(true);
+  });
+});
+
+describe('historial de versiones', () => {
+  const v = (projectId: string, minutes: number) => ({
+    id: `${projectId}-${minutes}`, projectId, at: new Date(Date.UTC(2026, 10, 18, 10, minutes)).toISOString(), reason: 'x', project: exampleProject(),
+  });
+  it('conserva las más recientes por horario y en total', () => {
+    let list: ReturnType<typeof v>[] = [];
+    for (let i = 0; i < 5; i++) list = addVersion(list, v('a', i), 3, 10);
+    expect(list.map((x) => x.id)).toEqual(['a-4', 'a-3', 'a-2']);
+    for (let i = 0; i < 5; i++) list = addVersion(list, v('b', 10 + i), 3, 4);
+    expect(list.map((x) => x.id)).toEqual(['b-14', 'b-13', 'b-12', 'a-4']);
+    expect(versionsOf(list, 'a').map((x) => x.id)).toEqual(['a-4']);
+  });
+  it('una copia automática como máximo cada media hora por horario', () => {
+    const list = [v('a', 0)];
+    const at = (m: number) => Date.UTC(2026, 10, 18, 10, m);
+    expect(needsAutosave(list, 'a', at(20))).toBe(false);
+    expect(needsAutosave(list, 'a', at(30))).toBe(true);
+    expect(needsAutosave(list, 'b', at(1))).toBe(true);
   });
 });

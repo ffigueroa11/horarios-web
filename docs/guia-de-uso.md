@@ -194,6 +194,13 @@ liberarlo con un botón.
 
 El horario se generó antes de tu último cambio. Genera de nuevo para actualizarlo.
 
+## Versiones anteriores
+
+Cada vez que generas un horario, y como máximo cada media hora mientras lo editas, se guarda una copia en este navegador.
+En el inicio, el menú **⋯** de cada horario tiene **Versiones anteriores**: elige una y **Restaurar como copia**. Se crea
+un horario aparte, así que el actual no cambia. Estas copias no reemplazan los respaldos: si borras los datos del
+navegador, se pierden.
+
 ## Respaldos y cambio de computador
 
 Desde **Inicio**, en el menú lateral, puedes descargar un respaldo de un horario o de todos. La app te avisa si llevas más de una

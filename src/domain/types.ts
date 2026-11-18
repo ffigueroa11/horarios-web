@@ -180,12 +180,6 @@ export interface Project {
   importReport?: ImportReport;
 }
 
-/** Combinaciones de grupos (una por división) = los distintos horarios de alumnos que tiene un curso. */
-export function studentSets(c: Course): CourseGroup[][] {
-  return c.divisions.filter((d) => d.groups.length > 0)
-    .reduce<CourseGroup[][]>((acc, d) => acc.flatMap((combo) => d.groups.map((g) => [...combo, g])), [[]]);
-}
-
 export function findGroup(c: Course | undefined, groupId: Id | null): { division: Division; group: CourseGroup } | null {
   if (!c || !groupId) return null;
   for (const division of c.divisions) {

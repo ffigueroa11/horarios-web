@@ -49,7 +49,7 @@ E6, la semilla, T7, T8 y parte de E12 se aplicaron con la fase A de la
 | E9 | Un carácter de control en un nombre produce un error incomprensible | Bajo | Medido | S | Corregido |
 | E10 | La app no arranca en HTTP fuera de `localhost` | Bajo | Lectura | S | Corregido |
 | E11 | Eliminar un curso o una asignatura borra su carga sin confirmar | Medio | Lectura | S | Corregido |
-| E12 | Inconsistencias menores (ver detalle) | Bajo | Lectura | S | Parcial |
+| E12 | Inconsistencias menores (ver detalle) | Bajo | Lectura | S | Corregido |
 
 ### E1. Diagnóstico perdido al agotarse el tiempo
 
@@ -186,7 +186,8 @@ eliminan al instante la carga asociada. Eliminar una franja o un profesor sí pi
 
 Corregidas las cuatro primeras: `migrateProject` limpia los fijados y tramos huérfanos, cambiar los bloques de una
 franja libera sus fijados, un horario generado queda desactualizado si contradice un bloque fijado durante el cálculo, y
-"Imprimir todos" deja de dibujar las grillas al terminar de imprimir. Quedan las dos últimas.
+"Imprimir todos" deja de dibujar las grillas al terminar de imprimir. Después se quitó `studentSets` y la revisión previa
+avisa tramos que terminan antes de empezar o se cruzan con el anterior (aviso, porque el motor no usa las horas).
 
 - Cambiar los bloques de una franja [no libera sus fijados](../src/pages/ElectivosPage.tsx#L54), aunque
   [la carga sí lo hace](../src/pages/CargaPage.tsx#L133-L136). Los fijados huérfanos inflan el contador de
@@ -205,13 +206,13 @@ franja libera sus fijados, un horario generado queda desactualizado si contradic
 |---|---|---|---|---|
 | T1 | La prueba principal usaba `if (await target.count())` en tres pasos: podía aprobar sin mover ningún bloque | Semilla fija en e2e y pasos que fallan si no encuentran el lugar | S | Corregido |
 | T2 | No había prueba de arrastrar y soltar: se retiró en `b028558` | Recuperada, con eventos enviados directamente y solo en Chromium | S | Corregido |
-| T3 | `ui/` y `pages/` no tienen pruebas unitarias, y de `store/` solo hay un archivo | Ampliar [`projects.test.ts`](../src/store/projects.test.ts) a migraciones y varias pestañas | S–M | Parcial |
+| T3 | `ui/` y `pages/` no tienen pruebas unitarias, y de `store/` solo hay un archivo | [`projects.test.ts`](../src/store/projects.test.ts) cubre migraciones, recarga desde otra pestaña, lo que se guarda, deshacer y el horario generado. `ui/` y `pages/` se prueban con e2e | S–M | Corregido |
 | T4 | [`large.test.ts`](../src/domain/large.test.ts) no medía un caso difícil: 24 cursos y 84 profesores se resuelven en 0,2–0,6 s | Dos colegios reales anonimizados en [`fixtures/`](../src/domain/fixtures/): uno con horario generado para el ajuste manual y uno que agota el tiempo para el motor ([resultados](revision-arquitectura.md#resultados-de-la-fase-b)) | M | Corregido |
 | T5 | La publicación no esperaba a CI | Vercel retiene cada publicación de `main` hasta que pasan los cinco trabajos de CI (Deployment Checks). Comprobado con un cambio que CI aprobó; no se ha probado con un CI que falle | S | Corregido |
 | T6 | No había política de seguridad de contenido (CSP) | CSP en [`vercel.json`](../vercel.json): una para la página y otra para el motor, que necesita `'unsafe-eval'` además de `'wasm-unsafe-eval'` ([arquitectura](arquitectura.md#seguridad-del-sitio)). `vite preview` envía las mismas cabeceras, así que todas las pruebas de navegador corren con ella. El inicio de sesión con Firebase no tiene prueba automática; se probó a mano en producción | S–M | Corregido |
 | T7 | La compilación del motor no verificaba el origen: [`build-engine.sh`](../engine/build-engine.sh) no comprobaba el `.tar.xz`, y `emsdk` y `aqtinstall` no estaban fijados | La fuente se comprueba por SHA-256 (firma del autor verificada al registrarla), `emsdk` y `aqtinstall` están fijados, y [`engine.sha256`](../engine/engine.sha256) registra el motor publicado, que una prueba revisa. El script no se volvió a ejecutar completo | S | Corregido |
 | T8 | Las acciones de GitHub usaban etiquetas, no commits fijos | Fijadas por SHA, con la versión en un comentario para Dependabot | S | Corregido |
-| T9 | No se ha hecho una auditoría de accesibilidad | Agregar `@axe-core/playwright` a e2e y probar a mano el ajuste con teclado | S | Pendiente |
+| T9 | No se ha hecho una auditoría de accesibilidad | [`accesibilidad.spec.ts`](../e2e/accesibilidad.spec.ts) audita con axe (WCAG 2.1 AA) todas las pantallas en modo claro y oscuro, y falla con problemas graves. Lo que encontró, contraste, se corrigió: colores de estado más oscuros en modo claro, texto de cada clase elegido según su color (`lessonColors`) y bloques atenuados sin transparencia. Falta probar a mano con teclado y lector de pantalla | S | Corregido |
 
 ### Mediciones con archivos reales
 
@@ -263,7 +264,7 @@ La semilla ya se guarda en `Timetable` (`seed`): con los mismos datos y la misma
 | Id | Función | Por qué | Base técnica | Esfuerzo |
 |---|---|---|---|---|
 | F5 | **Deshacer y rehacer** (aplicada) | No había forma de revertir una eliminación o un movimiento | Todo pasa por `update()`, un buen lugar para guardar copias. Un colegio de 480 bloques ocupa 74 KB | M |
-| F6 | **Historial automático de versiones** | Los datos viven en un solo navegador; un error de manejo puede ser costoso | Copias locales al generar, con un límite, y opción de restaurar | M |
+| F6 | **Historial automático de versiones** (aplicada) | Los datos viven en un solo navegador; un error de manejo puede ser costoso | Copias locales al generar, con un límite, y opción de restaurar | M |
 
 ### Modelo del colegio
 
@@ -344,7 +345,7 @@ Se evaluó y por ahora no se justifica:
 |---|---|---|
 | **0. Correcciones** (aplicada) | E1 a E5, E7 a E11, T1, T2, T5 | 3–5 días |
 | **1. Mejor diagnóstico** (aplicada) | F1, F2, semilla, E6, T4 | 1–2 semanas |
-| **2. Confianza** (en curso: F5, T6 y T7 aplicadas) | F5, F6, T3, T6, T7, T9 | 1–2 semanas |
+| **2. Confianza** (aplicada) | F5, F6, T3, T6, T7, T9 | 1–2 semanas |
 | **3. Uso diario** | F3, F13, F14 | 2–3 semanas |
 | **4. Modelo más rico** | F7 a F12, según lo que pidan los colegios | Semanas por función |
 

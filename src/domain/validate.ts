@@ -98,6 +98,18 @@ export function validate(p: Project): Issue[] {
 
   if (p.school.days.length === 0) err('jornada', 'La jornada no tiene días.');
   if (weekSlots === 0) err('jornada', 'La jornada no tiene bloques de clase.');
+  // Las horas no las usa el motor, pero se imprimen y exportan: un error de tipeo pasaría a los horarios entregados.
+  const toMin = (t: string) => (/^\d{1,2}:\d{2}$/.test(t) ? Number(t.split(':')[0]) * 60 + Number(t.split(':')[1]) : null);
+  p.school.periods.forEach((x, i) => {
+    const a = toMin(x.start), b = toMin(x.end);
+    const label = x.label || `El tramo ${i + 1}`;
+    // Sin horas (un .fet importado puede no traerlas) no se avisa: es un dato que falta, no uno equivocado.
+    if (!x.start || !x.end) return;
+    if (a == null || b == null) warn('jornada', `${label} no tiene un horario válido (usa el formato 08:30).`);
+    else if (a >= b) warn('jornada', `${label} termina (${x.end}) antes de empezar (${x.start}).`);
+    const prev = p.school.periods[i - 1], pe = prev && toMin(prev.end);
+    if (a != null && pe != null && a < pe) warn('jornada', `${label} empieza a las ${x.start}, antes de que termine ${prev.label || 'el tramo anterior'} (${prev.end}). Revisa el orden o las horas.`);
+  });
   if (p.courses.length === 0) err('cursos', 'Agrega al menos un curso.');
   if (allUnits.length === 0) err('carga', 'La carga académica está vacía: asigna asignaturas a los cursos.');
 

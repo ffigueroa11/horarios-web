@@ -1,4 +1,4 @@
-import { memo, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type RefObject } from 'react';
+import { memo, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type RefObject } from 'react';
 import { isStale, useCurrent, useProjects } from '../store/projects';
 import type { ActivityKey, Period, Project } from '../domain/types';
 import { slotKey } from '../domain/types';
@@ -9,6 +9,7 @@ import { describeUnit } from '../domain/fetResult';
 import type { Route } from '../App';
 import { MenuButton, PageHead, WeekGrid, type CellSpec } from '../ui/common';
 import { useMedia, useTouch } from '../ui/useMedia';
+import { lessonColors } from '../ui/color';
 import { UnmetPreferencesReport } from '../ui/UnmetPreferencesReport';
 import { downloadText, fileSafe } from '../ui/download';
 import { exportTimetableXlsx } from '../ui/exportXlsx';
@@ -113,6 +114,12 @@ interface GridProps {
  * selección o los destinos, no con los mensajes ni con el aviso junto al cursor.
  */
 const NO_TARGETS = new Map<string, PlaceCheck>();
+
+/** Color de la asignatura con texto legible. --subject permite atenuar el bloque sin perder contraste (styles.css). */
+const lessonStyle = (color: string | undefined) => {
+  const c = lessonColors(color);
+  return { '--subject': c.background, background: c.background, color: c.color } as CSSProperties;
+};
 
 const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interactive, selected, targets, act, days }: GridProps) {
   const subject = (sid: string) => p.subjects.find((s) => s.id === sid);
@@ -231,7 +238,7 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
           ...drop,
           ...(x.sel ? onSelected : {}),
           content: (
-            <div style={{ position: 'absolute', inset: 0, padding: '4px 6px', background: x.s?.color ?? '#777', borderRadius: 5 }}>
+            <div style={{ position: 'absolute', inset: 0, padding: '4px 6px', borderRadius: 5, ...lessonStyle(x.s?.color) }}>
               <span className="s">{x.main}</span>
               <span className="w">{x.sub}</span>
               {x.locked && <span className="lock" aria-label="Fijado">📌</span>}
@@ -259,7 +266,7 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
           const x = describe(l);
           return (
             <button key={l.pl.key} type="button" className={`chip-lesson${x.locked ? ' locked' : ''}${x.sel ? ' selected' : ''}`} title={x.title}
-              style={{ background: x.s?.color ?? '#777' }} disabled={!interactive}
+              style={lessonStyle(x.s?.color)} disabled={!interactive}
               draggable={interactive || undefined}
               onDragStart={dragProps(l).onDragStart}
               onDragEnd={dragProps(l).onDragEnd}

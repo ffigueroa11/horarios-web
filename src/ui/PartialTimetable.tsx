@@ -5,6 +5,7 @@ import { describeActivity, type PartialResult } from '../domain/fetResult';
 import { lessonIndex, lessons, type Lesson } from '../domain/manual';
 import { unitById, unitIdOf } from '../domain/units';
 import { WeekGrid, type CellSpec } from './common';
+import { lessonColors } from './color';
 
 type Mode = 'curso' | 'profesor';
 
@@ -34,7 +35,7 @@ export function PartialTimetable({ project: p, partial, activity }: {
     const teacher = p.teachers.find((t) => t.id === l.unit.teacherId)?.name ?? 'Sin profesor';
     const courses = [...new Set(l.unit.audience.map((a) => p.courses.find((c) => c.id === a.courseId)?.name ?? ''))].join(', ');
     return (
-      <div key={l.pl.key} className="chip-lesson" style={{ background: s?.color ?? '#777', cursor: 'default' }} title={`${s?.name} · ${courses} · ${teacher}`}>
+      <div key={l.pl.key} className="chip-lesson" style={{ ...lessonColors(s?.color), cursor: 'default' }} title={`${s?.name} · ${courses} · ${teacher}`}>
         <span className="s">{s?.name}{start ? '' : ' (cont.)'}</span>
         {start && <span className="w">{mode === 'curso' ? teacher : courses}</span>}
       </div>
