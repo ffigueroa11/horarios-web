@@ -32,6 +32,12 @@ async function exportFrom(page: Page, item: string) {
   return download;
 }
 
+/** Una acción del menú ⋯ del primer horario en el inicio. */
+async function projectMenu(page: Page, item: string) {
+  await page.getByLabel(/^Más acciones para /).first().click();
+  await page.getByRole('menuitem', { name: item, exact: true }).click();
+}
+
 async function generate(page: Page) {
   await go(page, 'generar');
   await page.getByRole('button', { name: /^Generar (horario|de nuevo)$/ }).last().click();
@@ -235,12 +241,37 @@ test('deshacer: eliminar un curso, mover un bloque y recuperar un horario elimin
 
   // Un horario eliminado se puede recuperar desde el inicio.
   await goHome(page);
-  await page.getByRole('button', { name: 'Eliminar' }).click();
+  await projectMenu(page, 'Eliminar');
   await page.getByRole('button', { name: 'Sí, eliminar' }).click();
   await expect(page.locator('.project')).toHaveCount(0);
   await page.getByRole('button', { name: 'Deshacer' }).click();
   await expect(page.locator('.project')).toHaveCount(1);
   expect(errors).toEqual([]);
+});
+
+test('primeros pasos, tarjeta del inicio y "Sin límite" en Preferencias', async ({ page }) => {
+  // Un horario nuevo muestra los primeros pasos; el de ejemplo, que ya está completo, no.
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Nuevo horario' }).click();
+  await expect(page.getByRole('heading', { name: 'Primeros pasos' })).toBeVisible();
+  await goHome(page);
+  await page.getByRole('button', { name: 'Probar con un liceo de ejemplo' }).click();
+  await expect(page.getByRole('heading', { name: 'Primeros pasos' })).toHaveCount(0);
+
+  // "Sin límite" es una casilla: desmarcarla pone un valor y vaciar el número la vuelve a marcar.
+  await go(page, 'reglas');
+  const week = page.getByRole('group', { name: 'Máximo de ventanas por semana' });
+  await expect(week.getByRole('checkbox')).toBeChecked();
+  await week.getByRole('checkbox').uncheck();
+  await expect(week.getByRole('textbox')).toHaveValue('6');
+  await week.getByRole('textbox').fill('');
+  await week.getByRole('textbox').press('Enter');
+  await expect(week.getByRole('checkbox')).toBeChecked();
+
+  // En el inicio, la tarjeta completa abre el horario.
+  await goHome(page);
+  await page.locator('.project h3', { hasText: 'Liceo de ejemplo' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
 });
 
 test('desde el menú se vuelve al inicio con "Inicio" o con el logo', async ({ page }) => {
@@ -259,13 +290,13 @@ test('respaldo: descargar e importar', async ({ page }, info) => {
   test.skip(info.project.name === 'movil', 'igual que en escritorio');
   await openExample(page);
   await goHome(page);
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Respaldo', exact: true }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), projectMenu(page, 'Descargar respaldo')]);
   const file = await download.path();
   const data = JSON.parse(readFileSync(file, 'utf8'));
   expect(data.app).toBe('horarios-web');
   expect(data.project.electives).toHaveLength(1);
 
-  await page.getByRole('button', { name: 'Eliminar' }).click();
+  await projectMenu(page, 'Eliminar');
   await page.getByRole('button', { name: 'Sí, eliminar' }).click();
   await expect(page.locator('.project')).toHaveCount(0);
   await page.locator('input[type=file]').setInputFiles(file);

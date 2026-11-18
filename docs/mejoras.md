@@ -318,10 +318,10 @@ Revisión de todas las pantallas del 18 de noviembre de 2026, en escritorio y te
 | D9 | Tablas con todos los campos enmarcados, y en el teléfono se cortan hacia el lado | Borde solo al pasar el mouse o editar; en el teléfono, filas apiladas y días abreviados en las grillas | M | Corregido |
 | D10 | "2+2+2" es un formato que hay que aprender | Al editar, el campo dice cómo lo entendió ("7 h: 3 bloques de 2 h y 1 de 1 h"), y en rojo lo que no entiende o no cabe entre recreos | S | Corregido |
 | D11 | Sin buscador de profesores ni leyenda en las grillas de disponibilidad | Buscador (con más de 6 profesores, sin distinguir tildes) y leyenda bajo la grilla | S | Corregido |
-| D12 | En Inicio, cuatro botones por horario | Tarjeta completa clicable, menú ⋯ y aviso si está desactualizado | S | Pendiente |
-| D13 | "Nuevo horario" no guía | Lista de primeros pasos | S–M | Pendiente |
-| D14 | Preferencias con anchos y textos de ejemplo confusos ("Sin límite" parece un valor) | Agrupar por a quién afecta, "Sin límite" como opción explícita | M | Pendiente |
-| D15 | En Generar, el tiempo máximo antes que la acción | Botón como acción principal y el tiempo como opción avanzada | S | Pendiente |
+| D12 | En Inicio, cuatro botones por horario | Tarjeta completa clicable, menú ⋯ (Duplicar, Descargar respaldo, Eliminar con confirmación) y "Horario desactualizado" | S | Corregido |
+| D13 | "Nuevo horario" no guía | Lista de primeros pasos en la Jornada mientras falte algo para generar (`stepsDone`, compartido con el menú) | S–M | Corregido |
+| D14 | Preferencias con anchos y textos de ejemplo confusos ("Sin límite" parece un valor) | "Sin límite" como casilla (`LimitField`): desmarcarla pone un valor sugerido; anchos uniformes. Ya estaba agrupada por cursos y profesores | M | Corregido |
+| D15 | En Generar, el tiempo máximo antes que la acción | Botón grande primero; el tiempo máximo en un desplegable que muestra el valor elegido | S | Corregido |
 
 ## Lo que no conviene priorizar
 

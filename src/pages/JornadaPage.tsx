@@ -4,6 +4,7 @@ import { newId, slotKey } from '../domain/types';
 import { DEFAULT_DAYS } from '../domain/defaults';
 import { NullableNumber, PageHead, TextInput, WeekGrid } from '../ui/common';
 import { openSlots } from '../domain/validate';
+import { FirstSteps } from '../ui/FirstSteps';
 
 const addMinutes = (t: string, m: number) => {
   const [h, mm] = t.split(':').map(Number);
@@ -39,6 +40,7 @@ export function JornadaPage() {
       <PageHead title="Jornada">
         Define los días y los bloques de clase con su horario real. Los recreos y el almuerzo separan bloques: ninguna clase de 2 horas quedará cortada por un recreo.
       </PageHead>
+      <FirstSteps project={p} />
 
       <section className="card">
         <div className="grid-2">

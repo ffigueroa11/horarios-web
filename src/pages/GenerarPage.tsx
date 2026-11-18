@@ -15,6 +15,10 @@ const STEP_LABEL: Record<string, string> = {
   profesores: 'Profesores', carga: 'Carga académica', electivos: 'Electivos', reglas: 'Preferencias', horario: 'Ver y ajustar',
 };
 
+const LIMITS = [
+  { s: 60, label: '1 minuto' }, { s: 300, label: '5 minutos' }, { s: 600, label: '10 minutos' }, { s: 1800, label: '30 minutos' },
+];
+
 function useElapsed(running: boolean, startedAt: number) {
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
@@ -86,18 +90,21 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
       </section>
 
       <section className="card">
+        {/* La acción primero; el tiempo máximo es un ajuste que casi nunca hace falta tocar. */}
         <div className="row">
-          <label className="field"><span>Tiempo máximo</span>
-            <select className="input" value={limit} disabled={busy} onChange={(e) => setLimit(Number(e.target.value))}>
-              <option value={60}>1 minuto</option><option value={300}>5 minutos</option>
-              <option value={600}>10 minutos</option><option value={1800}>30 minutos</option>
-            </select></label>
-          <span className="spacer" />
           {busy && mine
-            ? <button type="button" className="btn danger" onClick={g.cancel}>Detener</button>
-            : <button type="button" className="btn primary" disabled={errors.length > 0 || busy} onClick={() => g.start(p, limit)}>
+            ? <button type="button" className="btn danger big" onClick={g.cancel}>Detener</button>
+            : <button type="button" className="btn primary big" disabled={errors.length > 0 || busy} onClick={() => g.start(p, limit)}>
                 {p.timetable ? 'Generar de nuevo' : 'Generar horario'}</button>}
+          {errors.length > 0 && !busy && <span className="small muted">Corrige lo marcado en la revisión para poder generar.</span>}
         </div>
+        <details className="advanced small">
+          <summary>Tiempo máximo: {LIMITS.find((x) => x.s === limit)?.label}</summary>
+          <label className="field"><span>Si no encuentra un horario en este tiempo, se detiene y muestra lo que alcanzó a ubicar.</span>
+            <select className="input" value={limit} disabled={busy} onChange={(e) => setLimit(Number(e.target.value))}>
+              {LIMITS.map((x) => <option key={x.s} value={x.s}>{x.label}</option>)}
+            </select></label>
+        </details>
         {busy && !mine && <div className="notice warn">Se está generando otro horario. Espera a que termine.</div>}
 
         {mine && g.status !== 'idle' && (

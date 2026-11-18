@@ -152,6 +152,19 @@ table.data.teacher-list td .btn { font-weight: 400; }
 table.data.teacher-list tr[aria-selected='true'] td .btn { font-weight: 700; }
 .week .day-short { display: none; }
 .next-step { display: flex; justify-content: flex-end; }
+.card.project.clickable { cursor: pointer; transition: border-color .15s; }
+.card.project.clickable:hover { border-color: var(--accent); }
+.menu-list button.danger { color: var(--bad); }
+.menu > summary.icon-btn { font-size: 1.2rem; letter-spacing: .05em; }
+.limit-field .row { gap: 12px; }
+.limits { gap: 18px 28px; align-items: flex-start; }
+.btn.big { padding: 12px 22px; font-size: 1.05rem; }
+details.advanced summary { cursor: pointer; color: var(--muted); }
+details.advanced[open] summary { margin-bottom: 8px; }
+.first-steps ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.first-steps li.done { color: var(--muted); }
+.first-steps li.done a { color: var(--muted); text-decoration: line-through; }
+.first-steps li.done::marker { content: '✓  '; color: var(--ok); font-weight: 700; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: .8rem; font-weight: 700; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }

@@ -1,7 +1,7 @@
 import { useCurrent, useProjects } from '../store/projects';
 import type { Strength } from '../domain/types';
 import { newId, slotKey } from '../domain/types';
-import { NullableNumber, PageHead, WeekGrid } from '../ui/common';
+import { LimitField, PageHead, WeekGrid } from '../ui/common';
 
 function StrengthSelect({ value, onChange, label }: { value: Strength; onChange: (v: Strength) => void; label: string }) {
   return (
@@ -36,20 +36,20 @@ export function ReglasPage() {
             <span><b>Repartir cada asignatura en días distintos</b><br /><span className="small muted">Ej.: Matemática 2+2+2 queda en tres días diferentes, no dos bloques el mismo día.</span></span></label>
           {r.spreadSubjectDays && <StrengthSelect label="Fuerza de la regla" value={r.spreadStrength} onChange={(v) => setR((x) => { x.spreadStrength = v; })} />}
         </div>
-        <label className="field"><span>Máximo de horas de clase por día</span>
-          <NullableNumber value={r.courseMaxHoursDaily} max={16} placeholder="Sin límite" className="input" onChange={(v) => setR((x) => { x.courseMaxHoursDaily = v; })} /></label>
+        <LimitField label="Máximo de horas de clase por día" value={r.courseMaxHoursDaily} max={16} fallback={8}
+          onChange={(v) => setR((x) => { x.courseMaxHoursDaily = v; })} />
       </section>
 
       <section className="card">
         <h2>Profesores</h2>
-        <p className="small muted">Una “ventana” es una hora libre entre dos clases del mismo día. Deja el campo vacío para no limitar.</p>
-        <div className="row">
-          <label className="field"><span>Máximo de ventanas por día</span>
-            <NullableNumber value={r.teacherMaxGapsPerDay} max={10} placeholder="Sin límite" className="input" onChange={(v) => setR((x) => { x.teacherMaxGapsPerDay = v; })} /></label>
-          <label className="field"><span>Máximo de ventanas por semana</span>
-            <NullableNumber value={r.teacherMaxGapsPerWeek} max={50} placeholder="Sin límite" className="input" onChange={(v) => setR((x) => { x.teacherMaxGapsPerWeek = v; })} /></label>
-          <label className="field"><span>Máximo de horas de clase por día</span>
-            <NullableNumber value={r.teacherMaxHoursDaily} max={16} placeholder="Sin límite" className="input" onChange={(v) => setR((x) => { x.teacherMaxHoursDaily = v; })} /></label>
+        <p className="small muted">Una “ventana” es una hora libre entre dos clases del mismo día.</p>
+        <div className="row limits">
+          <LimitField label="Máximo de ventanas por día" value={r.teacherMaxGapsPerDay} max={10} fallback={2}
+            onChange={(v) => setR((x) => { x.teacherMaxGapsPerDay = v; })} />
+          <LimitField label="Máximo de ventanas por semana" value={r.teacherMaxGapsPerWeek} max={50} fallback={6}
+            onChange={(v) => setR((x) => { x.teacherMaxGapsPerWeek = v; })} />
+          <LimitField label="Máximo de horas de clase por día" value={r.teacherMaxHoursDaily} max={16} fallback={8}
+            onChange={(v) => setR((x) => { x.teacherMaxHoursDaily = v; })} />
         </div>
         <p className="small muted">La disponibilidad y el máximo de días de cada profesor se configuran en “Profesores”. Limitar mucho las ventanas hace más difícil encontrar un horario.</p>
       </section>

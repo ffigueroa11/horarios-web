@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
-import { needsBackup, useProjects } from '../store/projects';
+import { isStale, needsBackup, useProjects } from '../store/projects';
 import { parseBackup } from '../domain/backup';
 import { parseFet } from '../domain/fetImport';
-import { ConfirmButton } from '../ui/common';
+import { MenuButton } from '../ui/common';
 import { downloadBackup } from '../ui/backup';
 import { AppFooter } from '../ui/AppFooter';
 import { AccountCard } from '../ui/AccountCard';
@@ -14,6 +14,7 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
   const list = Object.values(projects).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const open = (id: string) => { select(id); onOpen(); };
   const onImport = async (file: File) => {
@@ -64,7 +65,8 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
             {list.length > 1 && <button type="button" className="btn small ghost" onClick={() => downloadBackup(list)}>Respaldar todos</button>}</div>
           <div className="projects">
             {list.map((p) => (
-              <article key={p.id} className="card project">
+              // La tarjeta completa abre el horario; las demás acciones están en el menú ⋯.
+              <article key={p.id} className="card project clickable" onClick={() => open(p.id)}>
                 <div>
                   <h3>{p.name}</h3>
                   <span className="small muted">Año {p.year} · editado {new Date(p.updatedAt).toLocaleDateString('es-CL')}</span>
@@ -72,15 +74,25 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
                 <div className="meta">
                   <span className="badge">{p.courses.length} cursos</span>
                   <span className="badge">{p.teachers.length} profesores</span>
-                  {p.timetable ? <span className="badge ok">Horario generado</span> : <span className="badge">Sin generar</span>}
+                  {!p.timetable ? <span className="badge">Sin generar</span>
+                    : isStale(p) ? <span className="badge warn" title="Los datos cambiaron después de generar">Horario desactualizado</span>
+                    : <span className="badge ok">Horario generado</span>}
                   {needsBackup(p) && <span className="badge warn" title="Hay cambios sin respaldar desde hace más de una semana">Sin respaldo reciente</span>}
                 </div>
-                <div className="row">
-                  <button type="button" className="btn primary small" onClick={() => open(p.id)}>Abrir</button>
-                  <button type="button" className="btn small" onClick={() => duplicate(p.id)} title="Útil para empezar el año siguiente">Duplicar</button>
-                  <button type="button" className="btn small" onClick={() => downloadBackup([p])}>Respaldo</button>
-                  <span className="spacer" />
-                  <ConfirmButton label="Eliminar" confirmLabel="Sí, eliminar" onConfirm={() => remove(p.id)} />
+                <div className="row" onClick={(e) => e.stopPropagation()}>
+                  {confirmId === p.id ? <>
+                    <span className="small">¿Eliminar este horario?</span>
+                    <button type="button" className="btn small danger" onClick={() => { setConfirmId(null); remove(p.id); }}>Sí, eliminar</button>
+                    <button type="button" className="btn small ghost" onClick={() => setConfirmId(null)}>Cancelar</button>
+                  </> : <>
+                    <button type="button" className="btn primary small" onClick={() => open(p.id)}>Abrir</button>
+                    <span className="spacer" />
+                    <MenuButton label="⋯" summaryClass="icon-btn" ariaLabel={`Más acciones para ${p.name}`} items={[
+                      { label: 'Duplicar', title: 'Útil para empezar el año siguiente', onClick: () => duplicate(p.id) },
+                      { label: 'Descargar respaldo', onClick: () => downloadBackup([p]) },
+                      { label: 'Eliminar', danger: true, onClick: () => setConfirmId(p.id) },
+                    ]} />
+                  </>}
                 </div>
               </article>
             ))}
