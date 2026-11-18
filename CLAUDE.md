@@ -66,7 +66,10 @@ pages/, ui/ (React) ──> store/ (zustand + IndexedDB) ──> engine/ (Worker
   existiendo pero cambia de sentido (duración de los bloques, grupo de una fila) lo libera la pantalla que lo cambia.
 - Al agregar un campo al modelo: pon su valor por defecto en `migrateProject` y su revisión en `checkProject`
   (`backup.ts`). Si hay que transformar datos, sube `version` en `projects.ts` y `BACKUP_VERSION`.
-- Un proyecto del almacén nunca se modifica en su lugar: `projectHash` (sincronización) lo guarda por objeto.
+- Un proyecto del almacén nunca se modifica en su lugar: `projectHash` (sincronización) lo guarda por objeto, y
+  deshacer (`undo`) guarda los objetos anterior y nuevo de cada `update()`. Lo que cambia fuera de `update()` no se deshace.
+- La CSP está en `vercel.json` (una para la página y otra para `/engine/`), y `vite preview` la replica. Al agregar un
+  dominio externo, agrégalo ahí. Si cambias la política, avisa que hay que probar a mano el inicio de sesión con Firebase.
 - `src/domain/fixtures/` tiene colegios reales anonimizados. No agregues nombres reales de personas ni de colegios.
 - Sincronización (`cloud/engine.ts`, sin Firebase ni React, probada con una nube en memoria): nada se sube antes de
   conocer la nube confirmada por el servidor, no se sincroniza si falló la lectura local, los eliminados quedan con

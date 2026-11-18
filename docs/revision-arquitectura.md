@@ -87,9 +87,9 @@ Las que ya tienen identificador están descritas en [mejoras.md](mejoras.md). La
 | R3 | Sacar `hint` de la página, memoizar las celdas y restablecer `printAll` (esto último es parte de E12) | 3 | S–M | Hecho |
 | R4 | Índices precalculados en `manual.ts` (por día, profesor y curso) y `parallelRows` memoizado | 3 | M | Hecho |
 | R5 | Limpieza central de `locks` huérfanos y de `teacherMeetingSlots`, en vez de una por pantalla (cubre parte de E12) | — | S | Hecho |
-| F5 | Deshacer y rehacer en `update()` | — | M | Pendiente |
+| F5 | Deshacer y rehacer en `update()` | — | M | Hecho |
 | R6 | Guardar la generación con una acción del almacén, e invalidarla si se movieron bloques durante el cálculo (parte de E12) | — | S | Hecho |
-| T6 | CSP con `wasm-unsafe-eval` en `vercel.json` | — | S–M | Pendiente |
+| T6 | CSP con `wasm-unsafe-eval` en `vercel.json` | — | S–M | Hecho |
 | T7, T8 | Acciones de GitHub fijadas por SHA; versiones y SHA-256 del motor | — | S | Hecho |
 | T4 | Colegio real anonimizado como referencia de rendimiento | 2 y 3 | M | Hecho |
 | F4 | Varias semillas, en paralelo o una tras otra, eligiendo el mejor resultado | 2 | M | Pendiente |
@@ -104,8 +104,9 @@ Otras menores, sin identificador:
 
 ## Plan de acción
 
-**Estado:** las fases A y B están aplicadas (18 de noviembre de 2026). Las fases C y D siguen pendientes; la medición
-de la fase B no muestra, por ahora, motivo para la D (ver [resultados](#resultados-de-la-fase-b)).
+**Estado:** las fases A, B y C están aplicadas (18 de noviembre de 2026). La D sigue pendiente, y la medición de la
+fase B no muestra, por ahora, motivo para hacerla (ver [resultados](#resultados-de-la-fase-b)). En la C, el inicio de
+sesión con Firebase bajo la nueva CSP queda por probar a mano en un despliegue.
 
 | Fase | Contenido | Criterio de cierre | Estimación |
 |---|---|---|---|

@@ -27,13 +27,12 @@ Los esfuerzos son estimaciones: **S** (menos de un día), **M** (varios días), 
 ## Resumen
 
 La base es sólida: el dominio está separado de la interfaz, el motor se prueba de punta a punta y la app ya se protege
-bien contra la pérdida de datos. Con la fase 0, F1 y F2 aplicados, lo más valioso que queda es:
-
-1. **Agregar deshacer** (F5). Eliminar ya pide confirmar, pero nada se puede revertir después.
+bien contra la pérdida de datos. Con las fases 0 y 1 aplicadas, y F5, T6 y T7 de la fase 2, lo más valioso que queda
+es el historial automático de versiones (F6) y la auditoría de accesibilidad (T9).
 
 E6, la semilla, T7, T8 y parte de E12 se aplicaron con la fase A de la
-[revisión de arquitectura](revision-arquitectura.md#plan-de-acción), y T4 con la fase B
-([resultados](revision-arquitectura.md#resultados-de-la-fase-b)).
+[revisión de arquitectura](revision-arquitectura.md#plan-de-acción), T4 con la fase B
+([resultados](revision-arquitectura.md#resultados-de-la-fase-b)), y F5 y T6 con la fase C.
 
 ## Errores confirmados
 
@@ -209,7 +208,7 @@ franja libera sus fijados, un horario generado queda desactualizado si contradic
 | T3 | `ui/` y `pages/` no tienen pruebas unitarias, y de `store/` solo hay un archivo | Ampliar [`projects.test.ts`](../src/store/projects.test.ts) a migraciones y varias pestañas | S–M | Parcial |
 | T4 | [`large.test.ts`](../src/domain/large.test.ts) no medía un caso difícil: 24 cursos y 84 profesores se resuelven en 0,2–0,6 s | Dos colegios reales anonimizados en [`fixtures/`](../src/domain/fixtures/): uno con horario generado para el ajuste manual y uno que agota el tiempo para el motor ([resultados](revision-arquitectura.md#resultados-de-la-fase-b)) | M | Corregido |
 | T5 | La publicación no esperaba a CI | Vercel retiene cada publicación de `main` hasta que pasan los cinco trabajos de CI (Deployment Checks). Comprobado con un cambio que CI aprobó; no se ha probado con un CI que falle | S | Corregido |
-| T6 | Sin política de seguridad de contenido (CSP); [`_headers`](../public/_headers) solo define caché | Agregar una CSP con `wasm-unsafe-eval`, en `vercel.json`, permitiendo los dominios de Firebase, y probarla con el motor | S–M | Pendiente |
+| T6 | No había política de seguridad de contenido (CSP) | CSP en [`vercel.json`](../vercel.json): una para la página y otra para el motor, que necesita `'unsafe-eval'` además de `'wasm-unsafe-eval'` ([arquitectura](arquitectura.md#seguridad-del-sitio)). `vite preview` envía las mismas cabeceras, así que todas las pruebas de navegador corren con ella. El inicio de sesión con Firebase no tiene prueba automática | S–M | Corregido |
 | T7 | La compilación del motor no verificaba el origen: [`build-engine.sh`](../engine/build-engine.sh) no comprobaba el `.tar.xz`, y `emsdk` y `aqtinstall` no estaban fijados | La fuente se comprueba por SHA-256 (firma del autor verificada al registrarla), `emsdk` y `aqtinstall` están fijados, y [`engine.sha256`](../engine/engine.sha256) registra el motor publicado, que una prueba revisa. El script no se volvió a ejecutar completo | S | Corregido |
 | T8 | Las acciones de GitHub usaban etiquetas, no commits fijos | Fijadas por SHA, con la versión en un comentario para Dependabot | S | Corregido |
 | T9 | No se ha hecho una auditoría de accesibilidad | Agregar `@axe-core/playwright` a e2e y probar a mano el ajuste con teclado | S | Pendiente |
@@ -263,7 +262,7 @@ La semilla ya se guarda en `Timetable` (`seed`): con los mismos datos y la misma
 
 | Id | Función | Por qué | Base técnica | Esfuerzo |
 |---|---|---|---|---|
-| F5 | **Deshacer y rehacer** | Hoy no hay forma de revertir una eliminación o un movimiento | Todo pasa por `update()`, un buen lugar para guardar copias. Un colegio de 480 bloques ocupa 74 KB | M |
+| F5 | **Deshacer y rehacer** (aplicada) | No había forma de revertir una eliminación o un movimiento | Todo pasa por `update()`, un buen lugar para guardar copias. Un colegio de 480 bloques ocupa 74 KB | M |
 | F6 | **Historial automático de versiones** | Los datos viven en un solo navegador; un error de manejo puede ser costoso | Copias locales al generar, con un límite, y opción de restaurar | M |
 
 ### Modelo del colegio
@@ -309,7 +308,7 @@ Se evaluó y por ahora no se justifica:
 |---|---|---|
 | **0. Correcciones** (aplicada) | E1 a E5, E7 a E11, T1, T2, T5 | 3–5 días |
 | **1. Mejor diagnóstico** (aplicada) | F1, F2, semilla, E6, T4 | 1–2 semanas |
-| **2. Confianza** | F5, F6, T3, T6, T7, T9 | 1–2 semanas |
+| **2. Confianza** (en curso: F5, T6 y T7 aplicadas) | F5, F6, T3, T6, T7, T9 | 1–2 semanas |
 | **3. Uso diario** | F3, F13, F14 | 2–3 semanas |
 | **4. Modelo más rico** | F7 a F12, según lo que pidan los colegios | Semanas por función |
 

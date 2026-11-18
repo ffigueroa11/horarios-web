@@ -62,10 +62,25 @@ const idbStorage: StateStorage = {
   removeItem: (name) => del(name),
 };
 
+/** Un cambio hecho con update(): el proyecto antes y después. Son los mismos objetos del almacén, no copias. */
+interface Step { before: Project; after: Project }
+/** Cuántos cambios se pueden deshacer por horario. Un colegio grande ocupa ~100 KB por paso. */
+export const HISTORY_LIMIT = 50;
+
 interface State {
   projects: Record<Id, Project>;
   currentId: Id | null;
   hydrated: boolean;
+  /**
+   * Deshacer y rehacer, por horario. No se guarda: vale mientras la pestaña está abierta. Un paso solo se aplica si el
+   * horario sigue siendo el que dejó ese paso; si cambió por otra vía (generar, la nube, otra pestaña), queda sin efecto.
+   */
+  history: Record<Id, { past: Step[]; future: Step[] }>;
+  /** El último horario eliminado, para poder recuperarlo. */
+  lastRemoved: Project | null;
+  undo: () => boolean;
+  redo: () => boolean;
+  restoreRemoved: () => void;
   create: (kind: 'vacio' | 'ejemplo') => Id;
   duplicate: (id: Id) => Id;
   remove: (id: Id) => void;
@@ -85,9 +100,11 @@ export const useProjects = create<State>()(
       projects: {},
       currentId: null,
       hydrated: false,
+      history: {},
+      lastRemoved: null,
       create: (kind) => {
         const p = kind === 'ejemplo' ? exampleProject() : emptyProject();
-        setState((s) => ({ projects: { ...s.projects, [p.id]: p }, currentId: p.id }));
+        setState((s) => ({ projects: { ...s.projects, [p.id]: p }, currentId: p.id, lastRemoved: null }));
         return p.id;
       },
       duplicate: (id) => {
@@ -99,9 +116,14 @@ export const useProjects = create<State>()(
       },
       remove: (id) =>
         setState((s) => {
-          const { [id]: _gone, ...rest } = s.projects;
-          return { projects: rest, currentId: s.currentId === id ? null : s.currentId };
+          const { [id]: gone, ...rest } = s.projects;
+          const { [id]: _history, ...history } = s.history;
+          return { projects: rest, currentId: s.currentId === id ? null : s.currentId, history, lastRemoved: gone ?? null };
         }),
+      restoreRemoved: () =>
+        setState((s) => (s.lastRemoved && !s.projects[s.lastRemoved.id]
+          ? { projects: { ...s.projects, [s.lastRemoved.id]: s.lastRemoved }, lastRemoved: null }
+          : { lastRemoved: null })),
       importProjects: (list) => {
         const now = new Date().toISOString();
         // updatedAt se conserva: restaurar no cambia los datos, y con la fecha actual el horario parecería desactualizado.
@@ -110,7 +132,8 @@ export const useProjects = create<State>()(
         setState((s) => ({ projects: { ...s.projects, ...Object.fromEntries(added.map((p) => [p.id, p])) }, currentId: added[0].id }));
         return added[0].id;
       },
-      select: (id) => setState({ currentId: id }),
+      // Abrir o crear otro horario cierra la posibilidad de recuperar el eliminado.
+      select: (id) => setState(id ? { currentId: id, lastRemoved: null } : { currentId: id }),
       markBackup: (ids) => {
         const now = new Date().toISOString();
         setState((s) => ({ projects: { ...s.projects, ...Object.fromEntries(ids.filter((id) => s.projects[id]).map((id) => [id, { ...s.projects[id], backupAt: now }])) } }));
@@ -137,7 +160,33 @@ export const useProjects = create<State>()(
         migrateProject(draft);
         // Guardar el horario o fijar bloques no cambia los datos del colegio (touch: false).
         if (opts?.touch !== false) draft.updatedAt = new Date().toISOString();
-        setState({ projects: { ...projects, [currentId]: draft } });
+        const h = getState().history[currentId];
+        const past = [...(h?.past ?? []), { before: projects[currentId], after: draft }].slice(-HISTORY_LIMIT);
+        setState({ projects: { ...projects, [currentId]: draft }, history: { ...getState().history, [currentId]: { past, future: [] } } });
+      },
+      // Deshacer devuelve el objeto anterior tal cual, con su updatedAt: un cambio con touch: false (fijar, mover) no
+      // cambia si el horario parece desactualizado, y deshacer una edición de datos devuelve la fecha que tenía.
+      undo: () => {
+        const { currentId, projects, history } = getState();
+        const h = currentId ? history[currentId] : undefined;
+        const step = h?.past.at(-1);
+        if (!currentId || !h || !step || projects[currentId] !== step.after) return false;
+        setState({
+          projects: { ...projects, [currentId]: step.before },
+          history: { ...history, [currentId]: { past: h.past.slice(0, -1), future: [...h.future, step] } },
+        });
+        return true;
+      },
+      redo: () => {
+        const { currentId, projects, history } = getState();
+        const h = currentId ? history[currentId] : undefined;
+        const step = h?.future.at(-1);
+        if (!currentId || !h || !step || projects[currentId] !== step.before) return false;
+        setState({
+          projects: { ...projects, [currentId]: step.after },
+          history: { ...history, [currentId]: { past: [...h.past, step], future: h.future.slice(0, -1) } },
+        });
+        return true;
       },
     }),
     {
@@ -172,6 +221,13 @@ channel?.addEventListener('message', (e: MessageEvent<{ type: string; from: stri
   useHealth.getState().setOtherTab(true);
   void useProjects.persist.rehydrate();
 });
+
+/** ¿Se puede deshacer o rehacer en el horario abierto? */
+export function undoState(s: Pick<State, 'currentId' | 'projects' | 'history'>) {
+  const p = s.currentId ? s.projects[s.currentId] : undefined;
+  const h = s.currentId ? s.history[s.currentId] : undefined;
+  return { canUndo: !!p && h?.past.at(-1)?.after === p, canRedo: !!p && h?.future.at(-1)?.before === p };
+}
 
 export const useCurrent = () => useProjects((s) => (s.currentId ? s.projects[s.currentId] ?? null : null));
 

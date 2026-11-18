@@ -177,6 +177,50 @@ test('un horario guardado con datos dañados no deja la app atascada', async ({ 
   await expect(page.locator('.project')).toHaveCount(1);
 });
 
+test('deshacer: eliminar un curso, mover un bloque y recuperar un horario eliminado', async ({ page }, info) => {
+  test.skip(info.project.name === 'movil', 'igual que en escritorio');
+  const errors = watchErrors(page);
+  await openExample(page);
+  const undo = page.getByRole('button', { name: '↶ Deshacer' });
+  const redo = page.getByRole('button', { name: '↷ Rehacer' });
+  await expect(undo).toBeDisabled();
+
+  // Eliminar un curso y deshacerlo con el teclado (fuera de un campo de texto).
+  await page.locator('a[href="#cursos"]').click();
+  await page.getByRole('button', { name: 'Eliminar 1° Medio A' }).click();
+  await page.getByRole('button', { name: /Sí, eliminar con \d+ clases de la carga/ }).click();
+  await expect(page.getByLabel('Nombre del curso').first()).not.toHaveValue('1° Medio A');
+  await page.locator('main h1').click();
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(page.getByLabel('Nombre del curso').first()).toHaveValue('1° Medio A');
+  await expect(page.locator('.toast')).toContainText('Se deshizo');
+  await redo.click();
+  await expect(page.getByLabel('Nombre del curso').first()).not.toHaveValue('1° Medio A');
+  await undo.click();
+  await expect(page.getByLabel('Nombre del curso').first()).toHaveValue('1° Medio A');
+
+  // Mover un bloque lo fija; deshacerlo lo devuelve a su lugar y lo libera.
+  await generate(page);
+  await expect(undo).toBeDisabled(); // el horario nuevo no se deshace
+  await page.getByRole('button', { name: 'Ver horario' }).click();
+  await selectLessonWith(page, '.card td.drop-ok');
+  await page.locator('.card td.drop-ok').first().click();
+  await expect(page.locator('.notice.ok')).toContainText(/Movido|Intercambiados/);
+  await expect(page.locator('.badge', { hasText: /^[1-9]\d* fijados$/ })).toBeVisible();
+  await undo.click();
+  await expect(page.locator('.badge', { hasText: /^0 fijados$/ })).toBeVisible();
+  await expect(page.locator('.notice.warn', { hasText: 'Los datos cambiaron' })).toHaveCount(0);
+
+  // Un horario eliminado se puede recuperar desde el inicio.
+  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
+  await page.getByRole('button', { name: 'Eliminar' }).click();
+  await page.getByRole('button', { name: 'Sí, eliminar' }).click();
+  await expect(page.locator('.project')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Deshacer' }).click();
+  await expect(page.locator('.project')).toHaveCount(1);
+  expect(errors).toEqual([]);
+});
+
 test('desde el menú se vuelve al inicio con "Inicio" o con el logo', async ({ page }) => {
   await openExample(page);
   for (const name of ['Inicio', 'Horarios Web']) {
@@ -258,6 +302,25 @@ test('importa un archivo .fet, informa lo perdido y genera con los bloques fijad
   await generate(page);
   await page.getByRole('button', { name: 'Ver horario' }).click();
   await expect(page.locator('td.lesson').first()).toContainText('Mat');
+  expect(errors).toEqual([]);
+});
+
+test('la política de seguridad de contenido no bloquea nada al generar ni al exportar', async ({ page }) => {
+  // Las mismas cabeceras que Vercel (vercel.json), que vite preview también envía.
+  const res = await page.request.get('./');
+  expect(res.headers()['content-security-policy']).toContain("default-src 'self'");
+  expect((await page.request.get('./engine/fet-worker.js')).headers()['content-security-policy']).toContain("'wasm-unsafe-eval'");
+  await page.addInitScript(() => {
+    const w = window as unknown as { cspViolations: string[] };
+    w.cspViolations = [];
+    addEventListener('securitypolicyviolation', (e) => w.cspViolations.push(`${e.violatedDirective} ${e.blockedURI}`));
+  });
+  const errors = watchErrors(page);
+  await openExample(page);
+  await generate(page);
+  await page.locator('a[href="#horario"]').click();
+  await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Excel', exact: true }).click()]);
+  expect(await page.evaluate(() => (window as unknown as { cspViolations: string[] }).cspViolations)).toEqual([]);
   expect(errors).toEqual([]);
 });
 

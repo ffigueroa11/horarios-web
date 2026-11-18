@@ -9,7 +9,7 @@ import { AccountCard } from '../ui/AccountCard';
 import { useAccount } from '../store/account';
 
 export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
-  const { projects, create, duplicate, remove, select, importProjects } = useProjects();
+  const { projects, create, duplicate, remove, select, importProjects, lastRemoved, restoreRemoved } = useProjects();
   const inCloud = useAccount((s) => s.phase === 'ready');
   const list = Object.values(projects).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const fileRef = useRef<HTMLInputElement>(null);
@@ -49,6 +49,12 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) onImport(f); e.target.value = ''; }} />
       </div>
       {error && <div className="notice bad" role="alert">{error}</div>}
+      {lastRemoved && (
+        <div className="notice row" role="status">
+          <span>Se eliminó “{lastRemoved.name}”.</span>
+          <button type="button" className="btn small" onClick={restoreRemoved}>Deshacer</button>
+        </div>
+      )}
 
       <AccountCard />
 
