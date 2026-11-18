@@ -28,6 +28,25 @@ export function NullableNumber({ value, onChange, min = 0, max, placeholder, id,
   );
 }
 
+/**
+ * Número con "Sin límite" como opción explícita. Antes, "Sin límite" era el texto de ejemplo de un campo vacío y parecía
+ * un valor ya escrito. Desmarcar la casilla pone `fallback`; vaciar el número vuelve a "Sin límite".
+ */
+export function LimitField({ label, value, onChange, max, fallback }: {
+  label: string; value: number | null; onChange: (v: number | null) => void; max: number; fallback: number;
+}) {
+  return (
+    <div className="field limit-field" role="group" aria-label={label}>
+      <span>{label}</span>
+      <div className="row">
+        <NullableNumber value={value} max={max} placeholder="—" onChange={onChange} />
+        <label className="check small"><input type="checkbox" checked={value == null}
+          onChange={(e) => onChange(e.target.checked ? null : fallback)} />Sin límite</label>
+      </div>
+    </div>
+  );
+}
+
 /** Texto que se guarda al salir del campo (evita guardar en IndexedDB a cada tecla). */
 export function TextInput({ value, onChange, placeholder, id, className = 'input', ariaLabel }: {
   value: string; onChange: (v: string) => void; placeholder?: string; id?: string; className?: string; ariaLabel?: string;
@@ -113,7 +132,12 @@ export function WeekGrid({ school, cell, dayHeader, days }: {
 }
 
 /** Menú desplegable con acciones. Se cierra al elegir una opción, al hacer clic fuera o con Esc. */
-export function MenuButton({ label, items }: { label: string; items: { label: string; onClick: () => void; title?: string }[] }) {
+export function MenuButton({ label, items, ariaLabel, summaryClass = 'btn' }: {
+  label: ReactNode;
+  items: { label: string; onClick: () => void; title?: string; danger?: boolean }[];
+  ariaLabel?: string;
+  summaryClass?: string;
+}) {
   const ref = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const close = (e: Event) => {
@@ -127,10 +151,10 @@ export function MenuButton({ label, items }: { label: string; items: { label: st
   }, []);
   return (
     <details className="menu" ref={ref}>
-      <summary className="btn">{label} <span aria-hidden="true">▾</span></summary>
+      <summary className={summaryClass} aria-label={ariaLabel}>{label}{summaryClass === 'btn' && <> <span aria-hidden="true">▾</span></>}</summary>
       <div className="menu-list" role="menu">
         {items.map((it) => (
-          <button key={it.label} type="button" role="menuitem" title={it.title}
+          <button key={it.label} type="button" role="menuitem" title={it.title} className={it.danger ? 'danger' : undefined}
             onClick={() => { if (ref.current) ref.current.open = false; it.onClick(); }}>{it.label}</button>
         ))}
       </div>

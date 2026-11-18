@@ -222,3 +222,18 @@ export function validate(p: Project): Issue[] {
     }
   return out;
 }
+
+/**
+ * Pasos que ya tienen lo necesario para generar. Lo usa el menú (✓) y la lista de primeros pasos. Electivos cuenta como
+ * listo solo si hay franjas; es opcional, igual que Preferencias.
+ */
+export function stepsDone(p: Project) {
+  return {
+    jornada: p.school.days.length > 0 && p.school.periods.some((x) => x.kind === 'clase'),
+    cursos: p.courses.length > 0,
+    asignaturas: p.subjects.length > 0,
+    profesores: p.teachers.length > 0,
+    carga: p.courses.length > 0 && p.courses.every((c) => p.assignments.some((a) => a.courseId === c.id)),
+    electivos: p.electives.length > 0,
+  };
+}

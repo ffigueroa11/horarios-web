@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyProject, exampleProject } from './defaults';
 import { exportFet } from './fetExport';
 import { describeActivity, fetMessages, parseActivitiesXml, parseResult } from './fetResult';
-import { courseLoad, describeBlocks, longestRun, openSlots, parseBlocks, teacherLoad, validate } from './validate';
+import { courseLoad, describeBlocks, longestRun, openSlots, parseBlocks, stepsDone, teacherLoad, validate } from './validate';
 import { units } from './units';
 import { checkMove, continueWith } from './manual';
 import { activityKey, migrateProject, newId, slotKey } from './types';
@@ -330,5 +330,19 @@ describe('cómo se describen los bloques', () => {
     expect(describeBlocks([2, 2, 2, 1])).toBe('7 h: 3 bloques de 2 h y 1 de 1 h');
     expect(describeBlocks([1])).toBe('1 h: 1 bloque de 1 h');
     expect(describeBlocks([3, 2, 1])).toBe('6 h: 1 bloque de 3 h, 1 de 2 h y 1 de 1 h');
+  });
+});
+
+describe('pasos listos', () => {
+  it('un horario nuevo solo tiene la jornada; el de ejemplo, todo', () => {
+    const fresh = stepsDone(emptyProject());
+    expect(fresh.jornada).toBe(true);
+    expect(fresh.cursos || fresh.profesores || fresh.carga).toBe(false);
+    expect(Object.values(stepsDone(exampleProject())).every(Boolean)).toBe(true);
+  });
+  it('la carga está lista solo si todos los cursos tienen alguna asignatura', () => {
+    const p = exampleProject();
+    p.assignments = p.assignments.filter((a) => a.courseId !== p.courses[0].id);
+    expect(stepsDone(p).carga).toBe(false);
   });
 });
