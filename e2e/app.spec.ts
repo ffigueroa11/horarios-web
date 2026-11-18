@@ -274,6 +274,19 @@ test('primeros pasos, tarjeta del inicio y "Sin límite" en Preferencias', async
   await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
 });
 
+test('versiones anteriores: generar guarda una copia que se restaura aparte', async ({ page }, info) => {
+  test.skip(info.project.name === 'movil', 'igual que en escritorio');
+  await openExample(page);
+  await generate(page);
+  await goHome(page);
+  await projectMenu(page, 'Versiones anteriores');
+  const row = page.locator('table.versions tr', { hasText: 'Horario generado' }).first();
+  await expect(row).toBeVisible();
+  await row.getByRole('button', { name: 'Restaurar como copia' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Se restauró como' })).toBeVisible();
+  await expect(page.locator('.project')).toHaveCount(2);
+});
+
 test('desde el menú se vuelve al inicio con "Inicio" o con el logo', async ({ page }) => {
   await openExample(page);
   for (const name of ['Inicio', 'Horarios Web']) {

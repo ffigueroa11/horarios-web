@@ -6,6 +6,7 @@ import { MenuButton } from '../ui/common';
 import { downloadBackup } from '../ui/backup';
 import { AppFooter } from '../ui/AppFooter';
 import { AccountCard } from '../ui/AccountCard';
+import { VersionsPanel } from '../ui/VersionsPanel';
 import { useAccount } from '../store/account';
 
 export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
@@ -15,6 +16,8 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [versionsId, setVersionsId] = useState<string | null>(null);
+  const versionsOf = versionsId ? projects[versionsId] : undefined;
 
   const open = (id: string) => { select(id); onOpen(); };
   const onImport = async (file: File) => {
@@ -90,6 +93,7 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
                     <MenuButton label="⋯" summaryClass="icon-btn" ariaLabel={`Más acciones para ${p.name}`} items={[
                       { label: 'Duplicar', title: 'Útil para empezar el año siguiente', onClick: () => duplicate(p.id) },
                       { label: 'Descargar respaldo', onClick: () => downloadBackup([p]) },
+                      { label: 'Versiones anteriores', onClick: () => setVersionsId(p.id) },
                       { label: 'Eliminar', danger: true, onClick: () => setConfirmId(p.id) },
                     ]} />
                   </>}
@@ -99,6 +103,7 @@ export function ProyectosPage({ onOpen }: { onOpen: () => void }) {
           </div>
         </section>
       )}
+      {versionsOf && <VersionsPanel key={versionsOf.id} projectId={versionsOf.id} name={versionsOf.name} onClose={() => setVersionsId(null)} />}
       {!inCloud && <p className="small muted">Los horarios se guardan en este navegador. Si borras los datos de navegación se pierden: descarga un respaldo de vez en cuando.</p>}
       <AppFooter />
     </div>

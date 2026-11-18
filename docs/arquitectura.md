@@ -227,6 +227,10 @@ Tres decisiones de diseño:
   tal cual, con su `updatedAt`, así que respeta `touch`. Un paso solo se aplica si el horario sigue siendo el que dejó:
   lo que cambia fuera de `update()` (generar, la nube, otra pestaña) no se deshace y deja sin efecto el historial.
   Eliminar un horario se recupera aparte (`lastRemoved`), desde el inicio.
+- **Versiones anteriores** ([`store/versions.ts`](../src/store/versions.ts)): copias en IndexedDB, en una clave aparte
+  (`<clave del almacén>:versiones`) que no se sincroniza ni entra en los respaldos. Se guarda una al generar y, al editar,
+  el estado anterior al cambio si la última copia tiene más de 30 minutos. Se conservan 15 por horario y 120 en total
+  ([`domain/versions.ts`](../src/domain/versions.ts)). Restaurar crea una copia: nunca reemplaza el horario.
 - **Cambiar la forma de los datos:** agrega el valor por defecto en `migrateProject`. Si el cambio requiere transformar
   datos, sube `version` en `projects.ts` y, si corresponde, `BACKUP_VERSION`.
 

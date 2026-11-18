@@ -137,3 +137,45 @@ describe('deshacer y rehacer', () => {
     expect(state().lastRemoved).toBeNull();
   });
 });
+
+describe('almacenamiento', () => {
+  const opts = () => useProjects.persist.getOptions();
+
+  it('migra datos guardados con una versión anterior (sin electivos ni reglas nuevas)', () => {
+    const old = generated() as any;
+    delete old.electives;
+    delete old.rules.teacherMeetingSlots;
+    delete old.rules.courseMaxHoursDaily;
+    const migrated = opts().migrate!({ projects: { [old.id]: old }, currentId: old.id }, 2) as any;
+    const p = migrated.projects[old.id];
+    expect(p.electives).toEqual([]);
+    expect(p.rules.teacherMeetingSlots).toEqual([]);
+    expect(p.rules.courseMaxHoursDaily).toBeNull();
+  });
+
+  it('al recargar por cambios de otra pestaña conserva el horario abierto en esta', () => {
+    const a = generated(), b = { ...generated(), id: 'otro' };
+    const current = { ...state(), hydrated: true, currentId: a.id, projects: { [a.id]: a } };
+    const merged = opts().merge!({ projects: { [a.id]: a, [b.id]: b }, currentId: b.id }, current) as ReturnType<typeof state>;
+    expect(merged.currentId).toBe(a.id);
+    expect(Object.keys(merged.projects)).toHaveLength(2);
+  });
+
+  it('si la otra pestaña eliminó el horario abierto, esta lo cierra', () => {
+    const a = generated();
+    const current = { ...state(), hydrated: true, currentId: a.id, projects: { [a.id]: a } };
+    const merged = opts().merge!({ projects: {}, currentId: null }, current) as ReturnType<typeof state>;
+    expect(merged.currentId).toBeNull();
+  });
+
+  it('al abrir la app usa el horario que estaba abierto', () => {
+    const a = generated();
+    const merged = opts().merge!({ projects: { [a.id]: a }, currentId: a.id }, { ...state(), hydrated: false, currentId: null }) as ReturnType<typeof state>;
+    expect(merged.currentId).toBe(a.id);
+  });
+
+  it('no guarda el historial de deshacer ni el último eliminado', () => {
+    const saved = opts().partialize!({ ...state(), history: { x: { past: [], future: [] } }, lastRemoved: generated() });
+    expect(Object.keys(saved as object).sort()).toEqual(['currentId', 'projects']);
+  });
+});

@@ -9,6 +9,7 @@ import { ErrorBoundary } from './ui/ErrorBoundary';
 import { missingFeatures, requestPersistence } from './store/health';
 import { registerServiceWorker } from './store/sw';
 import { initAccount } from './store/account';
+import { startAutoVersions } from './store/versions';
 
 const root = createRoot(document.getElementById('root')!);
 const missing = missingFeatures();
@@ -26,6 +27,7 @@ if (missing.length > 0) {
   void requestPersistence();
   registerServiceWorker();
   void initAccount();
+  startAutoVersions();
   root.render(
     <StrictMode>
       <ErrorBoundary>
