@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { exampleProject } from '../domain/defaults';
 import type { Id, Project } from '../domain/types';
 import { BACKUP_VERSION } from '../domain/backup';
-import { countPending, payload, SyncEngine, type CloudBackend, type RemoteDoc, type SyncMeta, type SyncStatus } from './engine';
+import { countPending, hash, payload, projectHash, SyncEngine, type CloudBackend, type RemoteDoc, type SyncMeta, type SyncStatus } from './engine';
 
 /** Nube en memoria con la misma regla que firestore.rules: solo se escribe la revisión siguiente. */
 class FakeCloud implements CloudBackend {
@@ -298,5 +298,16 @@ describe('sincronización', () => {
     const q = exampleProject();
     const meta: SyncMeta = { gone: { rev: 1, hash: 'h' }, dead: { rev: 2, hash: '', deleted: true } };
     expect(countPending({ [q.id]: q }, meta)).toBe(2);
+  });
+
+  it('tras editar un horario solo cambia su hash, y una copia editada se vuelve a calcular', () => {
+    const q = exampleProject(), r = exampleProject();
+    const meta: SyncMeta = { [q.id]: { rev: 1, hash: projectHash(q) }, [r.id]: { rev: 1, hash: projectHash(r) } };
+    expect(countPending({ [q.id]: q, [r.id]: r }, meta)).toBe(0);
+    const edited = { ...q, name: 'Otro nombre' };
+    expect(projectHash(edited)).toBe(hash(payload(edited)));
+    expect(countPending({ [q.id]: edited, [r.id]: r }, meta)).toBe(1);
+    // backupAt no viaja: descargar un respaldo no deja el horario pendiente.
+    expect(countPending({ [q.id]: { ...q, backupAt: '2026-11-18T00:00:00.000Z' }, [r.id]: r }, meta)).toBe(0);
   });
 });
