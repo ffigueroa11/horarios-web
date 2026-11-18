@@ -208,7 +208,7 @@ franja libera sus fijados, un horario generado queda desactualizado si contradic
 | T3 | `ui/` y `pages/` no tienen pruebas unitarias, y de `store/` solo hay un archivo | Ampliar [`projects.test.ts`](../src/store/projects.test.ts) a migraciones y varias pestañas | S–M | Parcial |
 | T4 | [`large.test.ts`](../src/domain/large.test.ts) no medía un caso difícil: 24 cursos y 84 profesores se resuelven en 0,2–0,6 s | Dos colegios reales anonimizados en [`fixtures/`](../src/domain/fixtures/): uno con horario generado para el ajuste manual y uno que agota el tiempo para el motor ([resultados](revision-arquitectura.md#resultados-de-la-fase-b)) | M | Corregido |
 | T5 | La publicación no esperaba a CI | Vercel retiene cada publicación de `main` hasta que pasan los cinco trabajos de CI (Deployment Checks). Comprobado con un cambio que CI aprobó; no se ha probado con un CI que falle | S | Corregido |
-| T6 | No había política de seguridad de contenido (CSP) | CSP en [`vercel.json`](../vercel.json): una para la página y otra para el motor, que necesita `'unsafe-eval'` además de `'wasm-unsafe-eval'` ([arquitectura](arquitectura.md#seguridad-del-sitio)). `vite preview` envía las mismas cabeceras, así que todas las pruebas de navegador corren con ella. El inicio de sesión con Firebase no tiene prueba automática | S–M | Corregido |
+| T6 | No había política de seguridad de contenido (CSP) | CSP en [`vercel.json`](../vercel.json): una para la página y otra para el motor, que necesita `'unsafe-eval'` además de `'wasm-unsafe-eval'` ([arquitectura](arquitectura.md#seguridad-del-sitio)). `vite preview` envía las mismas cabeceras, así que todas las pruebas de navegador corren con ella. El inicio de sesión con Firebase no tiene prueba automática; se probó a mano en producción | S–M | Corregido |
 | T7 | La compilación del motor no verificaba el origen: [`build-engine.sh`](../engine/build-engine.sh) no comprobaba el `.tar.xz`, y `emsdk` y `aqtinstall` no estaban fijados | La fuente se comprueba por SHA-256 (firma del autor verificada al registrarla), `emsdk` y `aqtinstall` están fijados, y [`engine.sha256`](../engine/engine.sha256) registra el motor publicado, que una prueba revisa. El script no se volvió a ejecutar completo | S | Corregido |
 | T8 | Las acciones de GitHub usaban etiquetas, no commits fijos | Fijadas por SHA, con la versión en un comentario para Dependabot | S | Corregido |
 | T9 | No se ha hecho una auditoría de accesibilidad | Agregar `@axe-core/playwright` a e2e y probar a mano el ajuste con teclado | S | Pendiente |
@@ -286,6 +286,20 @@ Estas funciones cubren lo que hoy el [importador de FET](../src/domain/fetImport
 | F14 | **Compartir sin servidor** | Entregar el horario a cada profesor | Un PDF por profesor, o un `.ics` por persona | S–M |
 | F15 | **Plantillas de plan de estudios por nivel** | Acelera la configuración inicial | Usa `Course.level`. Requiere confirmar los planes vigentes del Mineduc | M |
 | F16 | **Horas lectivas y no lectivas** | `maxHours` solo avisa sobrecarga | Requiere confirmar con colegios la normativa vigente y cómo se calcula | M |
+
+### Ajuste manual: experiencia de uso
+
+Revisión de "Ver y ajustar" del 18 de noviembre de 2026, a partir de capturas de uso real.
+
+| Id | Problema | Propuesta | Esfuerzo | Estado |
+|---|---|---|---|---|
+| U1 | Dos avisos para lo mismo al pasar el mouse: el propio y el título del navegador, que además decía "Clic para seleccionar" cuando el clic intercambiaba | Sin título durante la selección; la explicación va en la barra de selección | S | Corregido |
+| U2 | El aviso junto al cursor y el aviso breve eran ilegibles en modo oscuro (texto blanco sobre fondo claro) | Usan los colores del tema invertidos | S | Corregido |
+| U3 | Decía "Soltar para intercambiar" sin estar arrastrando | Con clic, la barra dice "Clic para…"; al arrastrar, "Suelta para…" junto al cursor | S | Corregido |
+| U4 | La barra no decía dónde está el bloque ni qué pasaría al hacer clic | Muestra día y horas del bloque, y para cada lugar qué pasaría: mover, intercambiar (y adónde pasa el otro bloque) o el motivo. Va fija abajo, para que su texto no desplace la grilla bajo el cursor; también reemplaza el aviso breve | S–M | Corregido |
+| U5 | Los motivos encadenados pasaban nombres a minúscula ("javier Contreras") | `continueWith` solo cambia artículos y palabras comunes | S | Corregido |
+| U6 | Mover, intercambiar y seleccionado se distinguen poco (verde casi en todo, naranja en seleccionado y en fijado) | Lugar libre en verde, intercambio con borde punteado y ⇄, no posible atenuado; seleccionado con el color del texto, distinto del naranja de fijado. La barra trae la leyenda | M | Corregido |
+| U7 | Se ofrecen intercambios que no cambian nada: otro bloque de la misma asignatura, curso y profesor | `checkPlace` no los propone y explica por qué | S | Corregido |
 
 ## Lo que no conviene priorizar
 

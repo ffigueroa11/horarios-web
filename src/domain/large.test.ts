@@ -66,6 +66,21 @@ describe('colegios de referencia', () => {
     }
     expect(lessons(reference('generada'))).toHaveLength(492);
   });
+
+  it('no ofrece intercambiar con otra hora de la misma asignatura y curso', () => {
+    const p = reference('generada');
+    const all = lessons(p);
+    let checked = 0;
+    for (const a of all) {
+      const b = all.find((l) => l !== a && l.unit.id === a.unit.id && l.dur === a.dur);
+      if (!b) continue;
+      const r = placeTargets(p, companions(p, a.pl.key), all).get(`${b.pl.day}:${b.pl.periodId}`)!;
+      expect(r.ok && r.swapWith?.includes(b.pl.key)).toBeFalsy();
+      if (!r.ok && !r.reason.includes('Tampoco')) expect(r.reason).toMatch(/otra hora de|ya tiene|alumnos/);
+      if (++checked >= 20) break;
+    }
+    expect(checked).toBe(20);
+  });
 });
 
 describe.skipIf(!process.env.LARGE)('colegio grande', () => {

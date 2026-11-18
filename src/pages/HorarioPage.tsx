@@ -1,11 +1,11 @@
-import { memo, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type RefObject } from 'react';
+import { memo, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type RefObject } from 'react';
 import { isStale, useCurrent, useProjects } from '../store/projects';
 import type { ActivityKey, Period, Project } from '../domain/types';
 import { slotKey } from '../domain/types';
 import { exportFet } from '../domain/fetExport';
-import { applyMove, applySwap, checkPlace, companions, lessonIndex, lessons, placeTargets, type Lesson, type LessonHit, type PlaceCheck } from '../domain/manual';
+import { applyMove, applySwap, checkPlace, companions, continueWith, lessonIndex, lessons, placeTargets, type Lesson, type LessonHit, type PlaceCheck } from '../domain/manual';
 import { findEffectiveGroup } from '../domain/units';
-import { describeActivity } from '../domain/fetResult';
+import { describeUnit } from '../domain/fetResult';
 import type { Route } from '../App';
 import { PageHead, WeekGrid, type CellSpec } from '../ui/common';
 import { UnmetPreferencesReport } from '../ui/UnmetPreferencesReport';
@@ -54,13 +54,37 @@ function DragHint({ handle }: { handle: RefObject<HintApi | null> }) {
   );
 }
 
+/** Día y horas que ocuparía un bloque de `dur` tramos que empieza en `startIdx`: "jueves de 09:45 a 11:15". */
+function when(p: Project, day: number, startIdx: number, dur: number) {
+  const first = p.school.periods[startIdx], last = p.school.periods[startIdx + dur - 1] ?? first;
+  return `${p.school.days[day]?.toLowerCase() ?? ''} de ${first?.start ?? ''} a ${last?.end ?? ''}`;
+}
+
+type Status = { text: string; kind: 'ok' | 'swap' | 'no' | 'info' } | null;
+interface StatusApi { set: (s: Status) => void }
+
+/**
+ * Qué pasa si se hace clic donde está el mouse (o el foco): mover, intercambiar o el motivo por el que no se puede.
+ * Vive en la barra de selección, con su propio estado, para no volver a dibujar la grilla en cada movimiento.
+ */
+function SelectionStatus({ handle, idle }: { handle: RefObject<StatusApi | null>; idle: string }) {
+  const [status, setStatus] = useState<Status>(null);
+  useImperativeHandle(handle, () => ({
+    set: (next) => setStatus((cur) => (cur?.text === next?.text ? cur : next)),
+  }), []);
+  const icon = { ok: '→ ', swap: '⇄ ', no: '🚫 ', info: '' }[status?.kind ?? 'info'];
+  return <span className={`sel-status${status?.kind === 'no' ? ' no' : ''}`} aria-live="polite">{status ? icon + status.text : idle}</span>;
+}
+
 /** Lo que la grilla pide a la página. Va en un ref para que la grilla memorizada no dependa de funciones nuevas. */
 interface GridActions {
   tryMove: (keys: ActivityKey[], day: number, period: Period) => void;
   select: (l: Lesson) => void;
   startDrag: (l: Lesson) => void;
-  toast: (text: string) => void;
+  /** El motivo por el que no se puede, en la barra de selección (al hacer clic o al soltar en un lugar no válido). */
+  refuse: (reason: string) => void;
   hint: RefObject<HintApi | null>;
+  status: RefObject<StatusApi | null>;
   lastInvalid: RefObject<string | null>;
 }
 
@@ -90,6 +114,10 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
   const selectedSet = new Set(selected ?? []);
   const isLocked = (key: ActivityKey) => !!p.locks[key];
   const slots = index.get(`${m}:${id}`);
+  const moving = selected ? all.find((l) => l.pl.key === selected[0]) : undefined;
+  const onSelected: Partial<CellSpec> = {
+    onMouseMove: () => act.current!.status.current?.set({ kind: 'info', text: 'Es el bloque seleccionado: haz clic de nuevo para soltarlo.' }),
+  };
   // Una clase ocupa una sola celda alta (rowSpan) si en todos sus tramos es la única clase.
   const alone = (l: Lesson) => Array.from({ length: l.dur }, (_, k) => p.school.periods[l.startIdx + k])
     .every((per) => per && (slots?.get(slotKey(l.pl.day, per.id))?.length ?? 0) === 1);
@@ -104,8 +132,8 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
       return `${courseName(c)}${g ? ` (${g})` : ''}`;
     }).join(', ');
     const franja = l.unit.kind === 'electivo' ? groupLabel(p, l, courses[0]) : undefined;
-    const help = !interactive ? '' : selectedSet.has(l.pl.key) ? 'Seleccionado: elige un lugar libre (en verde) o haz clic de nuevo para soltar' : 'Clic para seleccionar y mover o fijar; también se puede arrastrar';
-    const title = `${s?.name}${franja ? ` · ${franja}` : ''} · ${audience} · ${t ?? 'sin profesor'}${room ? ' · ' + room : ''}${locked ? ' · fijado' : ''}\n${help}`;
+    // Sin título mientras hay un bloque seleccionado: el navegador lo mostraría encima de la explicación de la barra.
+    const title = selected ? undefined : `${s?.name}${franja ? ` · ${franja}` : ''} · ${audience} · ${t ?? 'sin profesor'}${room ? ' · ' + room : ''}${locked ? ' · fijado' : ''}`;
     const g = m === 'curso' ? groupLabel(p, l, id) : undefined;
     const main = m === 'curso' ? `${s?.name}${g && l.unit.kind === 'carga' ? ` · ${g}` : ''}` : `${s?.short || s?.name} · ${audience}`;
     const sub = m === 'curso' ? `${l.unit.kind === 'electivo' ? `${g} · ` : ''}${t ?? 'Sin profesor'}${room ? ` · ${room}` : ''}` : room ?? '';
@@ -117,7 +145,7 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
       // Se soltó sobre un lugar no válido (algunos navegadores no informan la posición: se usa el último motivo).
       const unknownPos = e.clientX === 0 && e.clientY === 0;
       const overInvalid = unknownPos || !!document.elementFromPoint(e.clientX, e.clientY)?.closest('td.drop-no');
-      if (act.current!.lastInvalid.current && overInvalid) act.current!.toast(act.current!.lastInvalid.current);
+      if (act.current!.lastInvalid.current && overInvalid) act.current!.refuse(act.current!.lastInvalid.current);
       act.current!.lastInvalid.current = null;
       act.current!.hint.current?.hide();
     },
@@ -129,38 +157,50 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
     },
   } : {};
   return (
+    <div onMouseLeave={interactive && selected ? () => act.current!.status.current?.set(null) : undefined}>
     <WeekGrid school={p.school} cell={(d, per): CellSpec => {
       const k = slotKey(d, per.id);
       const target = interactive && selected ? targets.get(k) : undefined;
-      // Motivo junto al cursor: al arrastrar sobre un lugar no válido, o al pasar el mouse con un bloque seleccionado.
-      const showReason = (x: number, y: number) => {
-        const text = !target ? null : target.ok ? (target.swapWith ? `Soltar para intercambiar con ${subjectOfKey(target.swapWith[0])}` : null) : target.reason;
+      // Con clic: qué pasaría, en la barra de selección. Al arrastrar: junto al cursor, que es donde se está mirando.
+      const describeTarget = (): Status => {
+        if (!target) return null;
+        if (!target.ok) return { kind: 'no', text: `No se puede: ${continueWith(target.reason)}` };
+        if (target.swapWith) {
+          const other = all.find((l) => l.pl.key === target.swapWith![0]);
+          const there = moving ? `, que pasa al ${when(p, moving.pl.day, moving.startIdx, moving.dur)}` : '';
+          return { kind: 'swap', text: `Clic para intercambiar con ${subjectOfKey(target.swapWith[0])}${other ? there : ''}. Los dos quedan fijados 📌.` };
+        }
+        const start = p.school.periods.findIndex((x) => x.id === per.id);
+        return { kind: 'ok', text: `Clic para mover al ${when(p, d, start, moving?.dur ?? 1)}. Queda fijado 📌.` };
+      };
+      const showStatus = () => act.current!.status.current?.set(describeTarget());
+      const showDragHint = (x: number, y: number) => {
+        const text = !target ? null : target.ok ? (target.swapWith ? `Suelta para intercambiar con ${subjectOfKey(target.swapWith[0])}` : null) : target.reason;
         if (text) act.current!.hint.current?.show(text, x, y, !!target?.ok);
         else act.current!.hint.current?.hide();
       };
       const drop = target ? {
-        onMouseMove: (e: MouseEvent) => showReason(e.clientX, e.clientY),
-        onMouseLeave: () => act.current!.hint.current?.hide(),
+        onMouseMove: showStatus,
+        onFocus: showStatus,
         onDragOver: (e: DragEvent) => {
           if (target.ok) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
             act.current!.lastInvalid.current = null;
           } else act.current!.lastInvalid.current = target.reason;
-          showReason(e.clientX, e.clientY);
+          showDragHint(e.clientX, e.clientY);
         },
         onDrop: (e: DragEvent) => { e.preventDefault(); if (selected) act.current!.tryMove(selected, d, per); },
       } : {};
       const targetClass = target ? (target.ok ? (target.swapWith ? ' drop-ok drop-swap' : ' drop-ok') : ' drop-no') : '';
-      const targetTitle = target?.ok ? (target.swapWith ? `Intercambiar con ${subjectOfKey(target.swapWith[0])}` : 'Mover aquí') : undefined;
-      if (p.school.closed.includes(k)) return { className: 'closed', title: 'Sin clases' };
+      if (p.school.closed.includes(k))
+        return { className: 'closed', title: selected ? undefined : 'Sin clases', onMouseMove: selected ? () => act.current!.status.current?.set(null) : undefined };
       const hits = slots?.get(k) ?? [];
       if (hits.length === 0) {
         if (!target) return {};
         return {
           className: targetClass.trim(),
-          title: target.ok ? targetTitle : target.reason,
-          onClick: () => (target.ok ? act.current!.tryMove(selected!, d, per) : act.current!.toast(target.reason)),
+          onClick: () => (target.ok ? act.current!.tryMove(selected!, d, per) : act.current!.refuse(target.reason)),
           ...drop,
         };
       }
@@ -171,10 +211,11 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
         return {
           className: `lesson${x.locked ? ' locked' : ''}${x.sel ? ' selected' : ''}${x.sel ? '' : targetClass}`,
           rowSpan: l.dur,
-          title: target && !x.sel ? (target.ok ? `${targetTitle}\n\n${x.title}` : `${target.reason}\n\n${x.title}`) : x.title,
+          title: x.title,
           onClick: interactive ? () => (target?.ok && !x.sel ? act.current!.tryMove(selected!, d, per) : act.current!.select(l)) : undefined,
           ...dragProps(l),
           ...drop,
+          ...(x.sel ? onSelected : {}),
           content: (
             <div style={{ position: 'absolute', inset: 0, padding: '4px 6px', background: x.s?.color ?? '#777', borderRadius: 5 }}>
               <span className="s">{x.main}</span>
@@ -198,8 +239,8 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
       return {
         className: `multi${anySel ? '' : targetClass}`,
         rowSpan: together ? hits[0].lesson.dur : undefined,
-        title: target && !anySel && !target.ok ? target.reason : undefined,
         ...drop,
+        ...(anySel ? onSelected : {}),
         content: hits.map(({ lesson: l, start }) => {
           const x = describe(l);
           return (
@@ -217,6 +258,7 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
         }),
       };
     }} />
+    </div>
   );
 });
 
@@ -240,16 +282,12 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
   const [printAll, setPrintAll] = useState(false);
   const [selected, setSelected] = useState<ActivityKey[] | null>(null);
   const [message, setMessage] = useState<{ kind: 'ok' | 'bad'; text: string } | null>(null);
-  // Motivo por el que no se puede soltar un bloque: junto al cursor mientras se arrastra (DragHint), y como aviso
-  // breve abajo de la pantalla si se suelta igual o se hace clic en un lugar no válido.
+  // Qué pasaría en cada lugar: en la barra de selección (SelectionStatus) y, mientras se arrastra, junto al cursor
+  // (DragHint), que es donde se está mirando.
   const hintRef = useRef<HintApi>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const statusRef = useRef<StatusApi>(null);
   const lastInvalid = useRef<string | null>(null);
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4500);
-    return () => clearTimeout(t);
-  }, [toast]);
+  const refuse = (reason: string) => statusRef.current?.set({ kind: 'no', text: `No se puede: ${continueWith(reason)}` });
   const all = useMemo(() => lessons(p), [p]);
   const index = useMemo(() => lessonIndex(p, all), [p, all]);
   // Lugares válidos para lo seleccionado: se calcula una vez por selección (no en cada celda de cada vista).
@@ -299,12 +337,13 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
 
   const tryMove = (keys: ActivityKey[], day: number, period: Period) => {
     const check = checkPlace(p, keys, day, period.id, all);
-    if (!check.ok) { setToast(check.reason); return; }
+    if (!check.ok) { refuse(check.reason); return; }
     const swap = check.swapWith;
     if (swap) update((d) => applySwap(d, keys, swap), { touch: false });
     else update((d) => applyMove(d, keys, day, period.id), { touch: false });
     setSelected(null);
     hintRef.current?.hide();
+    statusRef.current?.set(null);
     setMessage({ kind: 'ok', text: swap
       ? `Intercambiados: ${subjectOfKey(keys[0])} ↔ ${subjectOfKey(swap[0])}. Ambos quedaron fijados 📌.`
       : `Movido al ${p.school.days[day]}, ${period.label} (${period.start}). Quedó fijado 📌.` });
@@ -334,8 +373,7 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
   // Se actualiza después de cada dibujo: la grilla solo lo usa en eventos, que ocurren después.
   const startDrag = (l: Lesson) => { setSelected(companions(p, l.pl.key)); setMessage(null); };
   const act = useRef<GridActions>(null);
-  const showToast = (text: string) => setToast(text);
-  useLayoutEffect(() => { act.current = { tryMove, select, startDrag, toast: showToast, hint: hintRef, lastInvalid }; });
+  useLayoutEffect(() => { act.current = { tryMove, select, startDrag, refuse, hint: hintRef, status: statusRef, lastInvalid }; });
   const grid = (id: string, interactive: boolean) => (
     <ScheduleGrid p={p} all={all} index={index} m={mode} id={id} interactive={interactive}
       selected={interactive ? selected : null} targets={interactive ? targets : NO_TARGETS} act={act} />
@@ -346,6 +384,7 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
   const ownerSlots = owner ? index.get(`${mode}:${owner.id}`) : undefined;
   const ownerHours = ownerSlots?.size ?? 0;
   const selLocked = selected ? selected.every(isLocked) : false;
+  const selLesson = selected ? all.find((l) => l.pl.key === selected[0]) : undefined;
 
   return (
     <>
@@ -358,9 +397,9 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
           <button type="button" className="btn ghost" onClick={() => downloadText(`${fileSafe(p.name)}.fet`, exportFet(p).xml, 'application/xml')} title="Abre los datos en FET de escritorio">Archivo .fet</button>
         </div>
       }>
-        Haz clic en un bloque para <b>seleccionarlo</b>: puedes moverlo a un lugar libre (en verde), soltarlo sobre otro bloque
-        con borde verde para <b>intercambiarlos</b>, o <b>fijarlo</b> 📌. También se puede arrastrar.
-        Al generar de nuevo, los bloques fijados se mantienen y el resto se reorganiza.
+        Haz clic en un bloque para <b>seleccionarlo</b> y pasa el mouse por la grilla: la barra de abajo dice qué pasaría en
+        cada lugar. Haz clic donde quieras <b>moverlo</b> o <b>intercambiarlo</b>, o arrástralo. Lo que mueves queda <b>fijo</b> 📌:
+        al generar de nuevo se mantiene y el resto se reorganiza.
       </PageHead>
 
       {isStale(p) && (
@@ -391,28 +430,25 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
           <button type="button" className="btn small primary" onClick={() => go('generar')}>Generar de nuevo</button>
         </div>
 
+        {message && <div className={`notice ${message.kind === 'ok' ? 'ok' : 'bad'}`} role="status">{message.text}</div>}
+        {selected && <DragHint handle={hintRef} />}
+        {owner ? grid(owner.id, true) : <div className="empty">No hay elementos para mostrar.</div>}
+        {selected && <p className="small muted">Al mover o intercambiar se revisan los choques, recreos, la disponibilidad de profesores y todas las reglas obligatorias de Preferencias. Las reglas preferibles no se revisan.</p>}
         {selected && (
-          <div className="notice selbar" role="status">
+          <div className="notice selbar">
             <span>
-              <b>{describeActivity(p, selected[0])}</b>
-              {selected.length > 1 && <> y {selected.length - 1} clase{selected.length > 2 ? 's' : ''} en paralelo (se mueven juntas)</>}.
-              {' '}{[...targets.values()].some((t) => t.ok)
-                ? 'Elige un lugar en verde o arrástralo.'
-                : 'No hay otro lugar donde quepa sin choques; puedes fijarlo y generar de nuevo para que el resto se reorganice.'}
+              {selLesson && <><b>{describeUnit(p, selLesson.unit)}</b>, el {when(p, selLesson.pl.day, selLesson.startIdx, selLesson.dur)}</>}
+              {selected.length > 1 && <> y {selected.length - 1} clase{selected.length > 2 ? 's' : ''} en paralelo, que se mueven juntas</>}.
+              <SelectionStatus handle={statusRef} idle={[...targets.values()].some((t) => t.ok)
+                ? 'Verde: se puede mover ahí. ⇄: se puede intercambiar. Atenuado: no se puede. Pasa el mouse para ver el detalle.'
+                : 'No hay otro lugar donde quepa sin choques. Puedes dejarlo fijo y generar de nuevo para que el resto se reorganice.'} />
             </span>
             <span className="row">
-              <button type="button" className="btn small" onClick={() => toggleLock(selected)}>{selLocked ? 'Liberar' : 'Fijar aquí 📌'}</button>
+              <button type="button" className="btn small" onClick={() => toggleLock(selected)}>{selLocked ? 'Liberar' : 'Dejar fijo aquí 📌'}</button>
               <button type="button" className="btn small ghost" onClick={() => setSelected(null)}>Cancelar</button>
             </span>
           </div>
         )}
-        {message && <div className={`notice ${message.kind === 'ok' ? 'ok' : 'bad'}`} role="status">{message.text}</div>}
-        {selected && <DragHint handle={hintRef} />}
-        <div className="toast-zone" role="status" aria-live="polite">
-          {toast && <div className="toast" onClick={() => setToast(null)}>No se puede mover aquí: {toast}</div>}
-        </div>
-        {owner ? grid(owner.id, true) : <div className="empty">No hay elementos para mostrar.</div>}
-        {selected && <p className="small muted">Al mover o intercambiar se revisan los choques, recreos, la disponibilidad de profesores y todas las reglas obligatorias de Preferencias. Las reglas preferibles no se revisan.</p>}
       </section>
 
       <div className="print-only">

@@ -22,11 +22,15 @@ export function registerServiceWorker() {
         },
       });
       // Solo se ofrece actualizar si ya había una versión controlando la página (no en la primera visita).
-      if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+      if (reg.waiting && reg.active) offer(reg.waiting);
       reg.addEventListener('updatefound', () => {
         const w = reg.installing;
+        // Es una actualización solo si ya había una versión activa al empezar a instalar esta. No basta con mirar si la
+        // página tiene controlador al terminar: en WebKit el aviso de "instalado" puede llegar después de que la primera
+        // versión ya tomó el control, y se ofrecía "actualizar" en la primera visita.
+        const isUpdate = !!reg.active;
         w?.addEventListener('statechange', () => {
-          if (w.state === 'installed' && navigator.serviceWorker.controller) offer(w);
+          if (w.state === 'installed' && isUpdate) offer(w);
         });
       });
       // Revisa si hay versión nueva cada hora mientras la app está abierta.

@@ -20,8 +20,10 @@ async function openExample(page: Page) {
 async function generate(page: Page) {
   await page.locator('a[href="#generar"]').click();
   await page.getByRole('button', { name: /^Generar (horario|de nuevo)$/ }).last().click();
-  await expect(page.locator('.notice.ok, .notice.bad').first()).toBeVisible({ timeout: 200_000 });
-  await expect(page.locator('.notice.ok')).toContainText('Horario generado');
+  // Por texto: puede haber otro aviso verde a la vez (por ejemplo, el de versión nueva del service worker).
+  const ok = page.locator('.notice.ok', { hasText: 'Horario generado' });
+  await expect(ok.or(page.locator('main .notice.bad')).first()).toBeVisible({ timeout: 200_000 });
+  await expect(ok).toBeVisible();
 }
 
 /** Selecciona el primer bloque para el que existe `selector` (ej. un destino válido). Falla si ninguno lo tiene. */
@@ -57,21 +59,26 @@ test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ pa
   // Seleccionar un bloque y moverlo a un lugar válido: queda fijado.
   await selectLessonWith(page, 'td.drop-ok');
   await page.locator('td.drop-ok').first().click();
-  await expect(page.locator('.notice.ok')).toContainText(/Movido|Intercambiados/);
+  await expect(page.locator('.notice.ok', { hasText: /Movido|Intercambiados/ })).toBeVisible();
   await expect(page.locator('td.lesson.locked, .chip-lesson.locked').first()).toBeVisible();
 
-  // Lugar no válido con un bloque seleccionado: el motivo aparece junto al cursor (el mismo rótulo que al
-  // arrastrar) y, al hacer clic en un cuadro vacío no válido, como aviso breve abajo.
+  // Con un bloque seleccionado, la barra explica qué pasaría en cada lugar: el motivo en uno no válido, sin el título
+  // del navegador encima ni un aviso junto al cursor (ese es solo para arrastrar). Al hacer clic en un cuadro vacío no
+  // válido, el motivo aparece también como aviso breve abajo.
   await selectLessonWith(page, 'td.lesson.drop-no');
   const invalid = page.locator('td.lesson.drop-no').first();
   await invalid.hover({ position: { x: 10, y: 10 } });
-  await invalid.hover({ position: { x: 14, y: 14 } });
-  await expect(page.locator('.drag-hint')).toBeVisible();
+  await expect(page.locator('.selbar .sel-status')).toContainText('No se puede:');
+  await expect(invalid).not.toHaveAttribute('title');
+  await expect(page.locator('.drag-hint')).toHaveCount(0);
+  const valid = page.locator('td.drop-ok').first();
+  await valid.hover({ position: { x: 10, y: 10 } });
+  await expect(page.locator('.selbar .sel-status')).toContainText(/Clic para (mover|intercambiar)/);
   await page.keyboard.press('Escape');
   const emptyInvalid = 'td.drop-no:not(.lesson):not(.multi)';
   await selectLessonWith(page, emptyInvalid);
   await page.locator(emptyInvalid).first().click();
-  await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
+  await expect(page.locator('.selbar .sel-status')).toContainText('No se puede:');
   await page.keyboard.press('Escape');
 
   // 2° Medio A: el electivo artístico aparece con sus tres opciones a la misma hora.
@@ -106,7 +113,7 @@ test('arrastrar y soltar: motivo en un lugar no válido y movimiento en uno vál
   await invalid.target.dispatchEvent('dragover', { dataTransfer, ...invalid.at });
   await expect(page.locator('.drag-hint')).toBeVisible();
   await source.dispatchEvent('dragend', { dataTransfer, ...invalid.at });
-  await expect(page.locator('.toast')).toContainText('No se puede mover aquí');
+  await expect(page.locator('.selbar .sel-status')).toContainText('No se puede:');
   await expect(page.locator('.drag-hint')).toHaveCount(0);
   await page.keyboard.press('Escape');
 
@@ -116,7 +123,7 @@ test('arrastrar y soltar: motivo en un lugar no válido y movimiento en uno vál
   await source.dispatchEvent('dragstart', { dataTransfer });
   await valid.target.dispatchEvent('dragover', { dataTransfer, ...valid.at });
   await valid.target.dispatchEvent('drop', { dataTransfer, ...valid.at });
-  await expect(page.locator('.notice.ok')).toContainText(/Movido|Intercambiados/);
+  await expect(page.locator('.notice.ok', { hasText: /Movido|Intercambiados/ })).toBeVisible();
   await expect(page.locator('td.lesson.locked, .chip-lesson.locked').first()).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -205,7 +212,7 @@ test('deshacer: eliminar un curso, mover un bloque y recuperar un horario elimin
   await page.getByRole('button', { name: 'Ver horario' }).click();
   await selectLessonWith(page, '.card td.drop-ok');
   await page.locator('.card td.drop-ok').first().click();
-  await expect(page.locator('.notice.ok')).toContainText(/Movido|Intercambiados/);
+  await expect(page.locator('.notice.ok', { hasText: /Movido|Intercambiados/ })).toBeVisible();
   await expect(page.locator('.badge', { hasText: /^[1-9]\d* fijados$/ })).toBeVisible();
   await undo.click();
   await expect(page.locator('.badge', { hasText: /^0 fijados$/ })).toBeVisible();
