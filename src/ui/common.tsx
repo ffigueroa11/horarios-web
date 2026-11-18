@@ -56,6 +56,7 @@ export interface CellSpec {
   onDragLeave?: (e: DragEvent) => void;
   onMouseMove?: (e: MouseEvent) => void;
   onMouseLeave?: () => void;
+  onFocus?: () => void;
   onDrop?: (e: DragEvent) => void;
 }
 
@@ -92,7 +93,7 @@ export function WeekGrid({ school, cell, dayHeader }: {
                       onClick={c.onClick} tabIndex={c.onClick ? 0 : undefined}
                       draggable={c.draggable || undefined} onDragStart={c.onDragStart} onDragEnd={c.onDragEnd}
                       onDragOver={c.onDragOver} onDragLeave={c.onDragLeave} onDrop={c.onDrop}
-                      onMouseMove={c.onMouseMove} onMouseLeave={c.onMouseLeave}
+                      onMouseMove={c.onMouseMove} onMouseLeave={c.onMouseLeave} onFocus={c.onFocus}
                       onKeyDown={c.onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), c.onClick!()) : undefined}>
                       {c.content}
                     </td>

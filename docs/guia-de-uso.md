@@ -126,10 +126,15 @@ día o fuera de los bloques permitidos. El horario es válido igual.
 
 Mira el horario por curso, profesor o sala.
 
-- **Mover:** haz clic en un bloque y luego en un lugar en verde, o arrástralo.
-- **Intercambiar:** suéltalo sobre un bloque con borde verde.
-- **Fijar 📌:** el bloque se mantiene en su lugar al generar de nuevo. Todo bloque que mueves queda fijado.
-- **Lugar no válido:** al pasar el mouse o hacer clic, la app explica el motivo.
+- **Seleccionar:** haz clic en un bloque. Abajo aparece una barra que dice cuál es y dónde está.
+- **Ver qué se puede hacer:** con un bloque seleccionado, pasa el mouse por la grilla. La barra dice qué pasaría en cada
+  lugar: moverlo, intercambiarlo con el bloque que está ahí (y adónde pasa ese bloque), o por qué no se puede.
+  En la grilla, los lugares libres donde cabe están en verde, los bloques con los que se puede intercambiar tienen
+  borde punteado y ⇄, y lo que no se puede queda atenuado.
+- **Mover o intercambiar:** haz clic en el lugar, o arrastra el bloque hasta él. Al arrastrar, la explicación aparece
+  junto al cursor.
+- **Fijar 📌:** el bloque se mantiene en su lugar al generar de nuevo. Todo bloque que mueves o intercambias queda fijado.
+- **Soltar la selección:** haz clic de nuevo en el bloque, usa **Cancelar** o presiona Esc.
 
 Los movimientos respetan los choques y las reglas obligatorias, pero no impiden incumplir las preferibles: las que no se
 cumplen aparecen en un aviso sobre el horario, que se actualiza al mover bloques. Las clases en paralelo se mueven juntas.

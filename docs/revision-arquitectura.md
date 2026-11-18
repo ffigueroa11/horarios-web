@@ -106,7 +106,7 @@ Otras menores, sin identificador:
 
 **Estado:** las fases A, B y C están aplicadas (18 de noviembre de 2026). La D sigue pendiente, y la medición de la
 fase B no muestra, por ahora, motivo para hacerla (ver [resultados](#resultados-de-la-fase-b)). En la C, el inicio de
-sesión con Firebase bajo la nueva CSP queda por probar a mano en un despliegue.
+sesión con Firebase bajo la nueva CSP se probó a mano en producción y funciona.
 
 | Fase | Contenido | Criterio de cierre | Estimación |
 |---|---|---|---|

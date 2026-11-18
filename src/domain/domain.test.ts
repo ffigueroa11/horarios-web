@@ -4,7 +4,7 @@ import { exportFet } from './fetExport';
 import { describeActivity, fetMessages, parseActivitiesXml, parseResult } from './fetResult';
 import { courseLoad, longestRun, openSlots, parseBlocks, teacherLoad, validate } from './validate';
 import { units } from './units';
-import { checkMove } from './manual';
+import { checkMove, continueWith } from './manual';
 import { activityKey, migrateProject, newId, slotKey } from './types';
 
 describe('jornada', () => {
@@ -313,5 +313,13 @@ describe('referencias a lo eliminado', () => {
     const before = structuredClone(p);
     migrateProject(p);
     expect(p).toEqual(before);
+  });
+});
+
+describe('motivos dentro de una frase', () => {
+  it('pasa a minúscula solo las palabras comunes, no los nombres', () => {
+    expect(continueWith('Los alumnos ya tienen Física a esa hora.')).toBe('los alumnos ya tienen Física a esa hora.');
+    expect(continueWith('Javier Contreras ya tiene Física a esa hora.')).toBe('Javier Contreras ya tiene Física a esa hora.');
+    expect(continueWith('Educación Física dura 2 horas y no cabe.')).toBe('Educación Física dura 2 horas y no cabe.');
   });
 });

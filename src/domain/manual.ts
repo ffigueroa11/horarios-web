@@ -92,6 +92,13 @@ export function shareStudents(p: Project, a: Unit, b: Unit): boolean {
 
 export type MoveCheck = { ok: true } | { ok: false; reason: string };
 
+/**
+ * Para continuar una frase con un motivo ("…: los alumnos ya tienen…"). Solo pasa a minúscula los artículos y palabras
+ * comunes: si el motivo empieza con un nombre ("Javier Contreras ya tiene…", "Educación Física dura…"), lo deja igual.
+ */
+export const continueWith = (reason: string) =>
+  /^(Los|Las|La|El|Ese|Esa|Este|Esta|Ya|No|Hay)\b/.test(reason) ? reason.charAt(0).toLowerCase() + reason.slice(1) : reason;
+
 const nameOf = <T extends { id: string; name: string }>(list: T[], id: string | null) => list.find((x) => x.id === id)?.name ?? '';
 
 /**
@@ -395,7 +402,7 @@ function checkSwapIn(p: Project, a: ActivityKey[], b: ActivityKey[], v: View): M
   const r1 = checkMoveIn(p, a, lb.pl.day, lb.pl.periodId, movedView(p, v, b, la.pl.day, la.pl.periodId), { skipRules: true });
   if (!r1.ok) return r1;
   const r2 = checkMoveIn(p, b, la.pl.day, la.pl.periodId, movedView(p, v, a, lb.pl.day, lb.pl.periodId), { skipRules: true });
-  if (!r2.ok) return { ok: false, reason: `${subject(lb)} no puede ir donde está ${subject(la)}: ${r2.reason.charAt(0).toLowerCase()}${r2.reason.slice(1)}` };
+  if (!r2.ok) return { ok: false, reason: `${subject(lb)} no puede ir donde está ${subject(la)}: ${continueWith(r2.reason)}` };
   const final = movedView(p, movedView(p, v, b, la.pl.day, la.pl.periodId), a, lb.pl.day, lb.pl.periodId);
   const units = [la.unit, lb.unit, ...lessonsOf(v, [...a, ...b]).map((l) => l.unit)];
   const rule = ruleProblemIn(p, v, final, [...new Map(units.map((u) => [u.id, u])).values()]);
@@ -414,13 +421,19 @@ export function checkPlace(p: Project, keys: ActivityKey[], day: number, periodI
   const moving = lessonsOf(v, keys);
   if (moving.length === 0) return move;
   const keySet = new Set(keys);
-  const occupant = v.startingAt(day, periodId).find((o) => !keySet.has(o.pl.key) && o.dur === moving[0].dur
+  const candidates = v.startingAt(day, periodId).filter((o) => !keySet.has(o.pl.key) && o.dur === moving[0].dur
     && moving.some((m) => shareStudents(p, m.unit, o.unit) || (!!m.unit.teacherId && m.unit.teacherId === o.unit.teacherId)));
-  if (!occupant) return move;
+  // Intercambiar con otra hora de la misma asignatura, curso y profesor no cambia el horario: no se ofrece.
+  const sameUnit = new Set(moving.map((m) => m.unit.id));
+  const occupant = candidates.find((o) => !sameUnit.has(o.unit.id));
+  if (!occupant) {
+    const twin = candidates.find((o) => sameUnit.has(o.unit.id));
+    return twin ? { ok: false, reason: `Ahí está otra hora de ${nameOf(p.subjects, twin.unit.subjectId)} del mismo curso: intercambiarlas no cambia el horario.` } : move;
+  }
   const other = companions(p, occupant.pl.key);
   const swap = checkSwapIn(p, keys, other, v);
   if (swap.ok) return { ok: true, swapWith: other };
-  return { ok: false, reason: `${move.reason} Tampoco se pueden intercambiar: ${swap.reason.charAt(0).toLowerCase()}${swap.reason.slice(1)}` };
+  return { ok: false, reason: `${move.reason} Tampoco se pueden intercambiar: ${continueWith(swap.reason)}` };
 }
 
 /** Revisa todos los lugares de clase de la semana para los bloques `keys` (lo que muestra la grilla al seleccionar). */
