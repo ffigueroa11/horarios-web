@@ -1,0 +1,5565 @@
+{
+ "app": "horarios-web",
+ "version": 2,
+ "project": {
+  "id": "8e0f5e67",
+  "name": "Referencia difícil (anonimizado)",
+  "year": 2027,
+  "updatedAt": "2026-11-18T12:00:00.000Z",
+  "school": {
+   "name": "Escuela de referencia",
+   "days": [
+    "Lunes",
+    "Martes",
+    "Miercoles",
+    "Jueves",
+    "Viernes"
+   ],
+   "periods": [
+    {
+     "id": "e64a868a",
+     "label": "1° bloque",
+     "start": "08:00",
+     "end": "08:45",
+     "kind": "clase"
+    },
+    {
+     "id": "3b217f10",
+     "label": "2° bloque",
+     "start": "08:45",
+     "end": "09:30",
+     "kind": "clase"
+    },
+    {
+     "id": "a0346f9b",
+     "label": "Recreo",
+     "start": "09:30",
+     "end": "09:45",
+     "kind": "recreo"
+    },
+    {
+     "id": "c8d8ac0e",
+     "label": "3° bloque",
+     "start": "09:45",
+     "end": "10:30",
+     "kind": "clase"
+    },
+    {
+     "id": "00c060ba",
+     "label": "4° bloque",
+     "start": "10:31",
+     "end": "11:15",
+     "kind": "clase"
+    },
+    {
+     "id": "e98e96e8",
+     "label": "Recreo",
+     "start": "11:15",
+     "end": "11:25",
+     "kind": "recreo"
+    },
+    {
+     "id": "3a340c63",
+     "label": "5° bloque",
+     "start": "11:25",
+     "end": "12:10",
+     "kind": "clase"
+    },
+    {
+     "id": "279d0fba",
+     "label": "6° bloque",
+     "start": "12:11",
+     "end": "12:55",
+     "kind": "clase"
+    },
+    {
+     "id": "de0931f9",
+     "label": "Recreo",
+     "start": "12:55",
+     "end": "13:10",
+     "kind": "recreo"
+    },
+    {
+     "id": "6d940ad4",
+     "label": "7° bloque",
+     "start": "13:10",
+     "end": "13:55",
+     "kind": "clase"
+    },
+    {
+     "id": "7162e672",
+     "label": "8° bloque",
+     "start": "13:56",
+     "end": "14:40",
+     "kind": "clase"
+    }
+   ],
+   "closed": []
+  },
+  "courses": [
+   {
+    "id": "f0ad6d59",
+    "name": "1°A",
+    "level": "1°",
+    "divisions": []
+   },
+   {
+    "id": "2a2d2d52",
+    "name": "1°B",
+    "level": "1°",
+    "divisions": []
+   },
+   {
+    "id": "f5e13766",
+    "name": "1°C",
+    "level": "1°",
+    "divisions": []
+   },
+   {
+    "id": "02bddf3d",
+    "name": "2°A",
+    "level": "2°",
+    "divisions": []
+   },
+   {
+    "id": "8bcf1c11",
+    "name": "2°B",
+    "level": "2°",
+    "divisions": []
+   },
+   {
+    "id": "7f51f2ef",
+    "name": "2°C",
+    "level": "2°",
+    "divisions": []
+   },
+   {
+    "id": "c0ff5f8f",
+    "name": "3°A",
+    "level": "3°",
+    "divisions": []
+   },
+   {
+    "id": "f5e58ec8",
+    "name": "3°B",
+    "level": "3°",
+    "divisions": []
+   },
+   {
+    "id": "9bb486ed",
+    "name": "3°C",
+    "level": "3°",
+    "divisions": []
+   },
+   {
+    "id": "124f2847",
+    "name": "4°A",
+    "level": "4°",
+    "divisions": []
+   },
+   {
+    "id": "b16b7c5f",
+    "name": "4°B",
+    "level": "4°",
+    "divisions": []
+   },
+   {
+    "id": "a23a2eca",
+    "name": "4°C",
+    "level": "4°",
+    "divisions": []
+   },
+   {
+    "id": "d535cf8b",
+    "name": "5°A",
+    "level": "5°",
+    "divisions": []
+   },
+   {
+    "id": "9177ee66",
+    "name": "5°B",
+    "level": "5°",
+    "divisions": []
+   },
+   {
+    "id": "0d799541",
+    "name": "5°C",
+    "level": "5°",
+    "divisions": []
+   },
+   {
+    "id": "f628788b",
+    "name": "6°A",
+    "level": "6°",
+    "divisions": []
+   },
+   {
+    "id": "7b7efb46",
+    "name": "6°B",
+    "level": "6°",
+    "divisions": []
+   },
+   {
+    "id": "caf3fa19",
+    "name": "6°C",
+    "level": "6°",
+    "divisions": []
+   },
+   {
+    "id": "7c264650",
+    "name": "7°A",
+    "level": "7°",
+    "divisions": []
+   },
+   {
+    "id": "71aa060e",
+    "name": "7°B",
+    "level": "7°",
+    "divisions": []
+   },
+   {
+    "id": "c036443a",
+    "name": "7°C",
+    "level": "7°",
+    "divisions": []
+   },
+   {
+    "id": "e22219a5",
+    "name": "8°A",
+    "level": "8°",
+    "divisions": []
+   },
+   {
+    "id": "2dcea465",
+    "name": "8°B",
+    "level": "8°",
+    "divisions": []
+   },
+   {
+    "id": "67ea7c5d",
+    "name": "8°C",
+    "level": "8°",
+    "divisions": []
+   }
+  ],
+  "subjects": [
+   {
+    "id": "32b5c1de",
+    "name": "Lenguaje y Comunicacion",
+    "short": "LEN",
+    "color": "#4f7cac",
+    "roomId": null
+   },
+   {
+    "id": "8ac73d2c",
+    "name": "Historia, Geografia y Cs Sociales",
+    "short": "HIS",
+    "color": "#c0603a",
+    "roomId": null
+   },
+   {
+    "id": "b51a9453",
+    "name": "Ciencias Naturales",
+    "short": "CIE",
+    "color": "#5a9367",
+    "roomId": null
+   },
+   {
+    "id": "7d08cbe4",
+    "name": "Matematica",
+    "short": "MAT",
+    "color": "#9b6bb3",
+    "roomId": null
+   },
+   {
+    "id": "4c90850b",
+    "name": "Idioma Extranjero(Ingles)",
+    "short": "IDI",
+    "color": "#c99a2e",
+    "roomId": null
+   },
+   {
+    "id": "2c88bbc8",
+    "name": "Educacion Fisica",
+    "short": "EDU",
+    "color": "#3f8f8f",
+    "roomId": null
+   },
+   {
+    "id": "d317f5bf",
+    "name": "Artes Visuales",
+    "short": "ART",
+    "color": "#b5547a",
+    "roomId": null
+   },
+   {
+    "id": "2f4b16ba",
+    "name": "Musica",
+    "short": "MUS",
+    "color": "#6d7a3a",
+    "roomId": null
+   },
+   {
+    "id": "f4d19585",
+    "name": "Orientacion",
+    "short": "ORI",
+    "color": "#7a5c45",
+    "roomId": null
+   },
+   {
+    "id": "614f7145",
+    "name": "Tecnologia",
+    "short": "TEC",
+    "color": "#5566c2",
+    "roomId": null
+   },
+   {
+    "id": "c0320fe4",
+    "name": "Taller 1",
+    "short": "TAL",
+    "color": "#a8463f",
+    "roomId": null
+   },
+   {
+    "id": "e68f910e",
+    "name": "Taller 2",
+    "short": "TAL",
+    "color": "#2f7a5c",
+    "roomId": null
+   },
+   {
+    "id": "94fc0328",
+    "name": "Tiempo para mi",
+    "short": "TIE",
+    "color": "#4f7cac",
+    "roomId": null
+   },
+   {
+    "id": "25847704",
+    "name": "Religion",
+    "short": "REL",
+    "color": "#c0603a",
+    "roomId": null
+   },
+   {
+    "id": "cf9488dd",
+    "name": "Taller Ciencias Naturales",
+    "short": "TAL",
+    "color": "#5a9367",
+    "roomId": null
+   },
+   {
+    "id": "47ad1dde",
+    "name": "Taller Deportes",
+    "short": "TAL",
+    "color": "#9b6bb3",
+    "roomId": null
+   }
+  ],
+  "teachers": [
+   {
+    "id": "032d9d5f",
+    "name": "Profesor(a) 01",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "0e424dd3",
+    "name": "Profesor(a) 02",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "0ff2bea2",
+    "name": "Profesor(a) 03",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "15aaabb3",
+    "name": "Profesor(a) 04",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "189ab879",
+    "name": "Profesor(a) 05",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "1b8f6438",
+    "name": "Profesor(a) 06",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "28d3843d",
+    "name": "Profesor(a) 07",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "46212e92",
+    "name": "Profesor(a) 08",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "49b3d64c",
+    "name": "Profesor(a) 09",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "4ac071ae",
+    "name": "Profesor(a) 10",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "0:c8d8ac0e",
+     "0:00c060ba",
+     "1:c8d8ac0e",
+     "1:00c060ba",
+     "2:c8d8ac0e",
+     "2:00c060ba",
+     "3:c8d8ac0e",
+     "3:00c060ba",
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:c8d8ac0e",
+     "4:00c060ba",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "4d44909e",
+    "name": "Profesor(a) 11",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "5397d04c",
+    "name": "Profesor(a) 12",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "54f746c6",
+    "name": "Profesor(a) 13",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "598ddd34",
+    "name": "Profesor(a) 14",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "69f2b835",
+    "name": "Profesor(a) 15",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "76ff6c36",
+    "name": "Profesor(a) 16",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": []
+   },
+   {
+    "id": "7af0430b",
+    "name": "Profesor(a) 17",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "7e5b2bea",
+    "name": "Profesor(a) 18",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "1:6d940ad4",
+     "1:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "85465508",
+    "name": "Profesor(a) 19",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "8662beb2",
+    "name": "Profesor(a) 20",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "0:e64a868a",
+     "0:3b217f10",
+     "1:3a340c63",
+     "1:279d0fba",
+     "1:6d940ad4",
+     "1:7162e672",
+     "2:3a340c63",
+     "2:279d0fba",
+     "2:6d940ad4",
+     "2:7162e672",
+     "3:3a340c63",
+     "3:279d0fba",
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:3a340c63",
+     "4:279d0fba",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "8dc49ce6",
+    "name": "Profesor(a) 21",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "3:3a340c63",
+     "3:279d0fba",
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "8edbf421",
+    "name": "Profesor(a) 22",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "0:e64a868a",
+     "0:3b217f10",
+     "0:c8d8ac0e",
+     "0:00c060ba",
+     "0:3a340c63",
+     "0:279d0fba",
+     "1:e64a868a",
+     "1:3b217f10",
+     "1:c8d8ac0e",
+     "1:00c060ba",
+     "1:3a340c63",
+     "1:279d0fba",
+     "2:e64a868a",
+     "2:3b217f10",
+     "2:c8d8ac0e",
+     "2:00c060ba",
+     "2:3a340c63",
+     "2:279d0fba",
+     "2:6d940ad4",
+     "2:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "96fefa4d",
+    "name": "Profesor(a) 23",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "9f686e7a",
+    "name": "Profesor(a) 24",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "a20cfe97",
+    "name": "Profesor(a) 25",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "b0ab216b",
+    "name": "Profesor(a) 26",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "b11e2856",
+    "name": "Profesor(a) 27",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "b2b2f4ed",
+    "name": "Profesor(a) 28",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "be02397e",
+    "name": "Profesor(a) 29",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "d8624d81",
+    "name": "Profesor(a) 30",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "da712e44",
+    "name": "Profesor(a) 31",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "3:6d940ad4",
+     "3:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "dc3c74b4",
+    "name": "Profesor(a) 32",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "dc6d292d",
+    "name": "Profesor(a) 33",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "0:e64a868a",
+     "0:3b217f10",
+     "0:c8d8ac0e",
+     "0:00c060ba",
+     "0:3a340c63",
+     "0:279d0fba",
+     "0:6d940ad4",
+     "0:7162e672",
+     "1:e64a868a",
+     "1:3b217f10",
+     "1:c8d8ac0e",
+     "1:00c060ba",
+     "1:3a340c63",
+     "1:279d0fba",
+     "2:e64a868a",
+     "2:3b217f10",
+     "2:c8d8ac0e",
+     "2:00c060ba",
+     "2:3a340c63",
+     "2:279d0fba",
+     "2:6d940ad4",
+     "2:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "f04b8c58",
+    "name": "Profesor(a) 34",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "fedf7bc6",
+    "name": "Profesor(a) 35",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   },
+   {
+    "id": "ff192930",
+    "name": "Profesor(a) 36",
+    "maxHours": null,
+    "maxDays": null,
+    "unavailable": [
+     "0:e64a868a",
+     "0:3b217f10",
+     "0:c8d8ac0e",
+     "0:00c060ba",
+     "0:3a340c63",
+     "0:279d0fba",
+     "0:6d940ad4",
+     "0:7162e672",
+     "1:e64a868a",
+     "1:3b217f10",
+     "1:c8d8ac0e",
+     "1:00c060ba",
+     "1:3a340c63",
+     "1:279d0fba",
+     "1:6d940ad4",
+     "1:7162e672",
+     "2:e64a868a",
+     "2:3b217f10",
+     "2:c8d8ac0e",
+     "2:00c060ba",
+     "2:3a340c63",
+     "2:279d0fba",
+     "2:6d940ad4",
+     "2:7162e672",
+     "4:6d940ad4",
+     "4:7162e672"
+    ]
+   }
+  ],
+  "rooms": [],
+  "assignments": [
+   {
+    "id": "fced6617",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "c58945cd",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "a3bdc2bc",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "b1ffc7c4",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "1ba38e30",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "67b9cfba",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "3be54818",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "8c8374e7",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "bf1bd87e",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "4962e7d5",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "5311aeef",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "15aaabb3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "77dad6e5",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "b11e2856",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "5c8f33c7",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "b11e2856",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "5821a5ee",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "b11e2856",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "39157177",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "8662beb2",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "44199f12",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "8662beb2",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "c08e0dea",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "8662beb2",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "e8cae26e",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "9f686e7a",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "1a1c11e1",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "9f686e7a",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "5afc4f87",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "9f686e7a",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "f42a8a2e",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "9f686e7a",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "0ecc1d9e",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "9f686e7a",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "5b46b66c",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "9f686e7a",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "60a1deff",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "47ad1dde",
+    "teacherId": "9f686e7a",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "0865bc02",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "9f686e7a",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "fc0f9699",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "4ac071ae",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "a9b50b4f",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "47ad1dde",
+    "teacherId": "4ac071ae",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "c412e1e1",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "4ac071ae",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "a6d7a6f0",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "598ddd34",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "dfa2551a",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "47ad1dde",
+    "teacherId": "598ddd34",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "06b9df7d",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "598ddd34",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "ab4ef726",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "598ddd34",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "c0e27bc4",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "598ddd34",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "aa1551ab",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "598ddd34",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "538da1de",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "598ddd34",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "b509975b",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "598ddd34",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "9355111b",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "b11e2856",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "00fab175",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "b11e2856",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "32932c15",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "b11e2856",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "f360e0a0",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "b11e2856",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "68045acd",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "b11e2856",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "c0593b0f",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "b11e2856",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "a82f9a59",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "b11e2856",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "a82ee0f3",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "b11e2856",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "de11deb6",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "ff192930",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "92868d64",
+    "courseId": "f0ad6d59",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "dd9b111a",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "76cd72b2",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "531b66db",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "5f9364ab",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "92bb46db",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "a2866bf7",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "dbc5365d",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "ec38c171",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "be9bc550",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "c7888342",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "1d90ef0e",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "6862d691",
+    "courseId": "2a2d2d52",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "dc6d292d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "ef80d4ce",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "d421446d",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "968a0d78",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "89ce00f3",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "2b899daf",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "82f0b475",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "6abeb82b",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "ba757c69",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "46914da2",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "be02397e",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "7b4736eb",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "be02397e",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "cc2d3549",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "be02397e",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "23c8eb87",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "be02397e",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "4b19da10",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "be02397e",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "ca6ca870",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "be02397e",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "81388ac7",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "be02397e",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "8870fa51",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "be02397e",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "b502a071",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "be02397e",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "afd4e915",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "be02397e",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "ef04c481",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "be02397e",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "51ecad1c",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "926bc0fe",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "a59162d3",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "290aa9af",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "359434cc",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "a4e15d1b",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "b580e3ec",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "d2f38c3f",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "016ee420",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "e1618ac9",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "f1c32e7a",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "a20cfe97",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "73a205d1",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "46212e92",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "641b44f5",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "46212e92",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "c74a54c8",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "46212e92",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "8c8486fa",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "46212e92",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "fcdff984",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "46212e92",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "3b34579d",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "46212e92",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "a988d98a",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "46212e92",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "8aef5aeb",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "46212e92",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "d0b80c08",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "46212e92",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "665956b1",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "46212e92",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "78c8811b",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "46212e92",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "ad824c53",
+    "courseId": "8bcf1c11",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "dc6d292d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "1d5cbdff",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "dc6d292d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "053901d3",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "dc6d292d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "06922112",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "dc6d292d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "d7a2301a",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "dc6d292d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "7b068a8b",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "dc6d292d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "7312db12",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "dc6d292d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "5fa38088",
+    "courseId": "02bddf3d",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "ff192930",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "836c279c",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "ff192930",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "732d4be0",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "ff192930",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "954158b9",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "ff192930",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "3f3a783d",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "ff192930",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "f6a8b87e",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "ff192930",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "39768ca5",
+    "courseId": "7f51f2ef",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "2ebdbc70",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "e406fd5b",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "ec52921a",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "884f53ac",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "fe8e0121",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "38ffcf87",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "e2651622",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "25847704",
+    "teacherId": "8edbf421",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "e53be7b1",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "1c62c482",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "95d0dcb3",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "3ab88cd9",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "6b2c7920",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "378d259f",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "6848ab4e",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "7ea8022f",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "65bce71e",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "5ab6bb00",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "49d469b3",
+    "courseId": "c0ff5f8f",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "f04b8c58",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "d760e032",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "e9e6b40e",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "2cd48811",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "f7ab5edd",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "93f0a350",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "dfa10e48",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "cffbe47d",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "a1836a41",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "63b174ca",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "31fd37aa",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "b793e26f",
+    "courseId": "f5e58ec8",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "1b8f6438",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "08537d1d",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "54f746c6",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "accdf668",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "54f746c6",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "c8d4cb41",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "54f746c6",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "fb2c5a54",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "54f746c6",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "01b8ed1f",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "54f746c6",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "f80743d1",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "54f746c6",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "af62de60",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "54f746c6",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "827988be",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "54f746c6",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "811d18f0",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "54f746c6",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "c7cea31b",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "54f746c6",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "cb4f6b57",
+    "courseId": "9bb486ed",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "54f746c6",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "58eede5b",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "4d44909e",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "5d1e5bcd",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "4d44909e",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "70fa11d8",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "4d44909e",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "f155b849",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "4d44909e",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "555f3004",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "4d44909e",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "752ebbd8",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "4d44909e",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "b86f62d4",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "4d44909e",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "e262a53b",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "4d44909e",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "aa417b82",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "4d44909e",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "16bb4049",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "4d44909e",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "6f9f7801",
+    "courseId": "124f2847",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "4d44909e",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "cca1acb7",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "28d3843d",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "853b20d8",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "28d3843d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "a97cfe3a",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "28d3843d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "55381482",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "28d3843d",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "e5eafcb4",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "28d3843d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "9442020e",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "28d3843d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "8d816aed",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "28d3843d",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "929dc78a",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "28d3843d",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "a000a316",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "28d3843d",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "2ad55ad1",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "28d3843d",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "aaacba1d",
+    "courseId": "b16b7c5f",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "28d3843d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "9614fe9b",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "5397d04c",
+    "blocks": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "202f8455",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "5397d04c",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "cc6f8fd6",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "5397d04c",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "8fbece20",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "5397d04c",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "c05f19f9",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "5397d04c",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "a539d107",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "5397d04c",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "4631e4dc",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "5397d04c",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "7997b0bd",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "5397d04c",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "c91bc66e",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "5397d04c",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "55d72afd",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "5397d04c",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "b98072c5",
+    "courseId": "a23a2eca",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "5397d04c",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "0bf8da5c",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "10113ce8",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "9aefd77e",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "a7951890",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "5942aaa6",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "c1dd1c67",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "b6da7fa1",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "6e347f8e",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "15090d81",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "8be83bcb",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "818031e3",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "fedf7bc6",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "b9a92dda",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "fedf7bc6",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "6a83165f",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "76ff6c36",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "113c4903",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "d1ade78a",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "13aeaec8",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "7536f1de",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "2226a7b1",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "4362fe59",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "af671a6d",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "ca32e26f",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "5857e616",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "dc3c74b4",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "74c2f4a5",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "032d9d5f",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "e195c5f6",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "032d9d5f",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "9445e24e",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "032d9d5f",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "d0aaccd5",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "032d9d5f",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "b986babd",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "032d9d5f",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "664fbcd0",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "032d9d5f",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "fecccbf7",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "8dc49ce6",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "7b37a857",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "8dc49ce6",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "56d90913",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "8dc49ce6",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "a68538ca",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "8dc49ce6",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "bd39124e",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "8dc49ce6",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "0bf0fc3f",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "8dc49ce6",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "92dc639c",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "b2b2f4ed",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "e82f903d",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "b2b2f4ed",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "0d20f5ff",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "b2b2f4ed",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "2ddf6a0e",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "b2b2f4ed",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "1c286f2b",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "b2b2f4ed",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "5e150f09",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "b2b2f4ed",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "27da2c99",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "49b3d64c",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "cba0b597",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "49b3d64c",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "c6f6304c",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "49b3d64c",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "aabf299b",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "49b3d64c",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "18424fd8",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "49b3d64c",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "33578218",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "49b3d64c",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "8eef8018",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "b5819df0",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "189ab879",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "730d7e0b",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "f4d19585",
+    "teacherId": "189ab879",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "8e1550b4",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "3ee80e09",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "3b9d6cf6",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "bd979fde",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "f63f408f",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "7962ac64",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "97fe6700",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "70d7fa9e",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "2620c850",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "79a47232",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "5456af5f",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "85465508",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "857cd806",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "a76f97b0",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "11aebe15",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "82783e94",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "9af3d3da",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "291c88af",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "0bda41f2",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "d3fed615",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "464f4521",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "501927bf",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "f16c4916",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "449421f7",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "be6672c5",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "5e88f4c7",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "30ba2dea",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "85465508",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "139063ab",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "caf17e39",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "3fd89896",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "6683c39f",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "f207094e",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "9171be1f",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "cd3c4353",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "3f0ca30b",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "2b11e2b6",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "796c432a",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7af0430b",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "263cc8b9",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "cf9488dd",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "5c4f0332",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "cf9488dd",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "f8efe6bb",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "cf9488dd",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "ad80671c",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "7af0430b",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "e6e28a8e",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "b0ab216b",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "60638a6e",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "b0ab216b",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "1ddb0be7",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "b51a9453",
+    "teacherId": "b0ab216b",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "2772efce",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "b0ab216b",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "a66d79f9",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "b0ab216b",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "d343781d",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "cf9488dd",
+    "teacherId": "b0ab216b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "ef543ac8",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "cf9488dd",
+    "teacherId": "b0ab216b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "adef4650",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "cf9488dd",
+    "teacherId": "b0ab216b",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "ba7f627d",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "09f3bcd4",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "51e8409b",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "76d76fb0",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "70d3ffb6",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "8041a90c",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "8a286731",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "83f675b8",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "2c88bbc8",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "57f9033f",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "47ad1dde",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "9da7ea7c",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "47ad1dde",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "a0f80303",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "47ad1dde",
+    "teacherId": "0e424dd3",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "a5c005f2",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "32b5c1de",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "1b0fe493",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "a072ce60",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "33c85806",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "884a920a",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "ff2ab1d7",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "14fe6866",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "fabdbfee",
+    "courseId": "7b7efb46",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "276b68f9",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "66b00fb5",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "d0d926db",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "04682382",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "bf19645e",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "27cce184",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "c704ea33",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "614f7145",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "e5ecc240",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "d3b9ca61",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "94596a51",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "40dccf32",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "a83709cd",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "367d7724",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "3935083d",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "8db7d3e6",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "7e5b2bea",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "9054f145",
+    "courseId": "f628788b",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "d8624d81",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "e7386a4b",
+    "courseId": "caf3fa19",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "d8624d81",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "c287e09c",
+    "courseId": "7c264650",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "d8624d81",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "4fca440c",
+    "courseId": "71aa060e",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "d8624d81",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "2983ba71",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "d8624d81",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "29011bd3",
+    "courseId": "e22219a5",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "d8624d81",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "c499150b",
+    "courseId": "2dcea465",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "d8624d81",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "dbb586e3",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "d317f5bf",
+    "teacherId": "d8624d81",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "f201d5e9",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "da712e44",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "93ab0e86",
+    "courseId": "9177ee66",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "da712e44",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "95b1e7a0",
+    "courseId": "0d799541",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "da712e44",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "0d87da09",
+    "courseId": "67ea7c5d",
+    "groupId": null,
+    "subjectId": "8ac73d2c",
+    "teacherId": "da712e44",
+    "blocks": [
+     2,
+     2
+    ]
+   },
+   {
+    "id": "fee278b2",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "69f2b835",
+    "blocks": [
+     2
+    ]
+   },
+   {
+    "id": "3bc1c173",
+    "courseId": "d535cf8b",
+    "groupId": null,
+    "subjectId": "7d08cbe4",
+    "teacherId": "b2b2f4ed",
+    "blocks": [
+     2,
+     2,
+     2
+    ]
+   },
+   {
+    "id": "7dd697ba",
+    "courseId": "c036443a",
+    "groupId": null,
+    "subjectId": "4c90850b",
+    "teacherId": "96fefa4d",
+    "blocks": [
+     2,
+     1
+    ]
+   },
+   {
+    "id": "f2f79a11",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "94fc0328",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     1,
+     1
+    ]
+   },
+   {
+    "id": "cbac57ec",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "c0320fe4",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "93bd7f62",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "e68f910e",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     1
+    ]
+   },
+   {
+    "id": "ad2de66d",
+    "courseId": "f5e13766",
+    "groupId": null,
+    "subjectId": "2f4b16ba",
+    "teacherId": "0ff2bea2",
+    "blocks": [
+     2
+    ]
+   }
+  ],
+  "electives": [],
+  "rules": {
+   "coursesNoGaps": false,
+   "coursesStartFirstBlock": false,
+   "spreadSubjectDays": true,
+   "spreadStrength": "preferible",
+   "teacherMaxGapsPerDay": null,
+   "teacherMaxGapsPerWeek": null,
+   "subjectWindows": [],
+   "teacherMaxHoursDaily": null,
+   "courseMaxHoursDaily": null,
+   "teacherMeetingSlots": []
+  },
+  "locks": {
+   "fced6617#0": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "fced6617#1": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "fced6617#2": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "fced6617#3": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "c58945cd#0": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "c58945cd#1": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "c58945cd#2": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "a3bdc2bc#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "a3bdc2bc#1": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "b1ffc7c4#0": {
+    "day": 0,
+    "periodId": "7162e672"
+   },
+   "b1ffc7c4#1": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "1ba38e30#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "67b9cfba#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "3be54818#0": {
+    "day": 0,
+    "periodId": "3b217f10"
+   },
+   "8c8374e7#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "bf1bd87e#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "4962e7d5#0": {
+    "day": 0,
+    "periodId": "279d0fba"
+   },
+   "5311aeef#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "77dad6e5#0": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "77dad6e5#1": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "77dad6e5#2": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "77dad6e5#3": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "5c8f33c7#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "5c8f33c7#1": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "5821a5ee#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "5821a5ee#1": {
+    "day": 1,
+    "periodId": "7162e672"
+   },
+   "39157177#0": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "39157177#1": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "44199f12#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "44199f12#1": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "c08e0dea#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "c08e0dea#1": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "e8cae26e#0": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "e8cae26e#1": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "1a1c11e1#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "1a1c11e1#1": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "5afc4f87#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "5afc4f87#1": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "f42a8a2e#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "f42a8a2e#1": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "0ecc1d9e#0": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "0ecc1d9e#1": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "5b46b66c#0": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "60a1deff#0": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "0865bc02#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "fc0f9699#0": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "a9b50b4f#0": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "c412e1e1#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "a6d7a6f0#0": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "dfa2551a#0": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "06b9df7d#0": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "06b9df7d#1": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "ab4ef726#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "ab4ef726#1": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "c0e27bc4#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "c0e27bc4#1": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "aa1551ab#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "538da1de#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "b509975b#0": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "9355111b#0": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "9355111b#1": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "9355111b#2": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "00fab175#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "32932c15#0": {
+    "day": 0,
+    "periodId": "3b217f10"
+   },
+   "f360e0a0#0": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "68045acd#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "c0593b0f#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "a82f9a59#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "a82ee0f3#0": {
+    "day": 4,
+    "periodId": "00c060ba"
+   },
+   "de11deb6#0": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "92868d64#0": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "dd9b111a#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "76cd72b2#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "531b66db#0": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "5f9364ab#0": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "92bb46db#0": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "a2866bf7#0": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "dbc5365d#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "ec38c171#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "be9bc550#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "c7888342#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "1d90ef0e#0": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "ef80d4ce#0": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "ef80d4ce#1": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "ef80d4ce#2": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "ef80d4ce#3": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "d421446d#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "d421446d#1": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "d421446d#2": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "968a0d78#0": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "968a0d78#1": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "89ce00f3#0": {
+    "day": 1,
+    "periodId": "279d0fba"
+   },
+   "89ce00f3#1": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "2b899daf#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "82f0b475#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "6abeb82b#0": {
+    "day": 2,
+    "periodId": "7162e672"
+   },
+   "ba757c69#0": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "46914da2#0": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "46914da2#1": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "46914da2#2": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "46914da2#3": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "7b4736eb#0": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "7b4736eb#1": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "7b4736eb#2": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "cc2d3549#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "cc2d3549#1": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "23c8eb87#0": {
+    "day": 4,
+    "periodId": "00c060ba"
+   },
+   "23c8eb87#1": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "4b19da10#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "ca6ca870#0": {
+    "day": 0,
+    "periodId": "279d0fba"
+   },
+   "81388ac7#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "8870fa51#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "b502a071#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "ef04c481#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "51ecad1c#0": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "51ecad1c#1": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "51ecad1c#2": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "51ecad1c#3": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "926bc0fe#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "926bc0fe#1": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "926bc0fe#2": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "a59162d3#0": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "a59162d3#1": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "290aa9af#0": {
+    "day": 3,
+    "periodId": "3b217f10"
+   },
+   "290aa9af#1": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "359434cc#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "a4e15d1b#0": {
+    "day": 2,
+    "periodId": "00c060ba"
+   },
+   "b580e3ec#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "d2f38c3f#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "016ee420#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "e1618ac9#0": {
+    "day": 0,
+    "periodId": "3b217f10"
+   },
+   "f1c32e7a#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "73a205d1#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "73a205d1#1": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "73a205d1#2": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "73a205d1#3": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "641b44f5#0": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "641b44f5#1": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "641b44f5#2": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "c74a54c8#0": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "c74a54c8#1": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "8c8486fa#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "8c8486fa#1": {
+    "day": 3,
+    "periodId": "279d0fba"
+   },
+   "fcdff984#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "3b34579d#0": {
+    "day": 1,
+    "periodId": "7162e672"
+   },
+   "a988d98a#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "8aef5aeb#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "d0b80c08#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "78c8811b#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "ad824c53#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "053901d3#0": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "06922112#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "7b068a8b#0": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "7312db12#0": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "5fa38088#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "836c279c#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "732d4be0#0": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "954158b9#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "3f3a783d#0": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "f6a8b87e#0": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "39768ca5#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "2ebdbc70#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "ec52921a#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "884f53ac#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "fe8e0121#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "38ffcf87#0": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "e2651622#0": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "e53be7b1#0": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "e53be7b1#1": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "e53be7b1#2": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "e53be7b1#3": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "1c62c482#0": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "1c62c482#1": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "1c62c482#2": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "95d0dcb3#0": {
+    "day": 2,
+    "periodId": "00c060ba"
+   },
+   "95d0dcb3#1": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "3ab88cd9#0": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "3ab88cd9#1": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "6b2c7920#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "378d259f#0": {
+    "day": 3,
+    "periodId": "7162e672"
+   },
+   "6848ab4e#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "7ea8022f#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "65bce71e#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "49d469b3#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "d760e032#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "d760e032#1": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "d760e032#2": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "d760e032#3": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "e9e6b40e#0": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "e9e6b40e#1": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "2cd48811#1": {
+    "day": 2,
+    "periodId": "279d0fba"
+   },
+   "f7ab5edd#0": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "f7ab5edd#1": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "f7ab5edd#2": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "93f0a350#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "dfa10e48#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "cffbe47d#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "63b174ca#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "31fd37aa#0": {
+    "day": 4,
+    "periodId": "00c060ba"
+   },
+   "b793e26f#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "08537d1d#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "08537d1d#1": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "08537d1d#2": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "08537d1d#3": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "accdf668#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "accdf668#1": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "c8d4cb41#0": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "c8d4cb41#1": {
+    "day": 2,
+    "periodId": "279d0fba"
+   },
+   "fb2c5a54#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "fb2c5a54#1": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "fb2c5a54#2": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "01b8ed1f#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "f80743d1#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "af62de60#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "811d18f0#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "c7cea31b#0": {
+    "day": 2,
+    "periodId": "00c060ba"
+   },
+   "cb4f6b57#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "58eede5b#0": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "58eede5b#1": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "58eede5b#2": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "58eede5b#3": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "5d1e5bcd#0": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "5d1e5bcd#1": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "70fa11d8#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "70fa11d8#1": {
+    "day": 2,
+    "periodId": "7162e672"
+   },
+   "f155b849#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "f155b849#1": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "f155b849#2": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "555f3004#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "752ebbd8#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "b86f62d4#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "aa417b82#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "16bb4049#0": {
+    "day": 0,
+    "periodId": "7162e672"
+   },
+   "6f9f7801#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "cca1acb7#0": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "cca1acb7#1": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "cca1acb7#2": {
+    "day": 4,
+    "periodId": "e64a868a"
+   },
+   "cca1acb7#3": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "853b20d8#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "853b20d8#1": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "a97cfe3a#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "a97cfe3a#1": {
+    "day": 4,
+    "periodId": "00c060ba"
+   },
+   "55381482#0": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "55381482#1": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "e5eafcb4#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "9442020e#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "8d816aed#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "a000a316#0": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "2ad55ad1#0": {
+    "day": 2,
+    "periodId": "279d0fba"
+   },
+   "aaacba1d#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "9614fe9b#0": {
+    "day": 0,
+    "periodId": "c8d8ac0e"
+   },
+   "9614fe9b#1": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "9614fe9b#2": {
+    "day": 2,
+    "periodId": "e64a868a"
+   },
+   "9614fe9b#3": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "202f8455#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "202f8455#1": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "cc6f8fd6#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "cc6f8fd6#1": {
+    "day": 1,
+    "periodId": "00c060ba"
+   },
+   "8fbece20#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "8fbece20#1": {
+    "day": 1,
+    "periodId": "e64a868a"
+   },
+   "8fbece20#2": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "c05f19f9#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "a539d107#0": {
+    "day": 3,
+    "periodId": "6d940ad4"
+   },
+   "4631e4dc#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "c91bc66e#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "55d72afd#0": {
+    "day": 1,
+    "periodId": "7162e672"
+   },
+   "b98072c5#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "0bf8da5c#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "b9a92dda#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "6a83165f#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "113c4903#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "664fbcd0#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "fecccbf7#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "92dc639c#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "27da2c99#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "730d7e0b#0": {
+    "day": 0,
+    "periodId": "e64a868a"
+   },
+   "ba7f627d#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   },
+   "09f3bcd4#0": {
+    "day": 2,
+    "periodId": "3a340c63"
+   },
+   "51e8409b#0": {
+    "day": 3,
+    "periodId": "c8d8ac0e"
+   },
+   "76d76fb0#0": {
+    "day": 0,
+    "periodId": "3a340c63"
+   },
+   "70d3ffb6#0": {
+    "day": 1,
+    "periodId": "3a340c63"
+   },
+   "8041a90c#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "8a286731#0": {
+    "day": 3,
+    "periodId": "3a340c63"
+   },
+   "83f675b8#0": {
+    "day": 4,
+    "periodId": "c8d8ac0e"
+   },
+   "57f9033f#0": {
+    "day": 2,
+    "periodId": "6d940ad4"
+   },
+   "9da7ea7c#0": {
+    "day": 1,
+    "periodId": "c8d8ac0e"
+   },
+   "a0f80303#0": {
+    "day": 1,
+    "periodId": "6d940ad4"
+   },
+   "fee278b2#0": {
+    "day": 3,
+    "periodId": "e64a868a"
+   },
+   "f2f79a11#0": {
+    "day": 0,
+    "periodId": "7162e672"
+   },
+   "f2f79a11#1": {
+    "day": 4,
+    "periodId": "279d0fba"
+   },
+   "cbac57ec#0": {
+    "day": 4,
+    "periodId": "3a340c63"
+   },
+   "93bd7f62#0": {
+    "day": 0,
+    "periodId": "6d940ad4"
+   },
+   "ad2de66d#0": {
+    "day": 2,
+    "periodId": "c8d8ac0e"
+   }
+  },
+  "timetable": null
+ }
+}

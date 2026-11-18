@@ -83,15 +83,15 @@ Las que ya tienen identificador están descritas en [mejoras.md](mejoras.md). La
 |---|---|---|---|---|
 | E6 | Lista de precarga del service worker generada en el build; la instalación falla si falta el motor | — | S–M | Hecho |
 | R1 | Guardar la semilla en `Timetable` | 2 | S | Hecho |
-| R2 | Hash sucio por proyecto: `countPending` solo recalcula el proyecto editado | 1 | S | Pendiente |
-| R3 | Sacar `hint` de la página, memoizar las celdas y restablecer `printAll` (esto último es parte de E12) | 3 | S–M | Pendiente |
-| R4 | Índices precalculados en `manual.ts` (por día, profesor y curso) y `parallelRows` memoizado | 3 | M | Pendiente |
+| R2 | Hash sucio por proyecto: `countPending` solo recalcula el proyecto editado | 1 | S | Hecho |
+| R3 | Sacar `hint` de la página, memoizar las celdas y restablecer `printAll` (esto último es parte de E12) | 3 | S–M | Hecho |
+| R4 | Índices precalculados en `manual.ts` (por día, profesor y curso) y `parallelRows` memoizado | 3 | M | Hecho |
 | R5 | Limpieza central de `locks` huérfanos y de `teacherMeetingSlots`, en vez de una por pantalla (cubre parte de E12) | — | S | Hecho |
 | F5 | Deshacer y rehacer en `update()` | — | M | Pendiente |
 | R6 | Guardar la generación con una acción del almacén, e invalidarla si se movieron bloques durante el cálculo (parte de E12) | — | S | Hecho |
 | T6 | CSP con `wasm-unsafe-eval` en `vercel.json` | — | S–M | Pendiente |
 | T7, T8 | Acciones de GitHub fijadas por SHA; versiones y SHA-256 del motor | — | S | Hecho |
-| T4 | Colegio real anonimizado como referencia de rendimiento | 2 y 3 | M | Pendiente |
+| T4 | Colegio real anonimizado como referencia de rendimiento | 2 y 3 | M | Hecho |
 | F4 | Varias semillas, en paralelo o una tras otra, eligiendo el mejor resultado | 2 | M | Pendiente |
 
 Otras menores, sin identificador:
@@ -104,7 +104,8 @@ Otras menores, sin identificador:
 
 ## Plan de acción
 
-**Estado:** la fase A está aplicada (18 de noviembre de 2026). Las fases B a D siguen pendientes.
+**Estado:** las fases A y B están aplicadas (18 de noviembre de 2026). Las fases C y D siguen pendientes; la medición
+de la fase B no muestra, por ahora, motivo para la D (ver [resultados](#resultados-de-la-fase-b)).
 
 | Fase | Contenido | Criterio de cierre | Estimación |
 |---|---|---|---|
@@ -123,3 +124,36 @@ Condiciones:
   memoria. No toca las reglas ni `firebase.ts`, así que no obliga a repetir a mano el flujo con dos navegadores.
 - **Fuera del plan.** Guardar cada proyecto por separado en IndexedDB sigue sin justificarse con los tamaños medidos.
   Conviene revisarlo solo si R2 no basta.
+
+## Resultados de la fase B
+
+Referencias (T4) en [`src/domain/fixtures/`](../src/domain/fixtures/): dos colegios reales de 24 cursos, con los
+nombres de profesores y del colegio reemplazados y sin el informe de importación. Se comprobó que ninguna palabra de
+los nombres originales quedara en los archivos.
+
+| Referencia | Contenido | Uso |
+|---|---|---|
+| `referencia-generada.json` | 492 bloques, sin fijados, con un horario generado (semilla 7) | Ajuste manual, sin el motor |
+| `referencia-dificil.json` | 517 bloques, 293 fijados | El motor agota el tiempo: 507 de 517 ubicados en 30 s |
+
+Mediciones en el mismo equipo. Los tiempos varían entre corridas, así que se dan rangos de varias.
+
+| Qué | Antes | Después | Dónde |
+|---|---|---|---|
+| Revisar los destinos de un bloque, referencia generada (R4) | 23–25 ms | 5–7 ms | Node, `large.test.ts` |
+| Lo mismo, colegio sintético con grupos y electivos (R4) | 22–26 ms | 7 ms | Node, `large.test.ts` |
+| JavaScript al seleccionar y soltar un bloque (R3, R4) | 105–144 ms | 63–81 ms | Chromium con CPU ×4, `e2e/rendimiento.spec.ts` |
+| JavaScript por movimiento del mouse con un bloque seleccionado (R3) | 8–14 ms | 3 ms | Ídem |
+| Horarios pendientes tras cada edición, con 20 horarios guardados (R2) | 31 ms | 2 ms | Node, `large.test.ts` |
+
+- **R4** agrega a [`manual.ts`](../src/domain/manual.ts) un índice de las clases por clave, día, profesor, unidad y
+  lugar de inicio, y una vista que mueve bloques sin copiar el horario. `placeTargets` revisa la semana completa y
+  reutiliza `parallelRows` durante esa llamada. Una comparación de 10.340 casos (la referencia y el colegio sintético,
+  con las reglas apagadas y con todas las obligatorias activas) dio resultados idénticos a la versión anterior.
+- **R3:** el aviso junto al cursor tiene su propio estado, la grilla es un componente memorizado y "Imprimir todos"
+  deja de dibujar las grillas al terminar de imprimir.
+- **R2:** el hash se guarda por objeto de proyecto, así que tras una edición solo se recalcula el editado. Supone que
+  un proyecto del almacén nunca se modifica en su lugar, lo que ya garantiza `update()`.
+- **Lo que queda en el navegador** es sobre todo estilos, diseño y pintura de la página, no el cálculo.
+- **Semillas (para la fase D):** la referencia difícil llegó a 507 de 517 con las semillas 1 a 5, en 30 s cada una. En
+  este caso la semilla no cambia el resultado, así que generar con varias semillas (F4) no ayudaría.

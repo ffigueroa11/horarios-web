@@ -30,10 +30,10 @@ La base es sólida: el dominio está separado de la interfaz, el motor se prueba
 bien contra la pérdida de datos. Con la fase 0, F1 y F2 aplicados, lo más valioso que queda es:
 
 1. **Agregar deshacer** (F5). Eliminar ya pide confirmar, pero nada se puede revertir después.
-2. **Convertir los archivos reales en una referencia anonimizada** (T4). Por ahora solo se midieron localmente.
 
 E6, la semilla, T7, T8 y parte de E12 se aplicaron con la fase A de la
-[revisión de arquitectura](revision-arquitectura.md#plan-de-acción).
+[revisión de arquitectura](revision-arquitectura.md#plan-de-acción), y T4 con la fase B
+([resultados](revision-arquitectura.md#resultados-de-la-fase-b)).
 
 ## Errores confirmados
 
@@ -185,9 +185,9 @@ eliminan al instante la carga asociada. Eliminar una franja o un profesor sí pi
 
 ### E12. Inconsistencias menores
 
-Corregidas las tres primeras: `migrateProject` limpia los fijados y tramos huérfanos, cambiar los bloques de una franja
-libera sus fijados, y un horario generado queda desactualizado si contradice un bloque fijado durante el cálculo.
-Quedan las tres últimas.
+Corregidas las cuatro primeras: `migrateProject` limpia los fijados y tramos huérfanos, cambiar los bloques de una
+franja libera sus fijados, un horario generado queda desactualizado si contradice un bloque fijado durante el cálculo, y
+"Imprimir todos" deja de dibujar las grillas al terminar de imprimir. Quedan las dos últimas.
 
 - Cambiar los bloques de una franja [no libera sus fijados](../src/pages/ElectivosPage.tsx#L54), aunque
   [la carga sí lo hace](../src/pages/CargaPage.tsx#L133-L136). Los fijados huérfanos inflan el contador de
@@ -207,7 +207,7 @@ Quedan las tres últimas.
 | T1 | La prueba principal usaba `if (await target.count())` en tres pasos: podía aprobar sin mover ningún bloque | Semilla fija en e2e y pasos que fallan si no encuentran el lugar | S | Corregido |
 | T2 | No había prueba de arrastrar y soltar: se retiró en `b028558` | Recuperada, con eventos enviados directamente y solo en Chromium | S | Corregido |
 | T3 | `ui/` y `pages/` no tienen pruebas unitarias, y de `store/` solo hay un archivo | Ampliar [`projects.test.ts`](../src/store/projects.test.ts) a migraciones y varias pestañas | S–M | Parcial |
-| T4 | [`large.test.ts`](../src/domain/large.test.ts) no mide un caso difícil: 24 cursos y 84 profesores se resuelven en 0,2–0,6 s | Agregar un colegio real anonimizado como referencia (ver [mediciones](#mediciones-con-archivos-reales)) | M | Pendiente |
+| T4 | [`large.test.ts`](../src/domain/large.test.ts) no medía un caso difícil: 24 cursos y 84 profesores se resuelven en 0,2–0,6 s | Dos colegios reales anonimizados en [`fixtures/`](../src/domain/fixtures/): uno con horario generado para el ajuste manual y uno que agota el tiempo para el motor ([resultados](revision-arquitectura.md#resultados-de-la-fase-b)) | M | Corregido |
 | T5 | La publicación no esperaba a CI | Vercel retiene cada publicación de `main` hasta que pasan los cinco trabajos de CI (Deployment Checks). Comprobado con un cambio que CI aprobó; no se ha probado con un CI que falle | S | Corregido |
 | T6 | Sin política de seguridad de contenido (CSP); [`_headers`](../public/_headers) solo define caché | Agregar una CSP con `wasm-unsafe-eval`, en `vercel.json`, permitiendo los dominios de Firebase, y probarla con el motor | S–M | Pendiente |
 | T7 | La compilación del motor no verificaba el origen: [`build-engine.sh`](../engine/build-engine.sh) no comprobaba el `.tar.xz`, y `emsdk` y `aqtinstall` no estaban fijados | La fuente se comprueba por SHA-256 (firma del autor verificada al registrarla), `emsdk` y `aqtinstall` están fijados, y [`engine.sha256`](../engine/engine.sha256) registra el motor publicado, que una prueba revisa. El script no se volvió a ejecutar completo | S | Corregido |
@@ -300,14 +300,15 @@ Se evaluó y por ahora no se justifica:
 - **Permitir "preferible" en ventanas, horas libres o primer bloque.** El motor lo rechaza (ver E7).
 - **Generar en paralelo con varios Workers.** Podría ayudar en casos difíciles, pero no hay evidencia: en el caso fácil la
   diferencia entre semillas fue de 0,2 a 0,6 s, y en el difícil ninguna terminó en 30 s, sin saber si tenía solución.
-  Además, cada Worker consume unos 220 MB. Conviene medirlo después de T4.
+  Además, cada Worker consume unos 220 MB. Medido después de T4: en la referencia difícil, las semillas 1 a 5 llegaron
+  todas a 507 de 517 bloques en 30 s, así que la semilla no cambia el resultado en ese caso.
 
 ## Hoja de ruta sugerida
 
 | Fase | Contenido | Estimación |
 |---|---|---|
 | **0. Correcciones** (aplicada) | E1 a E5, E7 a E11, T1, T2, T5 | 3–5 días |
-| **1. Mejor diagnóstico** (en curso: F1, F2, semilla y E6 aplicadas) | F1, F2, semilla, E6, T4 | 1–2 semanas |
+| **1. Mejor diagnóstico** (aplicada) | F1, F2, semilla, E6, T4 | 1–2 semanas |
 | **2. Confianza** | F5, F6, T3, T6, T7, T9 | 1–2 semanas |
 | **3. Uso diario** | F3, F13, F14 | 2–3 semanas |
 | **4. Modelo más rico** | F7 a F12, según lo que pidan los colegios | Semanas por función |

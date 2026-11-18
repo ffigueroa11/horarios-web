@@ -64,10 +64,22 @@ export function hash(text: string): string {
   return (4294967296 * (2097151 & b) + (a >>> 0)).toString(36);
 }
 
+const hashes = new WeakMap<Project, string>();
+/**
+ * Hash de lo que se subiría de un proyecto, guardado por objeto: cada edición crea un proyecto nuevo (`update()` trabaja
+ * sobre una copia) y los demás conservan el suyo, así que tras editar uno solo se recalcula ese. Por eso un proyecto
+ * del almacén nunca se modifica en su lugar.
+ */
+export function projectHash(p: Project): string {
+  let h = hashes.get(p);
+  if (h === undefined) hashes.set(p, (h = hash(payload(p))));
+  return h;
+}
+
 /** Cuántos horarios tienen cambios que aún no están en la nube. */
 export function countPending(projects: Record<Id, Project>, meta: SyncMeta): number {
   let n = 0;
-  for (const p of Object.values(projects)) if (hash(payload(p)) !== meta[p.id]?.hash) n++;
+  for (const p of Object.values(projects)) if (projectHash(p) !== meta[p.id]?.hash) n++;
   for (const [id, m] of Object.entries(meta)) if (!m.deleted && !projects[id]) n++;
   return n;
 }
@@ -171,7 +183,7 @@ export class SyncEngine {
       const known = this.meta[doc.id];
       if (known && doc.revision <= known.rev) continue;
       const mine = projects[doc.id];
-      const mineHash = mine ? hash(payload(mine)) : null;
+      const mineHash = mine ? projectHash(mine) : null;
       const clean = mine ? mineHash === known?.hash : !known || !!known.deleted;
 
       let incoming: Project | null = null;
@@ -189,7 +201,7 @@ export class SyncEngine {
         }
       }
       this.blocked.delete(doc.id);
-      const incomingHash = incoming ? hash(payload(incoming)) : '';
+      const incomingHash = incoming ? projectHash(incoming) : '';
 
       // Es lo mismo que ya hay aquí (por ejemplo, la confirmación de una subida propia tras cerrar la pestaña).
       if (incoming && mine && incomingHash === mineHash) {
@@ -237,10 +249,10 @@ export class SyncEngine {
 
     for (const p of Object.values(projects)) {
       if (this.blocked.has(p.id)) continue;
-      const data = payload(p);
-      const h = hash(data);
+      const h = projectHash(p);
       const known = this.meta[p.id];
       if (h === known?.hash) continue;
+      const data = payload(p);
       if (byteLength(data) > MAX_DOC_BYTES) {
         this.tooBig.add(p.id);
         this.events.notice(`“${p.name}” es demasiado grande para guardarlo en la cuenta. Sigue guardado en este navegador; descarga un respaldo.`);

@@ -194,6 +194,11 @@ permitidos" permiten elegir.
 | `checkPlace` | Punto de entrada: intenta mover y, si no se puede, intercambiar |
 | `lockProblems` | Fijados que ya no se pueden respetar (lo usa `validate`) |
 
+`placeTargets` revisa todos los lugares de la semana para lo seleccionado, que es lo que pinta la grilla. Las clases se
+indexan por clave, día, profesor, unidad y lugar de inicio (`viewOf`, guardado por arreglo de clases), y un movimiento
+hipotético es una vista que reemplaza solo los bloques movidos (`movedView`), sin copiar el horario. Las listas conservan
+el orden original, así que los mensajes son los mismos que sin índices.
+
 Tres decisiones de diseño:
 
 - `ruleProblem` compara el horario **antes y después** y solo rechaza lo que el cambio empeora. Un horario que ya
@@ -257,7 +262,9 @@ misma validación que un respaldo. Los horarios reales medidos ocupan unos 113 K
 
 [`SyncEngine`](../src/cloud/engine.ts) no conoce Firebase ni React, y se prueba con una nube en memoria. Compara un hash
 del contenido con el último sincronizado en vez de usar `updatedAt`, porque `touch: false` no lo cambia y mover bloques o
-generar también debe subirse.
+generar también debe subirse. El hash se guarda por objeto de proyecto (`projectHash`): tras una edición solo se
+recalcula el editado. **Por eso un proyecto del almacén nunca se modifica en su lugar**: `update()` trabaja sobre una
+copia.
 
 | Situación | Resultado |
 |---|---|
@@ -311,10 +318,12 @@ La nueva versión espera a que el usuario acepte "Actualizar ahora".
 | [`fet.integration.test.ts`](../src/domain/fet.integration.test.ts), [`manual.integration.test.ts`](../src/domain/manual.integration.test.ts) | Generación real con el motor en Node, y sus resultados verificados | `npm test` |
 | [`projects.test.ts`](../src/store/projects.test.ts) | Cuándo un horario queda desactualizado al importar, duplicar y editar | `npm test` |
 | [`engine.test.ts`](../src/cloud/engine.test.ts), [`account.test.ts`](../src/store/account.test.ts) | Sincronización con una nube en memoria, y espacios de datos por cuenta | `npm test` |
-| [`large.test.ts`](../src/domain/large.test.ts) | Tiempos en un colegio sintético | `LARGE=1 npx vitest run src/domain/large.test.ts` |
+| [`large.test.ts`](../src/domain/large.test.ts) | Que las referencias se lean sin errores; con `LARGE=1`, tiempos en un colegio sintético y en dos reales anonimizados ([`fixtures/`](../src/domain/fixtures/)) | `LARGE=1 npx vitest run src/domain/large.test.ts` |
+| [`e2e/rendimiento.spec.ts`](../e2e/rendimiento.spec.ts) | Trabajo del navegador al seleccionar y mover bloques, con la CPU ×4 | `npm run build`, luego `PERF=1 npx playwright test e2e/rendimiento.spec.ts --project=chromium` |
 | [`e2e/app.spec.ts`](../e2e/app.spec.ts) | Flujos en navegadores reales | `npm run build`, luego `npm run e2e` |
 
-Las pruebas de integración se omiten solas si falta el motor. `ui/` y `pages/` no tienen pruebas unitarias. El adaptador
+Las pruebas de integración corren el motor en Node con [`nodeEngine.testutil.ts`](../src/domain/nodeEngine.testutil.ts)
+y se omiten solas si falta. `ui/` y `pages/` no tienen pruebas unitarias. El adaptador
 [`firebase.ts`](../src/cloud/firebase.ts) y las reglas no tienen pruebas automáticas, porque requieren los emuladores de
 Firebase, que necesitan Java. Se comprobaron una vez contra el proyecto real, con cuentas desechables: **al cambiar las
 reglas o el adaptador, repite a mano el flujo con dos navegadores.**

@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from 'react';
+import { memo, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type RefObject } from 'react';
 import { isStale, useCurrent, useProjects } from '../store/projects';
 import type { ActivityKey, Period, Project } from '../domain/types';
 import { slotKey } from '../domain/types';
 import { exportFet } from '../domain/fetExport';
-import { applyMove, applySwap, checkPlace, companions, lessonIndex, lessons, type Lesson, type LessonHit, type PlaceCheck } from '../domain/manual';
+import { applyMove, applySwap, checkPlace, companions, lessonIndex, lessons, placeTargets, type Lesson, type LessonHit, type PlaceCheck } from '../domain/manual';
 import { findEffectiveGroup } from '../domain/units';
 import { describeActivity } from '../domain/fetResult';
 import type { Route } from '../App';
@@ -34,7 +34,205 @@ function groupLabel(p: Project, l: Lesson, courseId: string): string | undefined
 
 const DRAG_TYPE = 'text/x-horario-bloque';
 
+interface HintApi { show: (text: string, x: number, y: number, swap: boolean) => void; hide: () => void }
+
+/**
+ * Motivo junto al cursor. Tiene su propio estado: mover el mouse no vuelve a dibujar la grilla, solo este cuadro
+ * (con 500 bloques, cada movimiento redibujaba la página entera).
+ */
+function DragHint({ handle }: { handle: RefObject<HintApi | null> }) {
+  const [hint, setHint] = useState<{ text: string; x: number; y: number; swap: boolean } | null>(null);
+  useImperativeHandle(handle, () => ({
+    show: (text, x, y, swap) => setHint((h) => (h && h.text === text && Math.abs(h.x - x) + Math.abs(h.y - y) <= 6 ? h : { text, x, y, swap })),
+    hide: () => setHint((h) => (h ? null : h)),
+  }), []);
+  if (!hint) return null;
+  return (
+    <div className="drag-hint" style={{ left: Math.min(hint.x + 22, innerWidth - 300), top: hint.y + 22 }} aria-hidden="true">
+      {hint.swap ? '⇄' : '🚫'} {hint.text}
+    </div>
+  );
+}
+
+/** Lo que la grilla pide a la página. Va en un ref para que la grilla memorizada no dependa de funciones nuevas. */
+interface GridActions {
+  tryMove: (keys: ActivityKey[], day: number, period: Period) => void;
+  select: (l: Lesson) => void;
+  startDrag: (l: Lesson) => void;
+  toast: (text: string) => void;
+  hint: RefObject<HintApi | null>;
+  lastInvalid: RefObject<string | null>;
+}
+
+interface GridProps {
+  p: Project;
+  all: Lesson[];
+  index: ReturnType<typeof lessonIndex>;
+  m: Mode;
+  id: string;
+  interactive: boolean;
+  selected: ActivityKey[] | null;
+  targets: Map<string, PlaceCheck>;
+  act: RefObject<GridActions | null>;
+}
+
+/**
+ * Grilla semanal de un curso, profesor o sala. Memorizada: solo se vuelve a dibujar si cambian el horario, la
+ * selección o los destinos, no con los mensajes ni con el aviso junto al cursor.
+ */
+const NO_TARGETS = new Map<string, PlaceCheck>();
+
+const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interactive, selected, targets, act }: GridProps) {
+  const subject = (sid: string) => p.subjects.find((s) => s.id === sid);
+  const teacher = (tid: string | null) => p.teachers.find((t) => t.id === tid);
+  const courseName = (cid: string) => p.courses.find((c) => c.id === cid)?.name ?? '';
+  const subjectOfKey = (k: ActivityKey) => subject(all.find((l) => l.pl.key === k)?.unit.subjectId ?? '')?.name ?? 'el bloque';
+  const selectedSet = new Set(selected ?? []);
+  const isLocked = (key: ActivityKey) => !!p.locks[key];
+  const slots = index.get(`${m}:${id}`);
+  // Una clase ocupa una sola celda alta (rowSpan) si en todos sus tramos es la única clase.
+  const alone = (l: Lesson) => Array.from({ length: l.dur }, (_, k) => p.school.periods[l.startIdx + k])
+    .every((per) => per && (slots?.get(slotKey(l.pl.day, per.id))?.length ?? 0) === 1);
+  const describe = (l: Lesson) => {
+    const s = subject(l.unit.subjectId);
+    const room = p.rooms.find((r) => r.id === l.pl.roomId)?.name;
+    const locked = isLocked(l.pl.key);
+    const t = teacher(l.unit.teacherId)?.name;
+    const courses = [...new Set(l.unit.audience.map((a) => a.courseId))];
+    const audience = courses.map((c) => {
+      const g = l.unit.kind === 'carga' ? groupLabel(p, l, c) : undefined;
+      return `${courseName(c)}${g ? ` (${g})` : ''}`;
+    }).join(', ');
+    const franja = l.unit.kind === 'electivo' ? groupLabel(p, l, courses[0]) : undefined;
+    const help = !interactive ? '' : selectedSet.has(l.pl.key) ? 'Seleccionado: elige un lugar libre (en verde) o haz clic de nuevo para soltar' : 'Clic para seleccionar y mover o fijar; también se puede arrastrar';
+    const title = `${s?.name}${franja ? ` · ${franja}` : ''} · ${audience} · ${t ?? 'sin profesor'}${room ? ' · ' + room : ''}${locked ? ' · fijado' : ''}\n${help}`;
+    const g = m === 'curso' ? groupLabel(p, l, id) : undefined;
+    const main = m === 'curso' ? `${s?.name}${g && l.unit.kind === 'carga' ? ` · ${g}` : ''}` : `${s?.short || s?.name} · ${audience}`;
+    const sub = m === 'curso' ? `${l.unit.kind === 'electivo' ? `${g} · ` : ''}${t ?? 'Sin profesor'}${room ? ` · ${room}` : ''}` : room ?? '';
+    return { s, locked, title, main, sub, sel: interactive && selectedSet.has(l.pl.key) };
+  };
+  const dragProps = (l: Lesson) => interactive ? {
+    draggable: true,
+    onDragEnd: (e: DragEvent) => {
+      // Se soltó sobre un lugar no válido (algunos navegadores no informan la posición: se usa el último motivo).
+      const unknownPos = e.clientX === 0 && e.clientY === 0;
+      const overInvalid = unknownPos || !!document.elementFromPoint(e.clientX, e.clientY)?.closest('td.drop-no');
+      if (act.current!.lastInvalid.current && overInvalid) act.current!.toast(act.current!.lastInvalid.current);
+      act.current!.lastInvalid.current = null;
+      act.current!.hint.current?.hide();
+    },
+    onDragStart: (e: DragEvent) => {
+      e.stopPropagation();
+      e.dataTransfer.setData(DRAG_TYPE, l.pl.key);
+      e.dataTransfer.effectAllowed = 'move';
+      act.current!.startDrag(l);
+    },
+  } : {};
+  return (
+    <WeekGrid school={p.school} cell={(d, per): CellSpec => {
+      const k = slotKey(d, per.id);
+      const target = interactive && selected ? targets.get(k) : undefined;
+      // Motivo junto al cursor: al arrastrar sobre un lugar no válido, o al pasar el mouse con un bloque seleccionado.
+      const showReason = (x: number, y: number) => {
+        const text = !target ? null : target.ok ? (target.swapWith ? `Soltar para intercambiar con ${subjectOfKey(target.swapWith[0])}` : null) : target.reason;
+        if (text) act.current!.hint.current?.show(text, x, y, !!target?.ok);
+        else act.current!.hint.current?.hide();
+      };
+      const drop = target ? {
+        onMouseMove: (e: MouseEvent) => showReason(e.clientX, e.clientY),
+        onMouseLeave: () => act.current!.hint.current?.hide(),
+        onDragOver: (e: DragEvent) => {
+          if (target.ok) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            act.current!.lastInvalid.current = null;
+          } else act.current!.lastInvalid.current = target.reason;
+          showReason(e.clientX, e.clientY);
+        },
+        onDrop: (e: DragEvent) => { e.preventDefault(); if (selected) act.current!.tryMove(selected, d, per); },
+      } : {};
+      const targetClass = target ? (target.ok ? (target.swapWith ? ' drop-ok drop-swap' : ' drop-ok') : ' drop-no') : '';
+      const targetTitle = target?.ok ? (target.swapWith ? `Intercambiar con ${subjectOfKey(target.swapWith[0])}` : 'Mover aquí') : undefined;
+      if (p.school.closed.includes(k)) return { className: 'closed', title: 'Sin clases' };
+      const hits = slots?.get(k) ?? [];
+      if (hits.length === 0) {
+        if (!target) return {};
+        return {
+          className: targetClass.trim(),
+          title: target.ok ? targetTitle : target.reason,
+          onClick: () => (target.ok ? act.current!.tryMove(selected!, d, per) : act.current!.toast(target.reason)),
+          ...drop,
+        };
+      }
+      if (hits.length === 1 && alone(hits[0].lesson)) {
+        if (!hits[0].start) return { skip: true };
+        const l = hits[0].lesson;
+        const x = describe(l);
+        return {
+          className: `lesson${x.locked ? ' locked' : ''}${x.sel ? ' selected' : ''}${x.sel ? '' : targetClass}`,
+          rowSpan: l.dur,
+          title: target && !x.sel ? (target.ok ? `${targetTitle}\n\n${x.title}` : `${target.reason}\n\n${x.title}`) : x.title,
+          onClick: interactive ? () => (target?.ok && !x.sel ? act.current!.tryMove(selected!, d, per) : act.current!.select(l)) : undefined,
+          ...dragProps(l),
+          ...drop,
+          content: (
+            <div style={{ position: 'absolute', inset: 0, padding: '4px 6px', background: x.s?.color ?? '#777', borderRadius: 5 }}>
+              <span className="s">{x.main}</span>
+              <span className="w">{x.sub}</span>
+              {x.locked && <span className="lock" aria-label="Fijado">📌</span>}
+            </div>
+          ),
+        };
+      }
+      // Clases en paralelo que empiezan y terminan juntas: una sola celda alta con una ficha por clase.
+      const keysAt = (sk: string) => (slots?.get(sk) ?? []).map((h) => h.lesson.pl.key).sort().join(',');
+      const block = (hs: LessonHit[]) => {
+        const l0 = hs[0].lesson;
+        if (!hs.every((h) => h.lesson.dur === l0.dur && h.lesson.startIdx === l0.startIdx && h.lesson.pl.day === l0.pl.day)) return false;
+        const keys = keysAt(slotKey(l0.pl.day, p.school.periods[l0.startIdx].id));
+        return Array.from({ length: l0.dur }, (_, i) => p.school.periods[l0.startIdx + i]).every((x) => x && keysAt(slotKey(l0.pl.day, x.id)) === keys);
+      };
+      const together = block(hits);
+      if (together && !hits[0].start) return { skip: true };
+      const anySel = interactive && hits.some((h) => selectedSet.has(h.lesson.pl.key));
+      return {
+        className: `multi${anySel ? '' : targetClass}`,
+        rowSpan: together ? hits[0].lesson.dur : undefined,
+        title: target && !anySel && !target.ok ? target.reason : undefined,
+        ...drop,
+        content: hits.map(({ lesson: l, start }) => {
+          const x = describe(l);
+          return (
+            <button key={l.pl.key} type="button" className={`chip-lesson${x.locked ? ' locked' : ''}${x.sel ? ' selected' : ''}`} title={x.title}
+              style={{ background: x.s?.color ?? '#777' }} disabled={!interactive}
+              draggable={interactive || undefined}
+              onDragStart={dragProps(l).onDragStart}
+              onDragEnd={dragProps(l).onDragEnd}
+              onClick={(e) => { e.stopPropagation(); if (target?.ok && !anySel) act.current!.tryMove(selected!, d, per); else act.current!.select(l); }}>
+              <span className="s">{x.main}{start || together ? '' : ' (cont.)'}</span>
+              {(start || together) && <span className="w">{x.sub}</span>}
+              {x.locked && start && <span className="lock" aria-label="Fijado"> 📌</span>}
+            </button>
+          );
+        }),
+      };
+    }} />
+  );
+});
+
 export function HorarioPage({ go }: { go: (r: Route) => void }) {
+  const p = useCurrent()!;
+  if (!p.timetable)
+    return (
+      <>
+        <PageHead title="Ver y ajustar" />
+        <div className="empty">Todavía no hay un horario generado.<button type="button" className="btn primary" onClick={() => go('generar')}>Ir a generar</button></div>
+      </>
+    );
+  return <AdjustView go={go} />;
+}
+
+function AdjustView({ go }: { go: (r: Route) => void }) {
   const p = useCurrent()!;
   const update = useProjects((s) => s.update);
   const [mode, setMode] = useState<Mode>('curso');
@@ -42,9 +240,9 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
   const [printAll, setPrintAll] = useState(false);
   const [selected, setSelected] = useState<ActivityKey[] | null>(null);
   const [message, setMessage] = useState<{ kind: 'ok' | 'bad'; text: string } | null>(null);
-  // Motivo por el que no se puede soltar un bloque: junto al cursor mientras se arrastra, y como aviso breve
-  // abajo de la pantalla si se suelta igual o se hace clic en un lugar no válido.
-  const [hint, setHint] = useState<{ text: string; x: number; y: number; swap?: boolean } | null>(null);
+  // Motivo por el que no se puede soltar un bloque: junto al cursor mientras se arrastra (DragHint), y como aviso
+  // breve abajo de la pantalla si se suelta igual o se hace clic en un lugar no válido.
+  const hintRef = useRef<HintApi>(null);
   const [toast, setToast] = useState<string | null>(null);
   const lastInvalid = useRef<string | null>(null);
   useEffect(() => {
@@ -55,14 +253,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
   const all = useMemo(() => lessons(p), [p]);
   const index = useMemo(() => lessonIndex(p, all), [p, all]);
   // Lugares válidos para lo seleccionado: se calcula una vez por selección (no en cada celda de cada vista).
-  const targets = useMemo(() => {
-    const m = new Map<string, PlaceCheck>();
-    if (!selected) return m;
-    p.school.days.forEach((_, d) => p.school.periods.forEach((per) => {
-      if (per.kind === 'clase') m.set(slotKey(d, per.id), checkPlace(p, selected, d, per.id, all));
-    }));
-    return m;
-  }, [p, all, selected]);
+  const targets = useMemo(() => (selected ? placeTargets(p, selected, all) : new Map<string, never>()), [p, all, selected]);
 
   // Escape suelta la selección.
   useEffect(() => {
@@ -72,13 +263,12 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
     return () => removeEventListener('keydown', on);
   }, [selected]);
 
-  if (!p.timetable)
-    return (
-      <>
-        <PageHead title="Ver y ajustar" />
-        <div className="empty">Todavía no hay un horario generado.<button type="button" className="btn primary" onClick={() => go('generar')}>Ir a generar</button></div>
-      </>
-    );
+  // Tras imprimir, se deja de dibujar la copia de todas las grillas.
+  useEffect(() => {
+    const done = () => setPrintAll(false);
+    addEventListener('afterprint', done);
+    return () => removeEventListener('afterprint', done);
+  }, []);
 
   const owners = mode === 'curso' ? p.courses : mode === 'profesor' ? p.teachers : p.rooms;
   const owner = owners.find((o) => o.id === ownerId) ?? owners[0];
@@ -114,144 +304,10 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
     if (swap) update((d) => applySwap(d, keys, swap), { touch: false });
     else update((d) => applyMove(d, keys, day, period.id), { touch: false });
     setSelected(null);
-    setHint(null);
+    hintRef.current?.hide();
     setMessage({ kind: 'ok', text: swap
       ? `Intercambiados: ${subjectOfKey(keys[0])} ↔ ${subjectOfKey(swap[0])}. Ambos quedaron fijados 📌.`
       : `Movido al ${p.school.days[day]}, ${period.label} (${period.start}). Quedó fijado 📌.` });
-  };
-
-  const grid = (m: Mode, id: string, interactive: boolean) => {
-    const slots = index.get(`${m}:${id}`);
-    // Una clase ocupa una sola celda alta (rowSpan) si en todos sus tramos es la única clase.
-    const alone = (l: Lesson) => Array.from({ length: l.dur }, (_, k) => p.school.periods[l.startIdx + k])
-      .every((per) => per && (slots?.get(slotKey(l.pl.day, per.id))?.length ?? 0) === 1);
-    const describe = (l: Lesson) => {
-      const s = subject(l.unit.subjectId);
-      const room = p.rooms.find((r) => r.id === l.pl.roomId)?.name;
-      const locked = isLocked(l.pl.key);
-      const t = teacher(l.unit.teacherId)?.name;
-      const courses = [...new Set(l.unit.audience.map((a) => a.courseId))];
-      const audience = courses.map((c) => {
-        const g = l.unit.kind === 'carga' ? groupLabel(p, l, c) : undefined;
-        return `${courseName(c)}${g ? ` (${g})` : ''}`;
-      }).join(', ');
-      const franja = l.unit.kind === 'electivo' ? groupLabel(p, l, courses[0]) : undefined;
-      const help = !interactive ? '' : selectedSet.has(l.pl.key) ? 'Seleccionado: elige un lugar libre (en verde) o haz clic de nuevo para soltar' : 'Clic para seleccionar y mover o fijar; también se puede arrastrar';
-      const title = `${s?.name}${franja ? ` · ${franja}` : ''} · ${audience} · ${t ?? 'sin profesor'}${room ? ' · ' + room : ''}${locked ? ' · fijado' : ''}\n${help}`;
-      const g = m === 'curso' ? groupLabel(p, l, id) : undefined;
-      const main = m === 'curso' ? `${s?.name}${g && l.unit.kind === 'carga' ? ` · ${g}` : ''}` : `${s?.short || s?.name} · ${audience}`;
-      const sub = m === 'curso' ? `${l.unit.kind === 'electivo' ? `${g} · ` : ''}${t ?? 'Sin profesor'}${room ? ` · ${room}` : ''}` : room ?? '';
-      return { s, locked, title, main, sub, sel: selectedSet.has(l.pl.key) };
-    };
-    const dragProps = (l: Lesson) => interactive ? {
-      draggable: true,
-      onDragEnd: (e: DragEvent) => {
-        // Se soltó sobre un lugar no válido (algunos navegadores no informan la posición: se usa el último motivo).
-        const unknownPos = e.clientX === 0 && e.clientY === 0;
-        const overInvalid = unknownPos || !!document.elementFromPoint(e.clientX, e.clientY)?.closest('td.drop-no');
-        if (lastInvalid.current && overInvalid) setToast(lastInvalid.current);
-        lastInvalid.current = null;
-        setHint(null);
-      },
-      onDragStart: (e: DragEvent) => {
-        e.stopPropagation();
-        e.dataTransfer.setData(DRAG_TYPE, l.pl.key);
-        e.dataTransfer.effectAllowed = 'move';
-        setSelected(companions(p, l.pl.key));
-        setMessage(null);
-      },
-    } : {};
-    return (
-      <WeekGrid school={p.school} cell={(d, per): CellSpec => {
-        const k = slotKey(d, per.id);
-        const target = interactive && selected ? targets.get(k) : undefined;
-        // Motivo junto al cursor: al arrastrar sobre un lugar no válido, o al pasar el mouse con un bloque seleccionado.
-        const showReason = (x: number, y: number) => {
-          const text = !target ? null : target.ok ? (target.swapWith ? `Soltar para intercambiar con ${subjectOfKey(target.swapWith[0])}` : null) : target.reason;
-          if (!text) { if (hint) setHint(null); return; }
-          if (!hint || hint.text !== text || Math.abs(hint.x - x) + Math.abs(hint.y - y) > 6)
-            setHint({ text, x, y, swap: !!target?.ok });
-        };
-        const drop = target ? {
-          onMouseMove: (e: MouseEvent) => showReason(e.clientX, e.clientY),
-          onMouseLeave: () => setHint(null),
-          onDragOver: (e: DragEvent) => {
-            if (target.ok) {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'move';
-              lastInvalid.current = null;
-            } else lastInvalid.current = target.reason;
-            showReason(e.clientX, e.clientY);
-          },
-          onDrop: (e: DragEvent) => { e.preventDefault(); if (selected) tryMove(selected, d, per); },
-        } : {};
-        const targetClass = target ? (target.ok ? (target.swapWith ? ' drop-ok drop-swap' : ' drop-ok') : ' drop-no') : '';
-        const targetTitle = target?.ok ? (target.swapWith ? `Intercambiar con ${subjectOfKey(target.swapWith[0])}` : 'Mover aquí') : undefined;
-        if (p.school.closed.includes(k)) return { className: 'closed', title: 'Sin clases' };
-        const hits = slots?.get(k) ?? [];
-        if (hits.length === 0) {
-          if (!target) return {};
-          return {
-            className: targetClass.trim(),
-            title: target.ok ? targetTitle : target.reason,
-            onClick: () => (target.ok ? tryMove(selected!, d, per) : setToast(target.reason)),
-            ...drop,
-          };
-        }
-        if (hits.length === 1 && alone(hits[0].lesson)) {
-          if (!hits[0].start) return { skip: true };
-          const l = hits[0].lesson;
-          const x = describe(l);
-          return {
-            className: `lesson${x.locked ? ' locked' : ''}${x.sel ? ' selected' : ''}${x.sel ? '' : targetClass}`,
-            rowSpan: l.dur,
-            title: target && !x.sel ? (target.ok ? `${targetTitle}\n\n${x.title}` : `${target.reason}\n\n${x.title}`) : x.title,
-            onClick: interactive ? () => (target?.ok && !x.sel ? tryMove(selected!, d, per) : select(l)) : undefined,
-            ...dragProps(l),
-            ...drop,
-            content: (
-              <div style={{ position: 'absolute', inset: 0, padding: '4px 6px', background: x.s?.color ?? '#777', borderRadius: 5 }}>
-                <span className="s">{x.main}</span>
-                <span className="w">{x.sub}</span>
-                {x.locked && <span className="lock" aria-label="Fijado">📌</span>}
-              </div>
-            ),
-          };
-        }
-        // Clases en paralelo que empiezan y terminan juntas: una sola celda alta con una ficha por clase.
-        const keysAt = (sk: string) => (slots?.get(sk) ?? []).map((h) => h.lesson.pl.key).sort().join(',');
-        const block = (hs: LessonHit[]) => {
-          const l0 = hs[0].lesson;
-          if (!hs.every((h) => h.lesson.dur === l0.dur && h.lesson.startIdx === l0.startIdx && h.lesson.pl.day === l0.pl.day)) return false;
-          const keys = keysAt(slotKey(l0.pl.day, p.school.periods[l0.startIdx].id));
-          return Array.from({ length: l0.dur }, (_, i) => p.school.periods[l0.startIdx + i]).every((x) => x && keysAt(slotKey(l0.pl.day, x.id)) === keys);
-        };
-        const together = block(hits);
-        if (together && !hits[0].start) return { skip: true };
-        const anySel = hits.some((h) => selectedSet.has(h.lesson.pl.key));
-        return {
-          className: `multi${anySel ? '' : targetClass}`,
-          rowSpan: together ? hits[0].lesson.dur : undefined,
-          title: target && !anySel && !target.ok ? target.reason : undefined,
-          ...drop,
-          content: hits.map(({ lesson: l, start }) => {
-            const x = describe(l);
-            return (
-              <button key={l.pl.key} type="button" className={`chip-lesson${x.locked ? ' locked' : ''}${x.sel ? ' selected' : ''}`} title={x.title}
-                style={{ background: x.s?.color ?? '#777' }} disabled={!interactive}
-                draggable={interactive || undefined}
-                onDragStart={dragProps(l).onDragStart}
-                onDragEnd={dragProps(l).onDragEnd}
-                onClick={(e) => { e.stopPropagation(); if (target?.ok && !anySel) tryMove(selected!, d, per); else select(l); }}>
-                <span className="s">{x.main}{start || together ? '' : ' (cont.)'}</span>
-                {(start || together) && <span className="w">{x.sub}</span>}
-                {x.locked && start && <span className="lock" aria-label="Fijado"> 📌</span>}
-              </button>
-            );
-          }),
-        };
-      }} />
-    );
   };
 
   const rows = () => {
@@ -274,6 +330,16 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
   const exportXlsx = () => {
     exportTimetableXlsx(p, all, header, rows()).catch((e: Error) => setMessage({ kind: 'bad', text: `No se pudo crear el Excel: ${e.message}` }));
   };
+
+  // Se actualiza después de cada dibujo: la grilla solo lo usa en eventos, que ocurren después.
+  const startDrag = (l: Lesson) => { setSelected(companions(p, l.pl.key)); setMessage(null); };
+  const act = useRef<GridActions>(null);
+  const showToast = (text: string) => setToast(text);
+  useLayoutEffect(() => { act.current = { tryMove, select, startDrag, toast: showToast, hint: hintRef, lastInvalid }; });
+  const grid = (id: string, interactive: boolean) => (
+    <ScheduleGrid p={p} all={all} index={index} m={mode} id={id} interactive={interactive}
+      selected={interactive ? selected : null} targets={interactive ? targets : NO_TARGETS} act={act} />
+  );
 
   const doPrint = (all: boolean) => { setPrintAll(all); setTimeout(() => window.print(), 50); };
   const nLocks = Object.keys(p.locks).length;
@@ -341,15 +407,11 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
           </div>
         )}
         {message && <div className={`notice ${message.kind === 'ok' ? 'ok' : 'bad'}`} role="status">{message.text}</div>}
-        {hint && selected && (
-          <div className="drag-hint" style={{ left: Math.min(hint.x + 22, innerWidth - 300), top: hint.y + 22 }} aria-hidden="true">
-            {hint.swap ? '⇄' : '🚫'} {hint.text}
-          </div>
-        )}
+        {selected && <DragHint handle={hintRef} />}
         <div className="toast-zone" role="status" aria-live="polite">
           {toast && <div className="toast" onClick={() => setToast(null)}>No se puede mover aquí: {toast}</div>}
         </div>
-        {owner ? grid(mode, owner.id, true) : <div className="empty">No hay elementos para mostrar.</div>}
+        {owner ? grid(owner.id, true) : <div className="empty">No hay elementos para mostrar.</div>}
         {selected && <p className="small muted">Al mover o intercambiar se revisan los choques, recreos, la disponibilidad de profesores y todas las reglas obligatorias de Preferencias. Las reglas preferibles no se revisan.</p>}
       </section>
 
@@ -357,7 +419,7 @@ export function HorarioPage({ go }: { go: (r: Route) => void }) {
         {(printAll ? owners : owner ? [owner] : []).map((o) => (
           <section key={o.id} className="print-page">
             <h2>{o.name} — {p.school.name || p.name} {p.year}</h2>
-            {grid(mode, o.id, false)}
+            {grid(o.id, false)}
           </section>
         ))}
       </div>

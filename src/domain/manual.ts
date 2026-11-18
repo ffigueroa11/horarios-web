@@ -59,11 +59,18 @@ export function lessonIndex(p: Project, all: Lesson[]) {
   return byOwner;
 }
 
+/**
+ * Cálculos que dependen solo de los datos del colegio y se repiten en cada lugar revisado. Se guardan mientras dura
+ * `placeTargets`, una llamada síncrona sobre un proyecto que no cambia: así no hace falta invalidarlos.
+ */
+let memo: { rows?: ReturnType<typeof parallelRows> } | null = null;
+const rowsOf = (p: Project) => (memo ? (memo.rows ??= parallelRows(p)) : parallelRows(p));
+
 /** Bloques que se mueven juntos con este (grupos en paralelo, opciones de una franja de electivos). */
 export function companions(p: Project, key: ActivityKey): ActivityKey[] {
   const uid = unitIdOf(key);
   const idx = Number(key.split('#')[1]);
-  const row = parallelRows(p).find((r) => r.unitIds.includes(uid) && idx < r.blocks);
+  const row = rowsOf(p).find((r) => r.unitIds.includes(uid) && idx < r.blocks);
   return row ? row.unitIds.map((id) => activityKey(id, idx)) : [key];
 }
 
@@ -111,13 +118,90 @@ export function slotProblem(p: Project, unit: Unit, idx: number, day: number, pe
   return null;
 }
 
+/**
+ * Clases de un horario con índices para no recorrerlas todas en cada revisión: por clave, día, profesor, unidad y
+ * lugar de inicio. Las listas conservan el orden del arreglo original, así que los mensajes no cambian.
+ */
+interface View {
+  get(key: ActivityKey): Lesson | undefined;
+  rank(key: ActivityKey): number;
+  day(d: number): readonly Lesson[];
+  teacher(id: string): readonly Lesson[];
+  unit(id: string): readonly Lesson[];
+  startingAt(day: number, periodId: string): readonly Lesson[];
+}
+
+const NONE: readonly Lesson[] = [];
+const views = new WeakMap<Lesson[], View>();
+
+/** Índice de un arreglo de clases. Se guarda por arreglo: los arreglos de clases no se modifican después de crearlos. */
+function viewOf(all: Lesson[]): View {
+  let v = views.get(all);
+  if (v) return v;
+  const byKey = new Map<ActivityKey, Lesson>(), rank = new Map<ActivityKey, number>();
+  const byDay: Lesson[][] = [], byTeacher = new Map<string, Lesson[]>(), byUnit = new Map<string, Lesson[]>(), byStart = new Map<string, Lesson[]>();
+  const push = <K,>(m: Map<K, Lesson[]>, k: K, l: Lesson) => { const list = m.get(k); if (list) list.push(l); else m.set(k, [l]); };
+  all.forEach((l, i) => {
+    byKey.set(l.pl.key, l);
+    rank.set(l.pl.key, i);
+    (byDay[l.pl.day] ??= []).push(l);
+    if (l.unit.teacherId) push(byTeacher, l.unit.teacherId, l);
+    push(byUnit, l.unit.id, l);
+    push(byStart, slotKey(l.pl.day, l.pl.periodId), l);
+  });
+  v = {
+    get: (k) => byKey.get(k),
+    rank: (k) => rank.get(k) ?? Infinity,
+    day: (d) => byDay[d] ?? NONE,
+    teacher: (id) => byTeacher.get(id) ?? NONE,
+    unit: (id) => byUnit.get(id) ?? NONE,
+    startingAt: (d, periodId) => byStart.get(slotKey(d, periodId)) ?? NONE,
+  };
+  views.set(all, v);
+  return v;
+}
+
+/** El mismo horario con los bloques `keys` empezando en otro lugar. No copia lo que no cambia. */
+function movedView(p: Project, base: View, keys: ActivityKey[], day: number, periodId: string): View {
+  const startIdx = p.school.periods.findIndex((x) => x.id === periodId);
+  const moved = new Map<ActivityKey, Lesson>();
+  for (const k of keys) {
+    const l = base.get(k);
+    if (l) moved.set(k, { ...l, startIdx, pl: { ...l.pl, day, periodId } });
+  }
+  const swap = (list: readonly Lesson[]) => (list.some((l) => moved.has(l.pl.key)) ? list.map((l) => moved.get(l.pl.key) ?? l) : list);
+  // Quita los bloques movidos de la lista y agrega los que ahora caen en ella, en el orden del arreglo original.
+  const regroup = (list: readonly Lesson[], belongs: (l: Lesson) => boolean) => {
+    const enter = [...moved.values()].filter(belongs);
+    if (enter.length === 0 && !list.some((l) => moved.has(l.pl.key))) return list;
+    return [...list.filter((l) => !moved.has(l.pl.key)), ...enter].sort((a, b) => base.rank(a.pl.key) - base.rank(b.pl.key));
+  };
+  return {
+    get: (k) => moved.get(k) ?? base.get(k),
+    rank: base.rank,
+    day: (d) => regroup(base.day(d), (l) => l.pl.day === d),
+    teacher: (id) => swap(base.teacher(id)),
+    unit: (id) => swap(base.unit(id)),
+    startingAt: (d, pid) => regroup(base.startingAt(d, pid), (l) => l.pl.day === d && l.pl.periodId === pid),
+  };
+}
+
+/** Los bloques `keys` que existen, en el orden del horario. */
+const lessonsOf = (v: View, keys: ActivityKey[]) =>
+  keys.map((k) => v.get(k)).filter((l): l is Lesson => !!l).sort((a, b) => v.rank(a.pl.key) - v.rank(b.pl.key));
+
 /** Revisa si los bloques `keys` (que hoy empiezan juntos) pueden empezar en el día y tramo indicados. */
 export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId: string, all: Lesson[] = lessons(p), opts: { skipRules?: boolean } = {}): MoveCheck {
-  const moving = all.filter((l) => keys.includes(l.pl.key));
+  return checkMoveIn(p, keys, day, periodId, viewOf(all), opts);
+}
+
+function checkMoveIn(p: Project, keys: ActivityKey[], day: number, periodId: string, v: View, opts: { skipRules?: boolean } = {}): MoveCheck {
+  const moving = lessonsOf(v, keys);
   if (moving.length === 0) return { ok: false, reason: 'El bloque ya no existe.' };
   const start = p.school.periods.findIndex((x) => x.id === periodId);
   if (start < 0 || day < 0 || day >= p.school.days.length) return { ok: false, reason: 'Ese lugar no existe en la jornada.' };
-  const others = all.filter((l) => !keys.includes(l.pl.key));
+  const keySet = new Set(keys);
+  const othersThatDay = v.day(day).filter((l) => !keySet.has(l.pl.key));
   const subject = (u: Unit) => nameOf(p.subjects, u.subjectId);
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -126,8 +210,8 @@ export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId
     if (problem) return { ok: false, reason: cap(problem) };
     for (let k = 0; k < m.dur; k++) {
       const at = start + k;
-      for (const o of others) {
-        if (o.pl.day !== day || at < o.startIdx || at >= o.startIdx + o.dur) continue;
+      for (const o of othersThatDay) {
+        if (at < o.startIdx || at >= o.startIdx + o.dur) continue;
         if (m.unit.teacherId && m.unit.teacherId === o.unit.teacherId)
           return { ok: false, reason: `${nameOf(p.teachers, m.unit.teacherId)} ya tiene ${subject(o.unit)} a esa hora.` };
         if (m.pl.roomId && m.pl.roomId === o.pl.roomId)
@@ -139,7 +223,7 @@ export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId
     // Reglas del profesor que dependen del resto de su semana.
     const t = p.teachers.find((x) => x.id === m.unit.teacherId);
     if (t) {
-      const his = others.filter((o) => o.unit.teacherId === t.id);
+      const his = v.teacher(t.id).filter((o) => !keySet.has(o.pl.key));
       const days = new Set([...his.map((o) => o.pl.day), day]);
       if (t.maxDays != null && days.size > t.maxDays)
         return { ok: false, reason: `${t.name} puede venir como máximo ${t.maxDays} días y ese día no tiene clases.` };
@@ -159,8 +243,8 @@ export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId
           if (a.groupId && !ids.has(a.groupId)) continue;
           const busy = new Set<number>();
           for (let k = 0; k < m.dur; k++) busy.add(start + k);
-          for (const o of others) {
-            if (o.pl.day !== day || !o.unit.audience.some((x) => x.courseId === a.courseId && (!x.groupId || ids.has(x.groupId)))) continue;
+          for (const o of othersThatDay) {
+            if (!o.unit.audience.some((x) => x.courseId === a.courseId && (!x.groupId || ids.has(x.groupId)))) continue;
             for (let k = 0; k < o.dur; k++) busy.add(o.startIdx + k);
           }
           if (busy.size > maxCourse) return { ok: false, reason: `Los alumnos quedarían con más de ${maxCourse} horas ese día.` };
@@ -168,7 +252,7 @@ export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId
       }
   }
   if (!opts.skipRules) {
-    const rule = ruleProblem(p, all, withLessonsAt(p, all, keys, day, periodId), moving.map((m) => m.unit));
+    const rule = ruleProblemIn(p, v, movedView(p, v, keys, day, periodId), moving.map((m) => m.unit));
     if (rule) return { ok: false, reason: rule };
   }
   return { ok: true };
@@ -180,15 +264,25 @@ export function checkMove(p: Project, keys: ActivityKey[], day: number, periodId
  * solo se rechaza lo que el cambio empeora (si el horario ya incumplía algo, no se culpa al movimiento).
  */
 export function ruleProblem(p: Project, before: Lesson[], after: Lesson[], moved: Unit[]): string | null {
+  return ruleProblemIn(p, viewOf(before), viewOf(after), moved);
+}
+
+function ruleProblemIn(p: Project, before: View, after: View, moved: Unit[]): string | null {
   const { rules, school } = p;
   const days = school.days.map((_, d) => d);
-  const open = (d: number) => school.periods.map((x, i) => ({ x, i }))
-    .filter(({ x }) => x.kind === 'clase' && !school.closed.includes(slotKey(d, x.id))).map(({ i }) => i);
-  const busy = (list: Lesson[], d: number, applies: (l: Lesson) => boolean) => {
+  const openSlots = days.map((d) => school.periods.map((x, i) => ({ x, i }))
+    .filter(({ x }) => x.kind === 'clase' && !school.closed.includes(slotKey(d, x.id))).map(({ i }) => i));
+  const open = (d: number) => openSlots[d];
+  const busy = (v: View, d: number, applies: (l: Lesson) => boolean) => {
     const set = new Set<number>();
-    for (const l of list) if (l.pl.day === d && applies(l)) for (let k = 0; k < l.dur; k++) set.add(l.startIdx + k);
+    for (const l of v.day(d)) if (applies(l)) for (let k = 0; k < l.dur; k++) set.add(l.startIdx + k);
     return set;
   };
+  // Solo los días cuyas clases cambian pueden empeorar una regla del día. Un día sin cambios es la misma lista.
+  const changed = days.filter((d) => {
+    const a = before.day(d), b = after.day(d);
+    return a !== b && !(a.length === b.length && a.every((l, i) => l === b[i]));
+  });
   const gaps = (slots: number[], b: Set<number>) => {
     const used = slots.filter((i) => b.has(i));
     if (used.length === 0) return 0;
@@ -200,8 +294,8 @@ export function ruleProblem(p: Project, before: Lesson[], after: Lesson[], moved
   if (rules.spreadSubjectDays && rules.spreadStrength === 'obligatoria')
     for (const u of moved) {
       if (u.blocks.length < 2 || u.blocks.length > school.days.length) continue;
-      const repeated = (list: Lesson[]) => {
-        const ds = list.filter((l) => l.unit.id === u.id).map((l) => l.pl.day);
+      const repeated = (v: View) => {
+        const ds = v.unit(u.id).map((l) => l.pl.day);
         return ds.length - new Set(ds).size;
       };
       if (repeated(after) > repeated(before))
@@ -209,7 +303,8 @@ export function ruleProblem(p: Project, before: Lesson[], after: Lesson[], moved
     }
 
   // Alumnos: cada combinación de grupos de los cursos involucrados.
-  const courseIds = [...new Set(moved.flatMap((u) => u.audience.map((a) => a.courseId)))];
+  const courseIds = rules.coursesNoGaps || rules.coursesStartFirstBlock
+    ? [...new Set(moved.flatMap((u) => u.audience.map((a) => a.courseId)))] : [];
   for (const cid of courseIds) {
     const c = p.courses.find((x) => x.id === cid);
     if (!c) continue;
@@ -217,7 +312,7 @@ export function ruleProblem(p: Project, before: Lesson[], after: Lesson[], moved
       const ids = new Set(combo.map((g) => g.id));
       const applies = (l: Lesson) => l.unit.audience.some((a) => a.courseId === cid && (!a.groupId || ids.has(a.groupId)));
       const who = combo.length ? `${c.name} (${combo.map((g) => g.name).join(', ')})` : c.name;
-      for (const d of days) {
+      for (const d of changed) {
         const slots = open(d);
         const b0 = busy(before, d, applies), b1 = busy(after, d, applies);
         if (rules.coursesNoGaps && gaps(slots, b1) > gaps(slots, b0))
@@ -230,12 +325,14 @@ export function ruleProblem(p: Project, before: Lesson[], after: Lesson[], moved
   }
 
   // Ventanas de profesores (los bloques no disponibles y el consejo no cuentan como ventana).
-  for (const tid of [...new Set(moved.map((u) => u.teacherId).filter((x): x is string => !!x))]) {
+  const teacherIds = rules.teacherMaxGapsPerDay != null || rules.teacherMaxGapsPerWeek != null
+    ? [...new Set(moved.map((u) => u.teacherId).filter((x): x is string => !!x))] : [];
+  for (const tid of teacherIds) {
     const t = p.teachers.find((x) => x.id === tid);
     if (!t) continue;
     const blocked = new Set([...t.unavailable, ...rules.teacherMeetingSlots]);
     const applies = (l: Lesson) => l.unit.teacherId === tid;
-    const perDay = (list: Lesson[]) => days.map((d) => gaps(open(d).filter((i) => !blocked.has(slotKey(d, school.periods[i].id))), busy(list, d, applies)));
+    const perDay = (v: View) => days.map((d) => gaps(open(d).filter((i) => !blocked.has(slotKey(d, school.periods[i].id))), busy(v, d, applies)));
     const g0 = perDay(before), g1 = perDay(after);
     const maxDay = rules.teacherMaxGapsPerDay;
     if (maxDay != null) {
@@ -286,23 +383,22 @@ export function lockProblems(p: Project, describe: (key: ActivityKey) => string)
 /** Resultado de soltar un bloque: mover a un lugar libre o intercambiar con el bloque que está ahí. */
 export type PlaceCheck = { ok: true; swapWith?: ActivityKey[] } | { ok: false; reason: string };
 
-const withLessonsAt = (p: Project, all: Lesson[], keys: ActivityKey[], day: number, periodId: string): Lesson[] => {
-  const startIdx = p.school.periods.findIndex((x) => x.id === periodId);
-  return all.map((l) => (keys.includes(l.pl.key) ? { ...l, startIdx, pl: { ...l.pl, day, periodId } } : l));
-};
-
 /** ¿Se pueden intercambiar los bloques `a` y `b` (cada uno con sus clases en paralelo)? */
 export function checkSwap(p: Project, a: ActivityKey[], b: ActivityKey[], all: Lesson[] = lessons(p)): MoveCheck {
-  const la = all.find((l) => a.includes(l.pl.key)), lb = all.find((l) => b.includes(l.pl.key));
+  return checkSwapIn(p, a, b, viewOf(all));
+}
+
+function checkSwapIn(p: Project, a: ActivityKey[], b: ActivityKey[], v: View): MoveCheck {
+  const la = lessonsOf(v, a)[0], lb = lessonsOf(v, b)[0];
   if (!la || !lb) return { ok: false, reason: 'El bloque ya no existe.' };
   const subject = (l: Lesson) => nameOf(p.subjects, l.unit.subjectId);
-  const r1 = checkMove(p, a, lb.pl.day, lb.pl.periodId, withLessonsAt(p, all, b, la.pl.day, la.pl.periodId), { skipRules: true });
+  const r1 = checkMoveIn(p, a, lb.pl.day, lb.pl.periodId, movedView(p, v, b, la.pl.day, la.pl.periodId), { skipRules: true });
   if (!r1.ok) return r1;
-  const r2 = checkMove(p, b, la.pl.day, la.pl.periodId, withLessonsAt(p, all, a, lb.pl.day, lb.pl.periodId), { skipRules: true });
+  const r2 = checkMoveIn(p, b, la.pl.day, la.pl.periodId, movedView(p, v, a, lb.pl.day, lb.pl.periodId), { skipRules: true });
   if (!r2.ok) return { ok: false, reason: `${subject(lb)} no puede ir donde está ${subject(la)}: ${r2.reason.charAt(0).toLowerCase()}${r2.reason.slice(1)}` };
-  const final = withLessonsAt(p, withLessonsAt(p, all, b, la.pl.day, la.pl.periodId), a, lb.pl.day, lb.pl.periodId);
-  const units = [la.unit, lb.unit, ...all.filter((l) => a.includes(l.pl.key) || b.includes(l.pl.key)).map((l) => l.unit)];
-  const rule = ruleProblem(p, all, final, [...new Map(units.map((u) => [u.id, u])).values()]);
+  const final = movedView(p, movedView(p, v, b, la.pl.day, la.pl.periodId), a, lb.pl.day, lb.pl.periodId);
+  const units = [la.unit, lb.unit, ...lessonsOf(v, [...a, ...b]).map((l) => l.unit)];
+  const rule = ruleProblemIn(p, v, final, [...new Map(units.map((u) => [u.id, u])).values()]);
   if (rule) return { ok: false, reason: rule };
   return { ok: true };
 }
@@ -312,17 +408,34 @@ export function checkSwap(p: Project, a: ActivityKey[], b: ActivityKey[], all: L
  * profesor, con la misma duración y que empieza ahí, se ofrece intercambiarlos.
  */
 export function checkPlace(p: Project, keys: ActivityKey[], day: number, periodId: string, all: Lesson[] = lessons(p)): PlaceCheck {
-  const move = checkMove(p, keys, day, periodId, all);
+  const v = viewOf(all);
+  const move = checkMoveIn(p, keys, day, periodId, v);
   if (move.ok) return move;
-  const moving = all.filter((l) => keys.includes(l.pl.key));
+  const moving = lessonsOf(v, keys);
   if (moving.length === 0) return move;
-  const occupant = all.find((o) => !keys.includes(o.pl.key) && o.pl.day === day && o.pl.periodId === periodId && o.dur === moving[0].dur
+  const keySet = new Set(keys);
+  const occupant = v.startingAt(day, periodId).find((o) => !keySet.has(o.pl.key) && o.dur === moving[0].dur
     && moving.some((m) => shareStudents(p, m.unit, o.unit) || (!!m.unit.teacherId && m.unit.teacherId === o.unit.teacherId)));
   if (!occupant) return move;
   const other = companions(p, occupant.pl.key);
-  const swap = checkSwap(p, keys, other, all);
+  const swap = checkSwapIn(p, keys, other, v);
   if (swap.ok) return { ok: true, swapWith: other };
   return { ok: false, reason: `${move.reason} Tampoco se pueden intercambiar: ${swap.reason.charAt(0).toLowerCase()}${swap.reason.slice(1)}` };
+}
+
+/** Revisa todos los lugares de clase de la semana para los bloques `keys` (lo que muestra la grilla al seleccionar). */
+export function placeTargets(p: Project, keys: ActivityKey[], all: Lesson[] = lessons(p)): Map<string, PlaceCheck> {
+  const out = new Map<string, PlaceCheck>();
+  const outer = memo;
+  memo ??= {};
+  try {
+    p.school.days.forEach((_, d) => p.school.periods.forEach((per) => {
+      if (per.kind === 'clase') out.set(slotKey(d, per.id), checkPlace(p, keys, d, per.id, all));
+    }));
+  } finally {
+    memo = outer;
+  }
+  return out;
 }
 
 /** Intercambia dos bloques y los deja fijados en su nuevo lugar. */

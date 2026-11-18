@@ -23,7 +23,8 @@ npm run lint                # oxlint src
 npm run typecheck           # tsc -b
 npm run build && npm run e2e:chromium                  # e2e corre sobre dist/, no sobre el servidor de desarrollo
 npx playwright test --project=chromium -g "nombre"     # un e2e
-LARGE=1 npx vitest run src/domain/large.test.ts        # medición con un colegio sintético
+LARGE=1 npx vitest run src/domain/large.test.ts        # medición: colegio sintético y dos reales anonimizados
+PERF=1 npx playwright test e2e/rendimiento.spec.ts --project=chromium   # ajuste manual en el navegador (tras build)
 bash engine/build-engine.sh # recompilar el motor (Qt 6.11.3 wasm + Emscripten 4.0.7, ~15 min)
 ```
 
@@ -65,6 +66,8 @@ pages/, ui/ (React) ──> store/ (zustand + IndexedDB) ──> engine/ (Worker
   existiendo pero cambia de sentido (duración de los bloques, grupo de una fila) lo libera la pantalla que lo cambia.
 - Al agregar un campo al modelo: pon su valor por defecto en `migrateProject` y su revisión en `checkProject`
   (`backup.ts`). Si hay que transformar datos, sube `version` en `projects.ts` y `BACKUP_VERSION`.
+- Un proyecto del almacén nunca se modifica en su lugar: `projectHash` (sincronización) lo guarda por objeto.
+- `src/domain/fixtures/` tiene colegios reales anonimizados. No agregues nombres reales de personas ni de colegios.
 - Sincronización (`cloud/engine.ts`, sin Firebase ni React, probada con una nube en memoria): nada se sube antes de
   conocer la nube confirmada por el servidor, no se sincroniza si falló la lectura local, los eliminados quedan con
   `data: null` y solo una pestaña sincroniza (`navigator.locks`). `cloud/firebase.ts` es el único archivo que toca
