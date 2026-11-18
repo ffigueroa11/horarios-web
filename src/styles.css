@@ -132,6 +132,27 @@ table.data th { text-align: left; font-size: .78rem; text-transform: uppercase; 
 table.data td { padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 table.data tr:last-child td { border-bottom: 0; }
 table.data td .input { width: 100%; }
+/* Tablas que se editan en el lugar: el campo muestra su marco al pasar el mouse o al editarlo; en reposo, solo una línea
+   abajo. Con todos los campos enmarcados, las tablas se veían como un formulario lleno de cajas. */
+table.data td .input:not(:hover):not(:focus):not([aria-invalid]) { border-color: transparent; border-bottom-color: var(--line); background: transparent; border-radius: 0; }
+table.data.teacher-list td .btn { border: 0; }
+.blocks-field { position: relative; display: inline-block; }
+.blocks-hint { position: absolute; left: 0; top: calc(100% + 2px); z-index: 10; white-space: nowrap; padding: 3px 8px; border-radius: 6px;
+  background: var(--ink); color: var(--bg); font-size: .75rem; box-shadow: 0 4px 12px rgb(0 0 0 / .15); }
+.blocks-hint.bad { background: var(--bad); color: #fff; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; background: var(--surface-2); border: 1px solid var(--line); }
+.swatch.off { background: var(--bad-soft); border-color: transparent; }
+.swatch.closed { background: repeating-linear-gradient(135deg, var(--break) 0 3px, transparent 3px 6px); border-color: var(--line); }
+.steps .num.done { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.steps .num.error { border-color: var(--bad); color: var(--bad); font-weight: 700; }
+.steps a[aria-current='page'] .num.done { color: var(--accent-ink); }
+table.data.teacher-list td .btn { font-weight: 400; }
+table.data.teacher-list tr[aria-selected='true'] td .btn { font-weight: 700; }
+.week .day-short { display: none; }
+.next-step { display: flex; justify-content: flex-end; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: .8rem; font-weight: 700; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .badge.ok { background: var(--accent-soft); color: var(--ok); border-color: transparent; }
@@ -164,7 +185,7 @@ table.data td .input { width: 100%; }
 .week td.closed { background: repeating-linear-gradient(135deg, var(--break) 0 6px, transparent 6px 12px); border-color: transparent; }
 .week td.toggle { cursor: pointer; }
 .week td.off { background: var(--bad-soft); border-color: transparent; }
-.week td.off::after { content: 'No disponible'; color: var(--bad); font-size: .72rem; }
+.week td.off:empty::after { content: 'No disponible'; color: var(--bad); font-size: .72rem; }
 .week td.allowed { background: var(--accent-soft); border-color: transparent; }
 .week td.lesson { color: #fff; border: 0; cursor: pointer; }
 .week td.lesson .s { font-weight: 700; display: block; line-height: 1.2; }
@@ -208,6 +229,17 @@ pre.log { margin: 0; max-height: 220px; overflow: auto; padding: 10px; backgroun
   .side.open { overflow: auto; }
   .steps { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .steps .phase { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  table.data:not(.teacher-list), table.data:not(.teacher-list) tbody { display: block; }
+  table.data:not(.teacher-list) thead { display: none; }
+  table.data:not(.teacher-list) tr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  table.data:not(.teacher-list) tr:last-child { border-bottom: 0; }
+  table.data:not(.teacher-list) td { display: block; border: 0; padding: 0; flex: 1 1 140px; min-width: 0; }
+  table.data:not(.teacher-list) td:has(> .icon-btn), table.data:not(.teacher-list) td:has(> .badge), table.data:not(.teacher-list) td:has(> .dot) { flex: 0 0 auto; }
+  table.data td .input:not(:hover):not(:focus):not([aria-invalid]) { border-color: var(--line-strong); border-radius: 6px; background: var(--surface); }
+  .week:not(.single) .day-full { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .week:not(.single) .day-short { display: inline; }
 }
 
 /* ---------- Impresión: solo las grillas ---------- */

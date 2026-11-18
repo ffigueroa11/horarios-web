@@ -313,11 +313,11 @@ Revisión de todas las pantallas del 18 de noviembre de 2026, en escritorio y te
 | D4 | Cinco botones de exportación sueltos en Ver y ajustar | "Imprimir" y un menú "Exportar" (imprimir todos, Excel, CSV, .fet) | S | Corregido |
 | D5 | Etiquetas de unos 11 px | 13 px | S | Corregido. El cero con raya es propio de Atkinson Hyperlegible, elegida por legibilidad: se mantiene |
 | D6 | Botones secundarios que parecían texto y botones de ícono de 16 px con colores distintos | Secundarios con borde suave; íconos de 32 px, y quitar o eliminar se marcan en rojo al pasar el mouse en todas las pantallas | S | Corregido |
-| D7 | El menú no dice qué pasos están completos | ✓ completo, ! con problemas o pendiente | S–M | Pendiente |
-| D8 | No hay "siguiente paso" al final de cada pantalla | Botón "Siguiente: …" | S | Pendiente |
-| D9 | Tablas con todos los campos enmarcados, y en el teléfono se cortan hacia el lado | Borde solo al pasar el mouse o editar; en el teléfono, filas apiladas | M | Pendiente |
-| D10 | "2+2+2" es un formato que hay que aprender | El campo dice cómo lo entendió ("3 bloques de 2 h") y marca lo que no entiende | S | Pendiente |
-| D11 | Sin buscador de profesores ni leyenda en las grillas de disponibilidad | Buscador y leyenda | S | Pendiente |
+| D7 | El menú no dice qué pasos están completos | El número del paso pasa a ✓ cuando el paso tiene lo necesario y a rojo si tiene errores; Electivos y Preferencias son opcionales | S–M | Corregido |
+| D8 | No hay "siguiente paso" al final de cada pantalla | Botón "Siguiente: …" al final de cada paso (en Generar lo ofrece el resultado) | S | Corregido |
+| D9 | Tablas con todos los campos enmarcados, y en el teléfono se cortan hacia el lado | Borde solo al pasar el mouse o editar; en el teléfono, filas apiladas y días abreviados en las grillas | M | Corregido |
+| D10 | "2+2+2" es un formato que hay que aprender | Al editar, el campo dice cómo lo entendió ("7 h: 3 bloques de 2 h y 1 de 1 h"), y en rojo lo que no entiende o no cabe entre recreos | S | Corregido |
+| D11 | Sin buscador de profesores ni leyenda en las grillas de disponibilidad | Buscador (con más de 6 profesores, sin distinguir tildes) y leyenda bajo la grilla | S | Corregido |
 | D12 | En Inicio, cuatro botones por horario | Tarjeta completa clicable, menú ⋯ y aviso si está desactualizado | S | Pendiente |
 | D13 | "Nuevo horario" no guía | Lista de primeros pasos | S–M | Pendiente |
 | D14 | Preferencias con anchos y textos de ejemplo confusos ("Sin límite" parece un valor) | Agrupar por a quién afecta, "Sin límite" como opción explícita | M | Pendiente |

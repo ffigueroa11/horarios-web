@@ -18,6 +18,9 @@ Conviene tener a mano:
 
 Para conocer la aplicación sin ingresar nada, elige **Probar con un liceo de ejemplo**.
 
+En el menú, cada paso que ya tiene lo necesario se marca con ✓, y en rojo si tiene algo por corregir. Al final de cada
+pantalla, **Siguiente** lleva al paso que sigue.
+
 Si te equivocas, **↶ Deshacer** (en el menú, o Ctrl+Z fuera de un campo de texto) revierte el último cambio: eliminar,
 editar, mover o fijar un bloque. **↷ Rehacer** (Ctrl+Y) lo vuelve a aplicar. Generar un horario no se deshace. Si
 eliminas un horario completo, puedes recuperarlo con **Deshacer** en la pantalla de inicio.

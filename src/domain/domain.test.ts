@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyProject, exampleProject } from './defaults';
 import { exportFet } from './fetExport';
 import { describeActivity, fetMessages, parseActivitiesXml, parseResult } from './fetResult';
-import { courseLoad, longestRun, openSlots, parseBlocks, teacherLoad, validate } from './validate';
+import { courseLoad, describeBlocks, longestRun, openSlots, parseBlocks, teacherLoad, validate } from './validate';
 import { units } from './units';
 import { checkMove, continueWith } from './manual';
 import { activityKey, migrateProject, newId, slotKey } from './types';
@@ -321,5 +321,14 @@ describe('motivos dentro de una frase', () => {
     expect(continueWith('Los alumnos ya tienen Física a esa hora.')).toBe('los alumnos ya tienen Física a esa hora.');
     expect(continueWith('Javier Contreras ya tiene Física a esa hora.')).toBe('Javier Contreras ya tiene Física a esa hora.');
     expect(continueWith('Educación Física dura 2 horas y no cabe.')).toBe('Educación Física dura 2 horas y no cabe.');
+  });
+});
+
+describe('cómo se describen los bloques', () => {
+  it('agrupa por duración', () => {
+    expect(describeBlocks([2, 2, 2])).toBe('6 h: 3 bloques de 2 h');
+    expect(describeBlocks([2, 2, 2, 1])).toBe('7 h: 3 bloques de 2 h y 1 de 1 h');
+    expect(describeBlocks([1])).toBe('1 h: 1 bloque de 1 h');
+    expect(describeBlocks([3, 2, 1])).toBe('6 h: 1 bloque de 3 h, 1 de 2 h y 1 de 1 h');
   });
 });

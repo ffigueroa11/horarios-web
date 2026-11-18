@@ -71,11 +71,12 @@ export function WeekGrid({ school, cell, dayHeader, days }: {
   const shown = days ?? school.days.map((_, i) => i);
   return (
     <div className="table-wrap">
-      <table className="week">
+      <table className={`week${shown.length === 1 ? ' single' : ''}`}>
         <thead>
           <tr>
             <th className="time" />
-            {shown.map((i) => <th key={i}>{dayHeader ? dayHeader(i) : school.days[i]}</th>)}
+            {/* En pantallas angostas, el día abreviado: los nombres completos se montaban. */}
+            {shown.map((i) => <th key={i}>{dayHeader ? dayHeader(i) : <><span className="day-full">{school.days[i]}</span><span className="day-short" aria-hidden="true">{school.days[i].slice(0, 3)}</span></>}</th>)}
           </tr>
         </thead>
         <tbody>
