@@ -17,6 +17,7 @@ import { ImportReportCard } from './ui/ImportReportCard';
 import { AppFooter } from './ui/AppFooter';
 import { downloadBackup } from './ui/backup';
 import { SyncStatus } from './ui/SyncStatus';
+import { UndoControls } from './ui/UndoControls';
 import { SidebarAccount } from './ui/AccountCard';
 
 export type Route = Step | 'generar' | 'horario' | 'proyectos' | 'acerca';
@@ -103,6 +104,7 @@ export default function App() {
         <div className="project-switch">
           <span className="small muted">Horario {project.year}</span>
           <span className="name">{project.name}</span>
+          <UndoControls />
           <SyncStatus />
         </div>
         <nav aria-label="Pasos">

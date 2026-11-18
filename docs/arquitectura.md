@@ -222,6 +222,11 @@ Tres decisiones de diseño:
 - **Datos dañados:** `App` captura los errores de `validate` y los muestra como un problema por corregir, porque esa
   revisión corre antes de elegir la pantalla y el horario actual queda guardado. "Ir al inicio" de la pantalla de error
   también cierra el horario actual.
+- **Deshacer y rehacer** (`undo`, `redo`): cada `update()` guarda el proyecto anterior y el nuevo (los mismos objetos,
+  sin copiar), hasta 50 pasos por horario y solo mientras la pestaña está abierta. Deshacer devuelve el objeto anterior
+  tal cual, con su `updatedAt`, así que respeta `touch`. Un paso solo se aplica si el horario sigue siendo el que dejó:
+  lo que cambia fuera de `update()` (generar, la nube, otra pestaña) no se deshace y deja sin efecto el historial.
+  Eliminar un horario se recupera aparte (`lastRemoved`), desde el inicio.
 - **Cambiar la forma de los datos:** agrega el valor por defecto en `migrateProject`. Si el cambio requiere transformar
   datos, sube `version` en `projects.ts` y, si corresponde, `BACKUP_VERSION`.
 
@@ -308,6 +313,21 @@ manifiesto) se guarda si se puede. Las búsquedas en el caché usan `ignoreVary`
 sin el encabezado `Origin` que llevan los módulos de la página.
 
 La nueva versión espera a que el usuario acepte "Actualizar ahora".
+
+## Seguridad del sitio
+
+[`vercel.json`](../vercel.json) define dos políticas de seguridad de contenido (CSP), en rutas que no se cruzan:
+
+| Ruta | Permite | Por qué |
+|---|---|---|
+| Todo menos `/engine/` | Scripts propios y `apis.google.com`; conexiones a `*.googleapis.com` y `*.firebaseapp.com`; marcos de `*.firebaseapp.com` y `accounts.google.com`; estilos en línea | Firebase (Firestore e inicio de sesión con Google) y los `style` de React |
+| `/engine/` | `'wasm-unsafe-eval'` y `'unsafe-eval'` | El Worker toma la política de su propio archivo. El motor compila WebAssembly, y el código de Emscripten crea funciones con `new Function` |
+
+`'unsafe-eval'` queda solo en el Worker, que no tiene acceso a la página. `vite preview` envía las mismas cabeceras
+([`vite.config.ts`](../vite.config.ts)), así que todas las pruebas de navegador corren con la política, y una de ellas
+falla si algo se bloquea al generar o exportar. **Al agregar un dominio externo, agrégalo a la política.** El inicio de
+sesión con Firebase no tiene prueba automática: al cambiar la política, pruébalo a mano en un despliegue.
+`public/_headers` (Cloudflare Pages, Netlify) no tiene la política.
 
 ## Pruebas
 
