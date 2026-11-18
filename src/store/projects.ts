@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import { del, get, set } from 'idb-keyval';
-import type { Id, Project } from '../domain/types';
+import type { Id, Project, Timetable } from '../domain/types';
 import { migrateProject, newId } from '../domain/types';
 import { emptyProject, exampleProject } from '../domain/defaults';
 import { useHealth } from './health';
@@ -73,6 +73,8 @@ interface State {
   importProjects: (list: Project[]) => Id | null;
   select: (id: Id | null) => void;
   markBackup: (ids: Id[]) => void;
+  /** Guarda un horario recién generado en el proyecto `id`, aunque el usuario haya abierto otro mientras se calculaba. */
+  saveTimetable: (id: Id, timetable: Timetable) => void;
   /** Modifica el proyecto actual sobre una copia; cualquier cambio de datos marca el horario como desactualizado. */
   update: (recipe: (p: Project) => void, opts?: { touch?: boolean }) => void;
 }
@@ -113,6 +115,20 @@ export const useProjects = create<State>()(
         const now = new Date().toISOString();
         setState((s) => ({ projects: { ...s.projects, ...Object.fromEntries(ids.filter((id) => s.projects[id]).map((id) => [id, { ...s.projects[id], backupAt: now }])) } }));
       },
+      saveTimetable: (id, timetable) => setState((s) => {
+        const target = s.projects[id];
+        if (!target) return s;
+        // Los fijados que había al empezar son obligatorios para el motor, así que el horario los respeta. Si durante el
+        // cálculo se movió o fijó un bloque en otro lugar (touch: false), el horario nuevo no lo refleja: queda marcado
+        // como desactualizado para que se vuelva a generar.
+        const at = new Map(timetable.placements.map((pl) => [pl.key, pl]));
+        const contradicted = Object.entries(target.locks).some(([k, lock]) => {
+          const pl = at.get(k);
+          return !!pl && (pl.day !== lock.day || pl.periodId !== lock.periodId);
+        });
+        const updatedAt = contradicted ? new Date(Math.max(Date.now(), Date.parse(timetable.generatedAt) + 1)).toISOString() : target.updatedAt;
+        return { projects: { ...s.projects, [id]: { ...target, timetable, updatedAt } } };
+      }),
       update: (recipe, opts) => {
         const { currentId, projects } = getState();
         if (!currentId || !projects[currentId]) return;

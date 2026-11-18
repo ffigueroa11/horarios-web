@@ -94,6 +94,8 @@ export function checkProject(x: unknown): Project {
     if (!isObj(lock) || !Number.isInteger(lock.day) || !isStr(lock.periodId)) throw new BackupError('un bloque fijado no es válido');
   if (x.timetable != null && (!isObj(x.timetable) || !Array.isArray(x.timetable.placements) || !x.timetable.placements.every(isPlacement))) x.timetable = null;
   x.timetable ??= null;
+  // La semilla es prescindible: sin ella el horario sigue siendo válido.
+  if (isObj(x.timetable) && x.timetable.seed !== undefined && !Number.isSafeInteger(x.timetable.seed)) delete x.timetable.seed;
   // El informe de una importación anterior es prescindible.
   if (x.importReport != null && !(isObj(x.importReport) && Array.isArray(x.importReport.kept) && Array.isArray(x.importReport.lost))) delete x.importReport;
   if (!isStr(x.name)) x.name = 'Horario importado';

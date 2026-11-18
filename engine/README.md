@@ -19,7 +19,17 @@ compilado a WebAssembly. Corre en un Web Worker dentro del navegador.
 bash engine/build-engine.sh
 ```
 
-Versiones: Qt 6.11.3 (wasm_singlethread) y Emscripten 4.0.7. Toma ~15 minutos y ~2,5 GB de RAM.
+Versiones: Qt 6.11.3 (wasm_singlethread, con aqtinstall 3.3.0) y Emscripten 4.0.7 (emsdk fijado en el commit de su
+etiqueta). Toma ~15 minutos y ~2,5 GB de RAM.
+
+**Origen.** El script comprueba el SHA-256 de `fet-7.12.0.tar.xz` antes de usarlo. Ese valor se registró después de
+verificar la firma `.asc` publicada junto al archivo, hecha con la clave de Liviu Lalescu
+(`521C6E3795F7072D5C64F5411AEE2686DC2E2334`). Para cambiar de versión de FET, verifica la firma del nuevo archivo
+(`gpg --verify fet-X.tar.xz.asc fet-X.tar.xz`) antes de anotar su SHA-256 en el script.
+
+**Huellas del motor.** Al terminar, el script escribe [`engine.sha256`](engine.sha256) con el SHA-256 de `fet-cl.js`,
+`fet-cl.wasm` y `fet_es.qm`. La prueba [`src/engine/engine.test.ts`](../src/engine/engine.test.ts) falla si los archivos
+de `public/engine/` no coinciden: un motor reemplazado a mano no pasa CI sin volver a registrarlo.
 
 ## Memoria en el navegador
 

@@ -17,11 +17,9 @@ const PRESETS: { label: string; name: string; groups: string[]; parallel: boolea
   { label: 'Electivos', name: 'Electivos', groups: ['Electivo A', 'Electivo B', 'Electivo C'], parallel: true },
 ];
 
-/** Quita grupos (y su carga) que ya no existen y limpia los bloques fijados de esa carga. */
+/** Quita la carga de grupos que ya no existen. Sus bloques fijados los limpia migrateProject. */
 function dropAssignments(d: Project, pred: (a: Project['assignments'][number]) => boolean) {
-  const gone = new Set(d.assignments.filter(pred).map((a) => a.id));
-  d.assignments = d.assignments.filter((a) => !gone.has(a.id));
-  for (const k of Object.keys(d.locks)) if (gone.has(k.split('#')[0])) delete d.locks[k];
+  d.assignments = d.assignments.filter((a) => !pred(a));
 }
 
 function DivisionsEditor({ course }: { course: Course }) {

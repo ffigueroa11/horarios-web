@@ -29,9 +29,11 @@ Los esfuerzos son estimaciones: **S** (menos de un día), **M** (varios días), 
 La base es sólida: el dominio está separado de la interfaz, el motor se prueba de punta a punta y la app ya se protege
 bien contra la pérdida de datos. Con la fase 0, F1 y F2 aplicados, lo más valioso que queda es:
 
-1. **Completar el uso sin conexión** (E6).
-2. **Agregar deshacer** (F5). Eliminar ya pide confirmar, pero nada se puede revertir después.
-3. **Convertir los archivos reales en una referencia anonimizada** (T4). Por ahora solo se midieron localmente.
+1. **Agregar deshacer** (F5). Eliminar ya pide confirmar, pero nada se puede revertir después.
+2. **Convertir los archivos reales en una referencia anonimizada** (T4). Por ahora solo se midieron localmente.
+
+E6, la semilla, T7, T8 y parte de E12 se aplicaron con la fase A de la
+[revisión de arquitectura](revision-arquitectura.md#plan-de-acción).
 
 ## Errores confirmados
 
@@ -42,13 +44,13 @@ bien contra la pérdida de datos. Con la fase 0, F1 y F2 aplicados, lo más vali
 | E3 | El máximo diario de un curso rechaza movimientos válidos si hay electivos o grupos | Medio | Medido | S | Corregido |
 | E4 | Un horario restaurado o duplicado aparece como desactualizado sin serlo | Medio | Medido | S | Corregido |
 | E5 | Un respaldo con datos mal formados puede dejar la app atascada en la pantalla de error | Medio | Medido | S–M | Corregido |
-| E6 | Importar y exportar Excel no están disponibles sin conexión tras instalar la app | Medio | Lectura y build | S–M | Pendiente |
+| E6 | Importar y exportar Excel no están disponibles sin conexión tras instalar la app | Medio | Lectura y build | S–M | Corregido |
 | E7 | Textos que prometen más de lo que hacen las reglas | Medio | Medido | S | Corregido |
 | E8 | Sin el enlace al código fuente en builds fuera de GitHub Actions (AGPL) | Medio | Medido | S | Corregido |
 | E9 | Un carácter de control en un nombre produce un error incomprensible | Bajo | Medido | S | Corregido |
 | E10 | La app no arranca en HTTP fuera de `localhost` | Bajo | Lectura | S | Corregido |
 | E11 | Eliminar un curso o una asignatura borra su carga sin confirmar | Medio | Lectura | S | Corregido |
-| E12 | Inconsistencias menores (ver detalle) | Bajo | Lectura | S | Pendiente |
+| E12 | Inconsistencias menores (ver detalle) | Bajo | Lectura | S | Parcial |
 
 ### E1. Diagnóstico perdido al agotarse el tiempo
 
@@ -127,6 +129,11 @@ generación.
 **Solución:** generar la lista de archivos durante el build y hacer que falle la instalación si falta alguna parte del
 motor.
 
+**Corregido:** `vite.config.ts` escribe `precache.json` con todo lo que produce el build, y el service worker lo guarda
+junto con el motor; si falla una descarga, la instalación falla y sigue la versión anterior. Al probarlo apareció otro
+problema: lo guardado al instalar no coincidía con los módulos de la página cuando el servidor responde con
+`Vary: Origin`, así que ahora se busca con `ignoreVary`. La prueba sin conexión exporta un Excel y lo vuelve a leer.
+
 ### E7. Textos que no coinciden con el comportamiento
 
 La medición consistió en cambiar el peso de cada restricción a 95 % y entregarla al motor:
@@ -178,6 +185,10 @@ eliminan al instante la carga asociada. Eliminar una franja o un profesor sí pi
 
 ### E12. Inconsistencias menores
 
+Corregidas las tres primeras: `migrateProject` limpia los fijados y tramos huérfanos, cambiar los bloques de una franja
+libera sus fijados, y un horario generado queda desactualizado si contradice un bloque fijado durante el cálculo.
+Quedan las tres últimas.
+
 - Cambiar los bloques de una franja [no libera sus fijados](../src/pages/ElectivosPage.tsx#L54), aunque
   [la carga sí lo hace](../src/pages/CargaPage.tsx#L133-L136). Los fijados huérfanos inflan el contador de
   [`GenerarPage`](../src/pages/GenerarPage.tsx#L35).
@@ -199,8 +210,8 @@ eliminan al instante la carga asociada. Eliminar una franja o un profesor sí pi
 | T4 | [`large.test.ts`](../src/domain/large.test.ts) no mide un caso difícil: 24 cursos y 84 profesores se resuelven en 0,2–0,6 s | Agregar un colegio real anonimizado como referencia (ver [mediciones](#mediciones-con-archivos-reales)) | M | Pendiente |
 | T5 | La publicación no esperaba a CI | Vercel retiene cada publicación de `main` hasta que pasan los cinco trabajos de CI (Deployment Checks). Comprobado con un cambio que CI aprobó; no se ha probado con un CI que falle | S | Corregido |
 | T6 | Sin política de seguridad de contenido (CSP); [`_headers`](../public/_headers) solo define caché | Agregar una CSP con `wasm-unsafe-eval`, en `vercel.json`, permitiendo los dominios de Firebase, y probarla con el motor | S–M | Pendiente |
-| T7 | La compilación del motor no verifica el origen: [`build-engine.sh`](../engine/build-engine.sh) no comprueba el `.tar.xz`, y `emsdk` y `aqtinstall` no están fijados | Fijar versiones y registrar SHA-256 de la fuente y del `.wasm` | S | Pendiente |
-| T8 | Las acciones de GitHub usan etiquetas, no commits fijos | Fijarlas por SHA; Dependabot ya está configurado | S | Pendiente |
+| T7 | La compilación del motor no verificaba el origen: [`build-engine.sh`](../engine/build-engine.sh) no comprobaba el `.tar.xz`, y `emsdk` y `aqtinstall` no estaban fijados | La fuente se comprueba por SHA-256 (firma del autor verificada al registrarla), `emsdk` y `aqtinstall` están fijados, y [`engine.sha256`](../engine/engine.sha256) registra el motor publicado, que una prueba revisa. El script no se volvió a ejecutar completo | S | Corregido |
+| T8 | Las acciones de GitHub usaban etiquetas, no commits fijos | Fijadas por SHA, con la versión en un comentario para Dependabot | S | Corregido |
 | T9 | No se ha hecho una auditoría de accesibilidad | Agregar `@axe-core/playwright` a e2e y probar a mano el ajuste con teclado | S | Pendiente |
 
 ### Mediciones con archivos reales
@@ -246,8 +257,7 @@ Ordenadas por valor frente a esfuerzo. El valor para los colegios es una hipóte
 | F3 | **Asistente "¿qué regla lo impide?"** | Responde la pregunta real cuando no hay horario | Volver a generar quitando una regla a la vez, con tiempo acotado y en otro Worker | M |
 | F4 | **Elegir entre varios horarios** | FET se detiene en el primero válido, no en el mejor | Generar varios con distintas semillas y comparar ventanas y preferencias. Depende de F2 | M |
 
-Conviene además guardar la semilla en `Timetable` (S): el motor es reproducible con ella, pero hoy
-[se descarta](../src/store/generation.ts#L36).
+La semilla ya se guarda en `Timetable` (`seed`): con los mismos datos y la misma semilla, el motor repite el horario.
 
 ### Seguridad de los datos
 
@@ -297,7 +307,7 @@ Se evaluó y por ahora no se justifica:
 | Fase | Contenido | Estimación |
 |---|---|---|
 | **0. Correcciones** (aplicada) | E1 a E5, E7 a E11, T1, T2, T5 | 3–5 días |
-| **1. Mejor diagnóstico** (en curso: F1 y F2 aplicadas) | F1, F2, semilla, E6, T4 | 1–2 semanas |
+| **1. Mejor diagnóstico** (en curso: F1, F2, semilla y E6 aplicadas) | F1, F2, semilla, E6, T4 | 1–2 semanas |
 | **2. Confianza** | F5, F6, T3, T6, T7, T9 | 1–2 semanas |
 | **3. Uso diario** | F3, F13, F14 | 2–3 semanas |
 | **4. Modelo más rico** | F7 a F12, según lo que pidan los colegios | Semanas por función |

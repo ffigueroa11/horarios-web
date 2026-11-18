@@ -10,8 +10,12 @@
 set -euo pipefail
 
 FET_VERSION=7.12.0
+# SHA-256 del .tar.xz publicado, firmado por Liviu Lalescu (clave 521C6E3795F7072D5C64F5411AEE2686DC2E2334).
+FET_SHA256=ff3d1e0be7708a648f6c4a5078f49d0b0926283c065791105229753c7b697cd4
 QT_VERSION=6.11.3
+AQT_VERSION=3.3.0            # aqtinstall, que descarga Qt
 EMSDK_VERSION=4.0.7          # versión de Emscripten que exige Qt 6.11
+EMSDK_COMMIT=c69d433d8509c5c64564c2f0d054bf102a5cf67e   # etiqueta 4.0.7 del repositorio emsdk
 QT_BASE="${QT_BASE:-}"       # espejo opcional de Qt para aqt (ej. https://qt.mirror.constant.com/)
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="${WORK:-$HOME/fet-wasm-build}"
@@ -19,7 +23,11 @@ mkdir -p "$WORK" && cd "$WORK"
 
 # 1. Código fuente de FET + cambios de Horarios Web
 if [ ! -d "fet-$FET_VERSION" ]; then
-  [ -f "fet-$FET_VERSION.tar.xz" ] || curl -fLO "https://lalescu.ro/liviu/fet/download/fet-$FET_VERSION.tar.xz"
+  # La versión vigente está en download/; al salir una nueva, la anterior pasa a download/old/.
+  [ -f "fet-$FET_VERSION.tar.xz" ] || curl -fLO "https://lalescu.ro/liviu/fet/download/fet-$FET_VERSION.tar.xz" \
+    || curl -fLO "https://lalescu.ro/liviu/fet/download/old/fet-$FET_VERSION.tar.xz"
+  echo "$FET_SHA256  fet-$FET_VERSION.tar.xz" | sha256sum -c - \
+    || { echo "La fuente de FET no coincide con la esperada: bórrala y revisa de dónde viene." >&2; exit 1; }
   tar -xJf "fet-$FET_VERSION.tar.xz"
   (cd "fet-$FET_VERSION" && patch -p1 < "$HERE/fet-web-progress.patch")
   python3 "$HERE/split-randomswap.py" "fet-$FET_VERSION/src/engine/generate.cpp"
@@ -31,7 +39,7 @@ fi
 # 2. Qt: versión de escritorio (herramientas del anfitrión) y versión WebAssembly
 AQT_BASE=(); [ -n "$QT_BASE" ] && AQT_BASE=(--base "$QT_BASE")
 if [ ! -d "Qt/$QT_VERSION/wasm_singlethread" ]; then
-  pip install --user --quiet aqtinstall 2>/dev/null || pip install --user --break-system-packages --quiet aqtinstall
+  pip install --user --quiet "aqtinstall==$AQT_VERSION" 2>/dev/null || pip install --user --break-system-packages --quiet "aqtinstall==$AQT_VERSION"
   python3 -m aqt install-qt linux desktop "$QT_VERSION" linux_gcc_64 -O Qt "${AQT_BASE[@]}"
   python3 -m aqt install-qt all_os wasm "$QT_VERSION" wasm_singlethread -O Qt "${AQT_BASE[@]}"
   chmod +x "Qt/$QT_VERSION/wasm_singlethread/bin/"*
@@ -39,6 +47,8 @@ fi
 
 # 3. Emscripten
 if [ ! -d emsdk ]; then git clone https://github.com/emscripten-core/emsdk.git; fi
+git -C emsdk fetch --quiet --tags origin
+git -C emsdk checkout --quiet "$EMSDK_COMMIT"
 ./emsdk/emsdk install "$EMSDK_VERSION"
 ./emsdk/emsdk activate "$EMSDK_VERSION"
 # shellcheck disable=SC1091
@@ -65,4 +75,6 @@ cp build-wasm/fet-cl.opt.wasm "$HERE/../public/engine/fet-cl.wasm"
 
 # 7. Traducción oficial al español de los mensajes del motor (la app la carga y usa --language=es)
 "$WORK/Qt/$QT_VERSION/gcc_64/bin/lrelease" translations/fet_es.ts -qm "$HERE/../public/engine/fet_es.qm"
+# 8. Huellas del motor publicado: una prueba (src/engine/engine.test.ts) avisa si cambia sin volver a registrarlas.
+(cd "$HERE/.." && sha256sum public/engine/fet-cl.js public/engine/fet-cl.wasm public/engine/fet_es.qm > engine/engine.sha256)
 echo "Listo: motor copiado a public/engine/ ($(du -h "$HERE/../public/engine/fet-cl.wasm" | cut -f1))"

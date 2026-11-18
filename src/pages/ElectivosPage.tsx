@@ -5,9 +5,8 @@ import { hours, longestRun } from '../domain/validate';
 import { ConfirmButton, PageHead, TextInput } from '../ui/common';
 import { BlocksInput } from '../ui/BlocksInput';
 
-/** Quita una franja y los bloques fijados de sus opciones. */
-function removeElective(d: Project, id: string) {
-  d.electives = d.electives.filter((e) => e.id !== id);
+/** Libera los bloques fijados de las opciones de una franja (cambió su duración). */
+function releaseLocks(d: Project, id: string) {
   for (const k of Object.keys(d.locks)) if (k.startsWith(`${id}:`)) delete d.locks[k];
 }
 
@@ -51,11 +50,14 @@ export function ElectivosPage() {
               <TextInput className="input strong" ariaLabel="Nombre de la franja" value={e.name}
                 onChange={(v) => setE(e.id, (x) => { x.name = v.trim() || x.name; })} />
               <label className="row small" style={{ gap: 6 }}>
-                Bloques <BlocksInput blocks={e.blocks} maxRun={maxRun} onChange={(b) => setE(e.id, (x) => { x.blocks = b; })} />
+                Bloques <BlocksInput blocks={e.blocks} maxRun={maxRun} onChange={(b) => update((d) => {
+                  d.electives.find((x) => x.id === e.id)!.blocks = b;
+                  releaseLocks(d, e.id);
+                })} />
               </label>
               <span className="badge">{hours(e.blocks)} h semanales</span>
               <span className="spacer" />
-              <ConfirmButton label="Eliminar" confirmLabel="Eliminar franja" onConfirm={() => update((d) => removeElective(d, e.id))} />
+              <ConfirmButton label="Eliminar" confirmLabel="Eliminar franja" onConfirm={() => update((d) => { d.electives = d.electives.filter((x) => x.id !== e.id); })} />
             </div>
 
             <h3>Cursos que participan</h3>
@@ -98,7 +100,6 @@ export function ElectivosPage() {
                           <button type="button" className="icon-btn" aria-label="Quitar opción" onClick={() => update((d) => {
                             const x = d.electives.find((y) => y.id === e.id)!;
                             x.options = x.options.filter((y) => y.id !== o.id);
-                            for (const k of Object.keys(d.locks)) if (k.startsWith(`${e.id}:${o.id}#`)) delete d.locks[k];
                           })}>✕</button>
                         </td>
                       </tr>

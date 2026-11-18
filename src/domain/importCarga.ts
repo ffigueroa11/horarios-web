@@ -140,8 +140,7 @@ export function applyImport(d: Project, plan: ImportPlan, replace: boolean) {
   if (replace) {
     const ids = new Set(plan.rows.map((r) => findBy(d.courses, r.course)!.id));
     const gone = new Set(d.assignments.filter((a) => ids.has(a.courseId)).map((a) => a.id));
-    d.assignments = d.assignments.filter((a) => !gone.has(a.id));
-    for (const k of Object.keys(d.locks)) if (gone.has(k.split('#')[0])) delete d.locks[k];
+    d.assignments = d.assignments.filter((a) => !gone.has(a.id)); // sus fijados los limpia migrateProject
   }
   for (const r of plan.rows) {
     const c = findBy(d.courses, r.course)!;

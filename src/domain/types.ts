@@ -146,6 +146,8 @@ export interface Timetable {
   generatedAt: string;
   seconds: number;
   placements: Placement[];
+  /** Semilla del motor: con los mismos datos y la misma semilla, FET produce el mismo horario. Falta en los anteriores. */
+  seed?: number;
 }
 
 /** Qué se traspasó y qué no al importar un archivo de otra aplicación. */
@@ -214,7 +216,38 @@ export function migrateProject(p: Project): Project {
     for (const o of e.options) if (o.teacherId && !teachers.has(o.teacherId)) o.teacherId = null;
   }
   for (const a of p.assignments) if (a.teacherId && !teachers.has(a.teacherId)) a.teacherId = null;
+  pruneOrphans(p);
   return p;
+}
+
+/**
+ * Quita lo que apunta a algo que ya no existe: tramos de días o bloques eliminados (disponibilidad, tramos cerrados,
+ * consejo) y fijados de bloques que ya no existen o de lugares fuera de la jornada. Así ninguna pantalla tiene que
+ * limpiarlos por su cuenta al eliminar. Lo que sigue existiendo pero cambió de sentido (la duración de un bloque, el
+ * grupo de una fila) lo libera la pantalla que hace el cambio.
+ */
+function pruneOrphans(p: Project) {
+  const periods = new Set(p.school.periods.map((x) => x.id));
+  const validSlot = (k: string) => {
+    const i = k.indexOf(':');
+    const day = Number(k.slice(0, i));
+    return Number.isInteger(day) && day >= 0 && day < p.school.days.length && periods.has(k.slice(i + 1));
+  };
+  const keepSlots = (list: string[]) => (list.every(validSlot) ? list : list.filter(validSlot));
+  p.school.closed = keepSlots(p.school.closed);
+  p.rules.teacherMeetingSlots = keepSlots(p.rules.teacherMeetingSlots);
+  for (const t of p.teachers) t.unavailable = keepSlots(t.unavailable);
+
+  p.locks ??= {};
+  // Cuántos bloques tiene cada unidad (ver units.ts): una fila de carga, o una opción de una franja con cursos.
+  const blocks = new Map<string, number>(p.assignments.map((a) => [a.id, a.blocks.length]));
+  for (const e of p.electives)
+    if (e.courseIds.length > 0) for (const o of e.options) blocks.set(`${e.id}:${o.id}`, e.blocks.length);
+  for (const [key, lock] of Object.entries(p.locks)) {
+    const [unitId, idx] = key.split('#');
+    // `!lock`: un fijado dañado en el almacenamiento (los respaldos ya pasan por checkProject).
+    if (!lock || !(Number(idx) < (blocks.get(unitId) ?? 0)) || !validSlot(slotKey(lock.day, lock.periodId))) delete p.locks[key];
+  }
 }
 
 export const slotKey = (day: number, periodId: Id) => `${day}:${periodId}`;

@@ -181,7 +181,8 @@ test('desde el menú se vuelve al inicio con "Inicio" o con el logo', async ({ p
   await openExample(page);
   for (const name of ['Inicio', 'Horarios Web']) {
     await page.getByRole('link', { name, exact: true }).click();
-    await expect(page.getByRole('heading', { level: 2, name: 'Tus horarios' })).toBeVisible();
+    // exact: con cuenta configurada también aparece "Guarda tus horarios en una cuenta".
+    await expect(page.getByRole('heading', { level: 2, name: 'Tus horarios', exact: true })).toBeVisible();
     await expect(page.locator('aside')).toHaveCount(0);
     await page.getByRole('button', { name: 'Abrir' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
@@ -277,15 +278,29 @@ test('funciona sin conexión después de la primera visita', async ({ page, cont
   // Espera a que el service worker controle la página y termine de guardar el motor.
   await page.reload();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  // Todo lo que lista precache.json (incluidos los módulos de Excel, que index.html no enlaza) y el motor.
   await expect.poll(() => page.evaluate(async () => {
-    const keys = await caches.keys();
-    for (const k of keys) if (await (await caches.open(k)).match('engine/fet-cl.wasm')) return true;
-    return false;
-  }), { timeout: 30_000 }).toBe(true);
+    const list: string[] = await (await fetch('precache.json')).json();
+    const missing = [];
+    for (const u of [...list, 'engine/fet-cl.wasm', 'engine/fet-cl.js', 'engine/fet-worker.js', 'engine/fet_es.qm'])
+      if (!(await caches.match(u, { ignoreVary: true }))) missing.push(u); // igual que public/sw.js
+    return list.some((u) => u.endsWith('.js') && !u.includes('index-')) ? missing : ['precache.json sin módulos bajo demanda'];
+  }), { timeout: 30_000 }).toEqual([]);
 
   await context.setOffline(true);
   await page.reload();
   await page.getByRole('button', { name: 'Probar con un liceo de ejemplo' }).click();
   await generate(page);
+
+  // Excel sin conexión: exportar el horario y volver a leer ese archivo en el importador de carga.
+  await page.locator('a[href="#horario"]').click();
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Excel', exact: true }).click()]);
+  const xlsx = readFileSync((await download.path())!);
+  await page.locator('a[href="#carga"]').click();
+  await page.getByRole('button', { name: 'Importar desde Excel' }).first().click();
+  await page.locator('input[type=file]').setInputFiles({ name: 'horario.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: xlsx });
+  // Si el módulo no cargara, aparecería "No se pudo leer el archivo"; leído, muestra el resumen con el nombre.
+  await expect(page.locator('.badge', { hasText: 'horario.xlsx' })).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
   await context.setOffline(false);
 });
