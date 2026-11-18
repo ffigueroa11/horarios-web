@@ -135,6 +135,8 @@ Mira el horario por curso, profesor o sala.
   junto al cursor.
 - **Fijar 📌:** el bloque se mantiene en su lugar al generar de nuevo. Todo bloque que mueves o intercambias queda fijado.
 - **Soltar la selección:** haz clic de nuevo en el bloque, usa **Cancelar** o presiona Esc.
+- **En el teléfono:** se ve un día a la vez (elige el día arriba de la grilla). Toca un bloque para seleccionarlo y luego
+  un lugar: el primer toque dice qué pasaría y el segundo lo hace. Los pasos del menú se abren con el botón de arriba.
 
 Los movimientos respetan los choques y las reglas obligatorias, pero no impiden incumplir las preferibles: las que no se
 cumplen aparecen en un aviso sobre el horario, que se actualiza al mover bloques. Las clases en paralelo se mueven juntas.
@@ -144,10 +146,12 @@ bloques fijados se mantienen y el resto se reorganiza.
 
 ### 10. Imprimir y exportar
 
+**Imprimir** está a la vista; las demás opciones, en el menú **Exportar**.
+
 | Opción | Resultado |
 |---|---|
 | **Imprimir** | El horario que estás viendo |
-| **Imprimir todos** | Todos los de la vista actual (cursos, profesores o salas) |
+| **Imprimir todos los cursos** (o profesores, o salas) | Todos los de la vista actual |
 | **Excel** | Un listado y una hoja por curso y por profesor |
 | **CSV** | El listado, para otras planillas |
 | **Archivo .fet** | Los datos para abrir en FET de escritorio |

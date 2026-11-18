@@ -1,4 +1,4 @@
-import { useState, type DragEvent, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type DragEvent, type MouseEvent, type ReactNode } from 'react';
 import { useDraft } from './useDraft';
 import type { Period, School } from '../domain/types';
 
@@ -61,18 +61,21 @@ export interface CellSpec {
 }
 
 /** Grilla semanal: días en columnas, tramos de la jornada en filas; recreos como franjas delgadas. */
-export function WeekGrid({ school, cell, dayHeader }: {
+export function WeekGrid({ school, cell, dayHeader, days }: {
   school: School;
   cell: (day: number, period: Period) => CellSpec;
   dayHeader?: (day: number) => ReactNode;
+  /** Qué días mostrar (índices). Por defecto, todos. En el teléfono se muestra uno a la vez. */
+  days?: number[];
 }) {
+  const shown = days ?? school.days.map((_, i) => i);
   return (
     <div className="table-wrap">
       <table className="week">
         <thead>
           <tr>
             <th className="time" />
-            {school.days.map((d, i) => <th key={i}>{dayHeader ? dayHeader(i) : d}</th>)}
+            {shown.map((i) => <th key={i}>{dayHeader ? dayHeader(i) : school.days[i]}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -80,12 +83,12 @@ export function WeekGrid({ school, cell, dayHeader }: {
             p.kind !== 'clase' ? (
               <tr key={p.id} className="break">
                 <th className="time small">{p.start}</th>
-                <td colSpan={school.days.length}>{p.label}</td>
+                <td colSpan={shown.length}>{p.label}</td>
               </tr>
             ) : (
               <tr key={p.id}>
                 <th className="time"><b>{p.label}</b>{p.start}–{p.end}</th>
-                {school.days.map((_, d) => {
+                {shown.map((d) => {
                   const c = cell(d, p);
                   if (c.skip) return null;
                   return (
@@ -105,6 +108,32 @@ export function WeekGrid({ school, cell, dayHeader }: {
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** Menú desplegable con acciones. Se cierra al elegir una opción, al hacer clic fuera o con Esc. */
+export function MenuButton({ label, items }: { label: string; items: { label: string; onClick: () => void; title?: string }[] }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (e: Event) => {
+      const d = ref.current;
+      if (!d?.open) return;
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !d.contains(e.target as Node)) d.open = false;
+    };
+    addEventListener('click', close);
+    addEventListener('keydown', close);
+    return () => { removeEventListener('click', close); removeEventListener('keydown', close); };
+  }, []);
+  return (
+    <details className="menu" ref={ref}>
+      <summary className="btn">{label} <span aria-hidden="true">▾</span></summary>
+      <div className="menu-list" role="menu">
+        {items.map((it) => (
+          <button key={it.label} type="button" role="menuitem" title={it.title}
+            onClick={() => { if (ref.current) ref.current.open = false; it.onClick(); }}>{it.label}</button>
+        ))}
+      </div>
+    </details>
   );
 }
 

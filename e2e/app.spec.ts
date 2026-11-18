@@ -17,8 +17,23 @@ async function openExample(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
 }
 
+/** Va a un paso del menú. En el teléfono, el menú está plegado: primero se despliega. */
+async function go(page: Page, step: string) {
+  const toggle = page.locator('.menu-toggle');
+  if (await toggle.isVisible()) await toggle.click();
+  await page.locator(`.side .steps a[href="#${step}"]`).click();
+}
+const goHome = (page: Page) => go(page, 'proyectos');
+
+/** Exporta desde el menú "Exportar" de Ver y ajustar. */
+async function exportFrom(page: Page, item: string) {
+  await page.locator('summary', { hasText: 'Exportar' }).click();
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('menuitem', { name: item, exact: true }).click()]);
+  return download;
+}
+
 async function generate(page: Page) {
-  await page.locator('a[href="#generar"]').click();
+  await go(page, 'generar');
   await page.getByRole('button', { name: /^Generar (horario|de nuevo)$/ }).last().click();
   // Por texto: puede haber otro aviso verde a la vez (por ejemplo, el de versión nueva del service worker).
   const ok = page.locator('.notice.ok', { hasText: 'Horario generado' });
@@ -46,10 +61,10 @@ test('flujo completo: ejemplo, generar, mover un bloque y recargar', async ({ pa
   const errors = watchErrors(page);
   await openExample(page);
   for (const step of ['cursos', 'asignaturas', 'profesores', 'carga', 'electivos', 'reglas']) {
-    await page.locator(`a[href="#${step}"]`).click();
+    await go(page, step);
     await expect(page.locator('main h1')).toBeVisible();
   }
-  await page.locator('a[href="#electivos"]').click();
+  await go(page, 'electivos');
   await expect(page.getByLabel('Nombre de la franja')).toHaveValue('Electivo artístico');
   await generate(page);
 
@@ -131,7 +146,7 @@ test('arrastrar y soltar: motivo en un lugar no válido y movimiento en uno vál
 test('eliminar un curso o una asignatura pide confirmar y dice cuánta carga se pierde', async ({ page }, info) => {
   test.skip(info.project.name === 'movil', 'igual que en escritorio');
   await openExample(page);
-  await page.locator('a[href="#cursos"]').click();
+  await go(page, 'cursos');
   await page.getByRole('button', { name: 'Eliminar 1° Medio A' }).click();
   await expect(page.getByLabel('Nombre del curso').first()).toHaveValue('1° Medio A');
   await page.getByRole('button', { name: 'Cancelar' }).click();
@@ -140,7 +155,7 @@ test('eliminar un curso o una asignatura pide confirmar y dice cuánta carga se 
   await page.getByRole('button', { name: /Sí, eliminar con \d+ clases de la carga/ }).click();
   await expect(page.getByLabel('Nombre del curso').first()).not.toHaveValue('1° Medio A');
 
-  await page.locator('a[href="#asignaturas"]').click();
+  await go(page, 'asignaturas');
   await expect(page.getByLabel('Sigla').first()).toBeVisible(); // count() no espera a que se dibuje la pantalla.
   const before = await page.getByLabel('Sigla').count();
   await page.getByRole('button', { name: /^Eliminar / }).first().click();
@@ -180,7 +195,7 @@ test('un horario guardado con datos dañados no deja la app atascada', async ({ 
   await page.goto('./#generar');
   await expect(page.locator('.issues')).toContainText('No se pudieron revisar los datos');
   await expect(page.getByRole('button', { name: 'Generar horario' })).toBeDisabled();
-  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
+  await goHome(page);
   await expect(page.locator('.project')).toHaveCount(1);
 });
 
@@ -193,7 +208,7 @@ test('deshacer: eliminar un curso, mover un bloque y recuperar un horario elimin
   await expect(undo).toBeDisabled();
 
   // Eliminar un curso y deshacerlo con el teclado (fuera de un campo de texto).
-  await page.locator('a[href="#cursos"]').click();
+  await go(page, 'cursos');
   await page.getByRole('button', { name: 'Eliminar 1° Medio A' }).click();
   await page.getByRole('button', { name: /Sí, eliminar con \d+ clases de la carga/ }).click();
   await expect(page.getByLabel('Nombre del curso').first()).not.toHaveValue('1° Medio A');
@@ -219,7 +234,7 @@ test('deshacer: eliminar un curso, mover un bloque y recuperar un horario elimin
   await expect(page.locator('.notice.warn', { hasText: 'Los datos cambiaron' })).toHaveCount(0);
 
   // Un horario eliminado se puede recuperar desde el inicio.
-  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
+  await goHome(page);
   await page.getByRole('button', { name: 'Eliminar' }).click();
   await page.getByRole('button', { name: 'Sí, eliminar' }).click();
   await expect(page.locator('.project')).toHaveCount(0);
@@ -231,7 +246,7 @@ test('deshacer: eliminar un curso, mover un bloque y recuperar un horario elimin
 test('desde el menú se vuelve al inicio con "Inicio" o con el logo', async ({ page }) => {
   await openExample(page);
   for (const name of ['Inicio', 'Horarios Web']) {
-    await page.getByRole('link', { name, exact: true }).click();
+    if (name === 'Inicio') await goHome(page); else await page.getByRole('link', { name, exact: true }).click();
     // exact: con cuenta configurada también aparece "Guarda tus horarios en una cuenta".
     await expect(page.getByRole('heading', { level: 2, name: 'Tus horarios', exact: true })).toBeVisible();
     await expect(page.locator('aside')).toHaveCount(0);
@@ -243,7 +258,7 @@ test('desde el menú se vuelve al inicio con "Inicio" o con el logo', async ({ p
 test('respaldo: descargar e importar', async ({ page }, info) => {
   test.skip(info.project.name === 'movil', 'igual que en escritorio');
   await openExample(page);
-  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
+  await goHome(page);
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Respaldo', exact: true }).click()]);
   const file = await download.path();
   const data = JSON.parse(readFileSync(file, 'utf8'));
@@ -257,7 +272,7 @@ test('respaldo: descargar e importar', async ({ page }, info) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Jornada' })).toBeVisible();
 
   // Un archivo que no es respaldo muestra un error claro.
-  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
+  await goHome(page);
   await page.locator('input[type=file]').setInputFiles({ name: 'otro.json', mimeType: 'application/json', buffer: Buffer.from('{"hola": 1}') });
   await expect(page.getByRole('alert')).toContainText('No se pudo importar');
 });
@@ -325,10 +340,35 @@ test('la política de seguridad de contenido no bloquea nada al generar ni al ex
   const errors = watchErrors(page);
   await openExample(page);
   await generate(page);
-  await page.locator('a[href="#horario"]').click();
-  await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Excel', exact: true }).click()]);
+  await go(page, 'horario');
+  await exportFrom(page, 'Excel');
   expect(await page.evaluate(() => (window as unknown as { cspViolations: string[] }).cspViolations)).toEqual([]);
   expect(errors).toEqual([]);
+});
+
+test('en el celular: menú plegado, un día a la vez y doble toque para mover', async ({ page }, info) => {
+  test.skip(info.project.name !== 'movil', 'solo móvil');
+  await openExample(page);
+  // El menú no ocupa la pantalla: se ve el paso actual y los pasos se despliegan con el botón.
+  await expect(page.locator('.menu-toggle')).toContainText('Jornada');
+  await expect(page.locator('.side .steps')).toBeHidden();
+  await generate(page);
+  await page.getByRole('button', { name: 'Ver horario' }).click();
+
+  // Un día a la vez, con pestañas.
+  await expect(page.locator('.day-tabs button')).toHaveCount(5);
+  await expect(page.locator('.card table.week thead th')).toHaveCount(2); // la columna de horas y un día
+  await page.locator('.day-tabs button', { hasText: 'Mar' }).click();
+  await expect(page.locator('.card table.week thead th').nth(1)).toHaveText('Martes');
+
+  // El primer toque en un lugar explica qué pasaría; el segundo lo hace.
+  await selectLessonWith(page, '.card td.drop-ok');
+  const target = page.locator('.card td.drop-ok').first();
+  await target.tap();
+  await expect(page.locator('.selbar .sel-status')).toContainText('Toca de nuevo para');
+  await expect(page.locator('.notice.ok', { hasText: /Movido|Intercambiados/ })).toHaveCount(0);
+  await target.tap();
+  await expect(page.locator('.notice.ok', { hasText: /Movido|Intercambiados/ })).toBeVisible();
 });
 
 test('en el celular la página no se desplaza hacia el lado', async ({ page }, info) => {
@@ -363,10 +403,10 @@ test('funciona sin conexión después de la primera visita', async ({ page, cont
   await generate(page);
 
   // Excel sin conexión: exportar el horario y volver a leer ese archivo en el importador de carga.
-  await page.locator('a[href="#horario"]').click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Excel', exact: true }).click()]);
+  await go(page, 'horario');
+  const download = await exportFrom(page, 'Excel');
   const xlsx = readFileSync((await download.path())!);
-  await page.locator('a[href="#carga"]').click();
+  await go(page, 'carga');
   await page.getByRole('button', { name: 'Importar desde Excel' }).first().click();
   await page.locator('input[type=file]').setInputFiles({ name: 'horario.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: xlsx });
   // Si el módulo no cargara, aparecería "No se pudo leer el archivo"; leído, muestra el resumen con el nombre.
