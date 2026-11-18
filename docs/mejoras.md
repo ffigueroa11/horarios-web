@@ -301,6 +301,28 @@ Revisión de "Ver y ajustar" del 18 de noviembre de 2026, a partir de capturas d
 | U6 | Mover, intercambiar y seleccionado se distinguen poco (verde casi en todo, naranja en seleccionado y en fijado) | Lugar libre en verde, intercambio con borde punteado y ⇄, no posible atenuado; seleccionado con el color del texto, distinto del naranja de fijado. La barra trae la leyenda | M | Corregido |
 | U7 | Se ofrecen intercambios que no cambian nada: otro bloque de la misma asignatura, curso y profesor | `checkPlace` no los propone y explica por qué | S | Corregido |
 
+### Experiencia de uso general
+
+Revisión de todas las pantallas del 18 de noviembre de 2026, en escritorio y teléfono, con el liceo de ejemplo.
+
+| Id | Problema | Propuesta | Esfuerzo | Estado |
+|---|---|---|---|---|
+| D1 | En el teléfono, el horario mostraba 5 columnas en 400 px y cortaba todos los nombres | Un día a la vez, con pestañas Lun–Vie (bajo 700 px) | S–M | Corregido |
+| D2 | En el teléfono, el menú completo ocupaba la primera pantalla | Barra superior con el paso actual ("5/9 · Carga académica"); los pasos se despliegan con el botón | S | Corregido |
+| D3 | En pantallas táctiles, los textos decían "clic" y "pasa el mouse", y un toque accidental movía un bloque | Textos con "toca"; el primer toque en un lugar explica qué pasaría y el segundo lo hace | S | Corregido |
+| D4 | Cinco botones de exportación sueltos en Ver y ajustar | "Imprimir" y un menú "Exportar" (imprimir todos, Excel, CSV, .fet) | S | Corregido |
+| D5 | Etiquetas de unos 11 px | 13 px | S | Corregido. El cero con raya es propio de Atkinson Hyperlegible, elegida por legibilidad: se mantiene |
+| D6 | Botones secundarios que parecían texto y botones de ícono de 16 px con colores distintos | Secundarios con borde suave; íconos de 32 px, y quitar o eliminar se marcan en rojo al pasar el mouse en todas las pantallas | S | Corregido |
+| D7 | El menú no dice qué pasos están completos | ✓ completo, ! con problemas o pendiente | S–M | Pendiente |
+| D8 | No hay "siguiente paso" al final de cada pantalla | Botón "Siguiente: …" | S | Pendiente |
+| D9 | Tablas con todos los campos enmarcados, y en el teléfono se cortan hacia el lado | Borde solo al pasar el mouse o editar; en el teléfono, filas apiladas | M | Pendiente |
+| D10 | "2+2+2" es un formato que hay que aprender | El campo dice cómo lo entendió ("3 bloques de 2 h") y marca lo que no entiende | S | Pendiente |
+| D11 | Sin buscador de profesores ni leyenda en las grillas de disponibilidad | Buscador y leyenda | S | Pendiente |
+| D12 | En Inicio, cuatro botones por horario | Tarjeta completa clicable, menú ⋯ y aviso si está desactualizado | S | Pendiente |
+| D13 | "Nuevo horario" no guía | Lista de primeros pasos | S–M | Pendiente |
+| D14 | Preferencias con anchos y textos de ejemplo confusos ("Sin límite" parece un valor) | Agrupar por a quién afecta, "Sin límite" como opción explícita | M | Pendiente |
+| D15 | En Generar, el tiempo máximo antes que la acción | Botón como acción principal y el tiempo como opción avanzada | S | Pendiente |
+
 ## Lo que no conviene priorizar
 
 Se evaluó y por ahora no se justifica:

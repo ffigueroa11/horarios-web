@@ -7,7 +7,8 @@ import { applyMove, applySwap, checkPlace, companions, continueWith, lessonIndex
 import { findEffectiveGroup } from '../domain/units';
 import { describeUnit } from '../domain/fetResult';
 import type { Route } from '../App';
-import { PageHead, WeekGrid, type CellSpec } from '../ui/common';
+import { MenuButton, PageHead, WeekGrid, type CellSpec } from '../ui/common';
+import { useMedia, useTouch } from '../ui/useMedia';
 import { UnmetPreferencesReport } from '../ui/UnmetPreferencesReport';
 import { downloadText, fileSafe } from '../ui/download';
 import { exportTimetableXlsx } from '../ui/exportXlsx';
@@ -85,6 +86,12 @@ interface GridActions {
   refuse: (reason: string) => void;
   hint: RefObject<HintApi | null>;
   status: RefObject<StatusApi | null>;
+  /**
+   * Pantalla táctil: el primer toque en un lugar muestra qué pasaría y el segundo lo hace. Sin mouse no hay forma de
+   * ver la explicación antes de actuar, y un toque accidental movía el bloque.
+   */
+  confirmTouch: (slot: string) => boolean;
+  touch: boolean;
   lastInvalid: RefObject<string | null>;
 }
 
@@ -98,6 +105,7 @@ interface GridProps {
   selected: ActivityKey[] | null;
   targets: Map<string, PlaceCheck>;
   act: RefObject<GridActions | null>;
+  days?: number[];
 }
 
 /**
@@ -106,7 +114,7 @@ interface GridProps {
  */
 const NO_TARGETS = new Map<string, PlaceCheck>();
 
-const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interactive, selected, targets, act }: GridProps) {
+const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interactive, selected, targets, act, days }: GridProps) {
   const subject = (sid: string) => p.subjects.find((s) => s.id === sid);
   const teacher = (tid: string | null) => p.teachers.find((t) => t.id === tid);
   const courseName = (cid: string) => p.courses.find((c) => c.id === cid)?.name ?? '';
@@ -158,7 +166,7 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
   } : {};
   return (
     <div onMouseLeave={interactive && selected ? () => act.current!.status.current?.set(null) : undefined}>
-    <WeekGrid school={p.school} cell={(d, per): CellSpec => {
+    <WeekGrid school={p.school} days={days} cell={(d, per): CellSpec => {
       const k = slotKey(d, per.id);
       const target = interactive && selected ? targets.get(k) : undefined;
       // Con clic: qué pasaría, en la barra de selección. Al arrastrar: junto al cursor, que es donde se está mirando.
@@ -168,10 +176,10 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
         if (target.swapWith) {
           const other = all.find((l) => l.pl.key === target.swapWith![0]);
           const there = moving ? `, que pasa al ${when(p, moving.pl.day, moving.startIdx, moving.dur)}` : '';
-          return { kind: 'swap', text: `Clic para intercambiar con ${subjectOfKey(target.swapWith[0])}${other ? there : ''}. Los dos quedan fijados 📌.` };
+          return { kind: 'swap', text: `${act.current!.touch ? 'Toca de nuevo' : 'Clic'} para intercambiar con ${subjectOfKey(target.swapWith[0])}${other ? there : ''}. Los dos quedan fijados 📌.` };
         }
         const start = p.school.periods.findIndex((x) => x.id === per.id);
-        return { kind: 'ok', text: `Clic para mover al ${when(p, d, start, moving?.dur ?? 1)}. Queda fijado 📌.` };
+        return { kind: 'ok', text: `${act.current!.touch ? 'Toca de nuevo' : 'Clic'} para mover al ${when(p, d, start, moving?.dur ?? 1)}. Queda fijado 📌.` };
       };
       const showStatus = () => act.current!.status.current?.set(describeTarget());
       const showDragHint = (x: number, y: number) => {
@@ -200,7 +208,10 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
         if (!target) return {};
         return {
           className: targetClass.trim(),
-          onClick: () => (target.ok ? act.current!.tryMove(selected!, d, per) : act.current!.refuse(target.reason)),
+          onClick: () => {
+            if (!target.ok) return act.current!.refuse(target.reason);
+            if (act.current!.confirmTouch(k)) act.current!.tryMove(selected!, d, per); else showStatus();
+          },
           ...drop,
         };
       }
@@ -212,7 +223,10 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
           className: `lesson${x.locked ? ' locked' : ''}${x.sel ? ' selected' : ''}${x.sel ? '' : targetClass}`,
           rowSpan: l.dur,
           title: x.title,
-          onClick: interactive ? () => (target?.ok && !x.sel ? act.current!.tryMove(selected!, d, per) : act.current!.select(l)) : undefined,
+          onClick: interactive ? () => {
+            if (!target?.ok || x.sel) return act.current!.select(l);
+            if (act.current!.confirmTouch(k)) act.current!.tryMove(selected!, d, per); else showStatus();
+          } : undefined,
           ...dragProps(l),
           ...drop,
           ...(x.sel ? onSelected : {}),
@@ -249,7 +263,11 @@ const ScheduleGrid = memo(function ScheduleGrid({ p, all, index, m, id, interact
               draggable={interactive || undefined}
               onDragStart={dragProps(l).onDragStart}
               onDragEnd={dragProps(l).onDragEnd}
-              onClick={(e) => { e.stopPropagation(); if (target?.ok && !anySel) act.current!.tryMove(selected!, d, per); else act.current!.select(l); }}>
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!target?.ok || anySel) return act.current!.select(l);
+                if (act.current!.confirmTouch(k)) act.current!.tryMove(selected!, d, per); else showStatus();
+              }}>
               <span className="s">{x.main}{start || together ? '' : ' (cont.)'}</span>
               {(start || together) && <span className="w">{x.sub}</span>}
               {x.locked && start && <span className="lock" aria-label="Fijado"> 📌</span>}
@@ -287,6 +305,16 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
   const hintRef = useRef<HintApi>(null);
   const statusRef = useRef<StatusApi>(null);
   const lastInvalid = useRef<string | null>(null);
+  const touch = useTouch();
+  // En pantallas angostas, un día a la vez: cinco columnas en 400 px cortaban todos los nombres.
+  const narrow = useMedia('(max-width: 700px)');
+  const [day, setDay] = useState(() => Math.min(Math.max(new Date().getDay() - 1, 0), p.school.days.length - 1));
+  const pendingTouch = useRef<string | null>(null);
+  const confirmTouch = (slot: string) => {
+    if (!touch || pendingTouch.current === slot) { pendingTouch.current = null; return true; }
+    pendingTouch.current = slot;
+    return false;
+  };
   const refuse = (reason: string) => statusRef.current?.set({ kind: 'no', text: `No se puede: ${continueWith(reason)}` });
   const all = useMemo(() => lessons(p), [p]);
   const index = useMemo(() => lessonIndex(p, all), [p, all]);
@@ -373,10 +401,13 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
   // Se actualiza después de cada dibujo: la grilla solo lo usa en eventos, que ocurren después.
   const startDrag = (l: Lesson) => { setSelected(companions(p, l.pl.key)); setMessage(null); };
   const act = useRef<GridActions>(null);
-  useLayoutEffect(() => { act.current = { tryMove, select, startDrag, refuse, hint: hintRef, status: statusRef, lastInvalid }; });
+  useLayoutEffect(() => { act.current = { tryMove, select, startDrag, refuse, hint: hintRef, status: statusRef, lastInvalid, confirmTouch, touch }; });
+  // Al cambiar de bloque seleccionado, el toque pendiente ya no vale.
+  useEffect(() => { pendingTouch.current = null; }, [selected]);
   const grid = (id: string, interactive: boolean) => (
     <ScheduleGrid p={p} all={all} index={index} m={mode} id={id} interactive={interactive}
-      selected={interactive ? selected : null} targets={interactive ? targets : NO_TARGETS} act={act} />
+      selected={interactive ? selected : null} targets={interactive ? targets : NO_TARGETS} act={act}
+      days={interactive && narrow ? [day] : undefined} />
   );
 
   const doPrint = (all: boolean) => { setPrintAll(all); setTimeout(() => window.print(), 50); };
@@ -391,15 +422,20 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
       <PageHead title="Ver y ajustar" actions={
         <div className="row no-print">
           <button type="button" className="btn" onClick={() => doPrint(false)}>Imprimir</button>
-          <button type="button" className="btn" onClick={() => doPrint(true)}>Imprimir todos</button>
-          <button type="button" className="btn" onClick={exportXlsx}>Excel</button>
-          <button type="button" className="btn ghost" onClick={exportCsv}>CSV</button>
-          <button type="button" className="btn ghost" onClick={() => downloadText(`${fileSafe(p.name)}.fet`, exportFet(p).xml, 'application/xml')} title="Abre los datos en FET de escritorio">Archivo .fet</button>
+          <MenuButton label="Exportar" items={[
+            { label: `Imprimir todos los ${mode === 'curso' ? 'cursos' : mode === 'profesor' ? 'profesores' : 'salas'}`, onClick: () => doPrint(true) },
+            { label: 'Excel', onClick: exportXlsx },
+            { label: 'CSV', onClick: exportCsv },
+            { label: 'Archivo .fet', title: 'Abre los datos en FET de escritorio', onClick: () => downloadText(`${fileSafe(p.name)}.fet`, exportFet(p).xml, 'application/xml') },
+          ]} />
         </div>
       }>
-        Haz clic en un bloque para <b>seleccionarlo</b> y pasa el mouse por la grilla: la barra de abajo dice qué pasaría en
-        cada lugar. Haz clic donde quieras <b>moverlo</b> o <b>intercambiarlo</b>, o arrástralo. Lo que mueves queda <b>fijo</b> 📌:
-        al generar de nuevo se mantiene y el resto se reorganiza.
+        {touch
+          ? <>Toca un bloque para <b>seleccionarlo</b> y luego toca un lugar: la barra de abajo dice qué pasaría. Toca de nuevo
+            para <b>moverlo</b> o <b>intercambiarlo</b>.</>
+          : <>Haz clic en un bloque para <b>seleccionarlo</b> y pasa el mouse por la grilla: la barra de abajo dice qué pasaría en
+            cada lugar. Haz clic donde quieras <b>moverlo</b> o <b>intercambiarlo</b>, o arrástralo.</>}
+        {' '}Lo que mueves queda <b>fijo</b> 📌: al generar de nuevo se mantiene y el resto se reorganiza.
       </PageHead>
 
       {isStale(p) && (
@@ -432,6 +468,13 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
 
         {message && <div className={`notice ${message.kind === 'ok' ? 'ok' : 'bad'}`} role="status">{message.text}</div>}
         {selected && <DragHint handle={hintRef} />}
+        {narrow && owner && (
+          <div className="tabs day-tabs" role="group" aria-label="Día">
+            {p.school.days.map((name, i) => (
+              <button key={i} type="button" aria-pressed={day === i} onClick={() => setDay(i)} title={name}>{name.slice(0, 3)}</button>
+            ))}
+          </div>
+        )}
         {owner ? grid(owner.id, true) : <div className="empty">No hay elementos para mostrar.</div>}
         {selected && <p className="small muted">Al mover o intercambiar se revisan los choques, recreos, la disponibilidad de profesores y todas las reglas obligatorias de Preferencias. Las reglas preferibles no se revisan.</p>}
         {selected && (
@@ -440,7 +483,7 @@ function AdjustView({ go }: { go: (r: Route) => void }) {
               {selLesson && <><b>{describeUnit(p, selLesson.unit)}</b>, el {when(p, selLesson.pl.day, selLesson.startIdx, selLesson.dur)}</>}
               {selected.length > 1 && <> y {selected.length - 1} clase{selected.length > 2 ? 's' : ''} en paralelo, que se mueven juntas</>}.
               <SelectionStatus handle={statusRef} idle={[...targets.values()].some((t) => t.ok)
-                ? 'Verde: se puede mover ahí. ⇄: se puede intercambiar. Atenuado: no se puede. Pasa el mouse para ver el detalle.'
+                ? `Verde: se puede mover ahí. ⇄: se puede intercambiar. Atenuado: no se puede. ${touch ? 'Toca un lugar' : 'Pasa el mouse'} para ver el detalle.`
                 : 'No hay otro lugar donde quepa sin choques. Puedes dejarlo fijo y generar de nuevo para que el resto se reorganice.'} />
             </span>
             <span className="row">

@@ -66,6 +66,7 @@ export default function App() {
     }
   }, [project]);
 
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => { window.scrollTo(0, 0); }, [route]);
 
   if (!hydrated) return <div className="welcome"><p className="muted">Cargando…</p></div>;
@@ -97,10 +98,20 @@ export default function App() {
   }
 
   let n = 0;
+  const stepIndex = ALL.indexOf(route === 'salas' ? 'asignaturas' : route);
+  const stepLabel = STEPS.flatMap((ph) => ph.items).find((it) => it.id === ALL[stepIndex])?.label;
   return (
     <div className="app">
-      <aside className="side no-print">
-        <a className="brand" href="#proyectos" title="Ir al inicio" onClick={() => select(null)}><img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />Horarios Web</a>
+      <aside className={`side no-print${menuOpen ? ' open' : ''}`}>
+        <div className="side-top">
+          <a className="brand" href="#proyectos" title="Ir al inicio" onClick={() => select(null)}><img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />Horarios Web</a>
+          {/* Solo en pantallas angostas: el menú completo ocupaba toda la primera pantalla del teléfono. */}
+          <button type="button" className="btn small menu-toggle" aria-expanded={menuOpen} aria-controls="side-menu" onClick={() => setMenuOpen((o) => !o)}>
+            {stepIndex >= 0 ? `${stepIndex + 1}/${ALL.length} · ${stepLabel}` : 'Menú'} <span aria-hidden="true">{menuOpen ? '▴' : '▾'}</span>
+          </button>
+        </div>
+        {/* Elegir un paso cierra el menú desplegado (en el teléfono). */}
+        <div className="side-menu" id="side-menu" onClick={(e) => { if ((e.target as HTMLElement).closest('a')) setMenuOpen(false); }}>
         <div className="project-switch">
           <span className="small muted">Horario {project.year}</span>
           <span className="name">{project.name}</span>
@@ -135,6 +146,7 @@ export default function App() {
             {needsBackup(project) ? 'Descargar respaldo (pendiente)' : 'Descargar respaldo'}
           </button>
           <AppFooter compact />
+        </div>
         </div>
       </aside>
       <main className="main"><HealthNotices /><ImportReportCard />{page}</main>
