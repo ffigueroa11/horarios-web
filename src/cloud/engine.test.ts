@@ -91,10 +91,11 @@ describe('sincronización', () => {
     const b = new Device(cloud);
     await b.open();
 
-    a.projects = { ...a.projects, [p.id]: { ...a.projects[p.id], timetable: { generatedAt: p.updatedAt, seconds: 1, placements: [] }, locks: { 'x#0': { day: 1, periodId: 'y' } } } };
+    const key = `${p.assignments[0].id}#0`;
+    a.projects = { ...a.projects, [p.id]: { ...a.projects[p.id], timetable: { generatedAt: p.updatedAt, seconds: 1, placements: [] }, locks: { [key]: { day: 1, periodId: p.school.periods[0].id } } } };
     await a.engine.flush();
     expect(b.projects[p.id].timetable).not.toBeNull();
-    expect(b.projects[p.id].locks['x#0'].day).toBe(1);
+    expect(b.projects[p.id].locks[key].day).toBe(1);
     expect(b.projects[p.id].updatedAt).toBe(p.updatedAt);
   });
 

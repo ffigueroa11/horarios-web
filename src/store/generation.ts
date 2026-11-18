@@ -54,12 +54,7 @@ export const useGeneration = create<GenState>()((set, get) => ({
       const seconds = run.genMs / 1000;
       if (outcome.kind === 'ok') {
         const placements = parseActivitiesXml(xml, ex);
-        // Se guarda en el proyecto que se generó, aunque el usuario haya cambiado de horario mientras tanto.
-        useProjects.setState((s) => {
-          const target = s.projects[p.id];
-          if (!target) return s;
-          return { projects: { ...s.projects, [p.id]: { ...target, timetable: { generatedAt, seconds, placements } } } };
-        });
+        useProjects.getState().saveTimetable(p.id, { generatedAt, seconds, placements, seed });
       }
       const found = outcome.kind === 'timeout' || outcome.kind === 'impossible' ? parsePartial(run.files, ex) : null;
       const partial = found && { ...found, generatedAt };

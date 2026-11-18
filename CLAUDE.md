@@ -61,7 +61,8 @@ pages/, ui/ (React) ──> store/ (zustand + IndexedDB) ──> engine/ (Worker
 - Toda edición del proyecto pasa por `update()` en `store/projects.ts`, que trabaja sobre una copia, ejecuta
   `migrateProject` y guarda. Usa `touch: false` en lo que no cambia los datos del colegio (fijar, mover, liberar), para
   no marcar el horario como desactualizado.
-- `migrateProject` no limpia `locks`: al quitar datos, cada pantalla debe limpiar sus fijados.
+- `migrateProject` limpia lo huérfano, también los fijados (`locks`) de bloques o lugares que ya no existen. Lo que sigue
+  existiendo pero cambia de sentido (duración de los bloques, grupo de una fila) lo libera la pantalla que lo cambia.
 - Al agregar un campo al modelo: pon su valor por defecto en `migrateProject` y su revisión en `checkProject`
   (`backup.ts`). Si hay que transformar datos, sube `version` en `projects.ts` y `BACKUP_VERSION`.
 - Sincronización (`cloud/engine.ts`, sin Firebase ni React, probada con una nube en memoria): nada se sube antes de

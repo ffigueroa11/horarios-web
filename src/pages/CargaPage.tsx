@@ -137,7 +137,6 @@ export function CargaPage() {
                       <td><span className="badge">{hours(a.blocks)}</span></td>
                       <td><button type="button" className="icon-btn" aria-label="Quitar asignatura" onClick={() => update((d) => {
                         d.assignments = d.assignments.filter((x) => x.id !== a.id);
-                        for (const k of Object.keys(d.locks)) if (k.startsWith(`${a.id}#`)) delete d.locks[k];
                       })}>✕</button></td>
                     </tr>
                   );

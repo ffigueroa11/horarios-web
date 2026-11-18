@@ -19,11 +19,9 @@ export function AsignaturasPage() {
     d.subjects.push({ id: newId(), name, short: short || name.slice(0, 3).toUpperCase(), color: SUBJECT_COLORS[d.subjects.length % SUBJECT_COLORS.length], roomId: null });
   });
   const removeSubject = (id: string) => update((d) => {
-    const gone = new Set(d.assignments.filter((a) => a.subjectId === id).map((a) => a.id));
     d.subjects = d.subjects.filter((s) => s.id !== id);
     d.assignments = d.assignments.filter((a) => a.subjectId !== id);
     d.rules.subjectWindows = d.rules.subjectWindows.filter((w) => w.subjectId !== id);
-    for (const k of Object.keys(d.locks)) if (gone.has(k.split('#')[0])) delete d.locks[k];
   });
   const removeRoom = (id: string) => update((d) => {
     d.rooms = d.rooms.filter((r) => r.id !== id);

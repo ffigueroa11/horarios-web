@@ -5,7 +5,7 @@ import { describeActivity, fetMessages, parseActivitiesXml, parseResult } from '
 import { courseLoad, longestRun, openSlots, parseBlocks, teacherLoad, validate } from './validate';
 import { units } from './units';
 import { checkMove } from './manual';
-import { migrateProject, newId, slotKey } from './types';
+import { activityKey, migrateProject, newId, slotKey } from './types';
 
 describe('jornada', () => {
   it('cuenta bloques abiertos y el tramo continuo más largo', () => {
@@ -262,5 +262,56 @@ describe('bloques fijados que ya no son posibles', () => {
     p.locks[`${a.id}#0`] = { day: 0, periodId: first.id };
     p.locks[`${b.id}#0`] = { day: 0, periodId: first.id };
     expect(validate(p).filter((i) => i.locks).map((i) => i.message).join()).toContain('choca con otro bloque fijado');
+  });
+});
+
+describe('referencias a lo eliminado', () => {
+  const withEverything = () => {
+    const p = exampleProject();
+    p.school.days = [...p.school.days, 'Sábado'];
+    const per = p.school.periods.find((x) => x.kind === 'clase')!.id;
+    const e = p.electives[0];
+    p.locks = {
+      [activityKey(p.assignments[0].id, 0)]: { day: 0, periodId: per },
+      [activityKey(p.assignments[1].id, 0)]: { day: 5, periodId: per },
+      [activityKey(`${e.id}:${e.options[0].id}`, 0)]: { day: 1, periodId: per },
+    };
+    p.school.closed = [slotKey(5, per)];
+    p.teachers[0].unavailable = [slotKey(0, per), slotKey(5, per)];
+    p.rules.teacherMeetingSlots = [slotKey(5, per)];
+    return { p, per, e };
+  };
+
+  it('quitar un día limpia sus tramos cerrados, disponibilidad, consejo y fijados', () => {
+    const { p, per } = withEverything();
+    p.school.days = p.school.days.slice(0, 5);
+    migrateProject(p);
+    expect(p.school.closed).toEqual([]);
+    expect(p.rules.teacherMeetingSlots).toEqual([]);
+    expect(p.teachers[0].unavailable).toEqual([slotKey(0, per)]);
+    expect(Object.keys(p.locks)).toHaveLength(2);
+  });
+  it('quitar un bloque de la jornada limpia todo lo que lo usaba', () => {
+    const { p, per } = withEverything();
+    p.school.periods = p.school.periods.filter((x) => x.id !== per);
+    migrateProject(p);
+    expect(p.locks).toEqual({});
+    expect(p.teachers[0].unavailable).toEqual([]);
+  });
+  it('quitar carga, una opción de electivo o acortar sus bloques libera sus fijados', () => {
+    const { p, e } = withEverything();
+    p.assignments = p.assignments.slice(1);
+    migrateProject(p);
+    expect(Object.keys(p.locks)).toEqual([activityKey(p.assignments[0].id, 0), activityKey(`${e.id}:${e.options[0].id}`, 0)]);
+    p.electives[0].options = p.electives[0].options.slice(1);
+    p.assignments[0].blocks = [];
+    migrateProject(p);
+    expect(p.locks).toEqual({});
+  });
+  it('conserva lo que sigue existiendo', () => {
+    const { p } = withEverything();
+    const before = structuredClone(p);
+    migrateProject(p);
+    expect(p).toEqual(before);
   });
 });

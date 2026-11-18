@@ -88,8 +88,10 @@ existentes pueden quedar apuntando a un bloque de otra duración o a uno que ya 
   como desactualizado.
 - **Horario desactualizado** significa `updatedAt > timetable.generatedAt`. `generatedAt` es la hora de *inicio* de la
   generación, para que una edición hecha durante el cálculo lo marque.
-- **Al quitar datos, limpia sus fijados.** `migrateProject` limpia referencias en carga y electivos, pero no `locks`:
-  cada pantalla lo hace por su cuenta.
+- **Las referencias huérfanas las limpia `migrateProject`:** carga y electivos que apuntan a algo eliminado, tramos
+  (cerrados, disponibilidad, consejo) de días o bloques que ya no existen, y fijados de bloques que ya no existen o de
+  lugares fuera de la jornada. Lo que sigue existiendo pero cambió de sentido lo libera la pantalla que hace el cambio:
+  la duración de los bloques de una fila o de una franja, o el grupo de una fila.
 
 ## Generación
 
@@ -117,7 +119,11 @@ sequenceDiagram
   al navegar. Solo hay una generación a la vez.
 - **Identidad.** FET usa nombres como identificadores. [`exportFet`](../src/domain/fetExport.ts) genera nombres únicos y
   devuelve los mapas de vuelta (`activityById`, `periodByName`, `roomByName`). Esos mapas solo valen para esa exportación.
-- **Semilla.** Es aleatoria en cada generación y no se guarda. Con la misma semilla, el resultado es el mismo.
+- **Semilla.** Es aleatoria en cada generación y se guarda en `timetable.seed`. Con los mismos datos y la misma semilla,
+  el resultado es el mismo.
+- **Guardar el resultado** pasa por `saveTimetable` en [`projects.ts`](../src/store/projects.ts), en el proyecto que se
+  generó aunque el usuario haya abierto otro. Si durante el cálculo se fijó un bloque en un lugar que el horario nuevo
+  no respeta, el horario queda desactualizado.
 
 ### Mensajes del Worker
 
@@ -287,10 +293,14 @@ Reglas que hay que mantener:
 |---|---|
 | Navegación | Primero la red; sin conexión, la copia guardada |
 | Otros archivos | Primero el caché; si falta, la red, y se guarda |
-| Instalación | Guarda `./`, lo que enlaza `index.html` y los cuatro archivos del motor |
+| Instalación | Guarda `./`, todo lo que lista `precache.json` y los cuatro archivos del motor. Si falta uno, la instalación falla y sigue la versión anterior |
 
-La nueva versión espera a que el usuario acepte "Actualizar ahora". Los módulos que se cargan bajo demanda no se guardan
-al instalar ([E6](mejoras.md#e6-sin-conexión-incompleto)).
+`precache.json` lo escribe el build ([`vite.config.ts`](../vite.config.ts)) con todo lo que produce, incluidos los
+módulos que se cargan bajo demanda (Excel, Firebase) y las fuentes. Lo que `index.html` enlaza desde `public/` (íconos,
+manifiesto) se guarda si se puede. Las búsquedas en el caché usan `ignoreVary`, porque lo guardado al instalar se pidió
+sin el encabezado `Origin` que llevan los módulos de la página.
+
+La nueva versión espera a que el usuario acepte "Actualizar ahora".
 
 ## Pruebas
 

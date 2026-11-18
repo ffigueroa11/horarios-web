@@ -81,16 +81,16 @@ Las que ya tienen identificador están descritas en [mejoras.md](mejoras.md). La
 
 | Id | Mejora | Cuello que ataca | Esfuerzo | Estado |
 |---|---|---|---|---|
-| E6 | Lista de precarga del service worker generada en el build; la instalación falla si falta el motor | — | S–M | Pendiente |
-| R1 | Guardar la semilla en `Timetable` | 2 | S | Pendiente |
+| E6 | Lista de precarga del service worker generada en el build; la instalación falla si falta el motor | — | S–M | Hecho |
+| R1 | Guardar la semilla en `Timetable` | 2 | S | Hecho |
 | R2 | Hash sucio por proyecto: `countPending` solo recalcula el proyecto editado | 1 | S | Pendiente |
 | R3 | Sacar `hint` de la página, memoizar las celdas y restablecer `printAll` (esto último es parte de E12) | 3 | S–M | Pendiente |
 | R4 | Índices precalculados en `manual.ts` (por día, profesor y curso) y `parallelRows` memoizado | 3 | M | Pendiente |
-| R5 | Limpieza central de `locks` huérfanos y de `teacherMeetingSlots`, en vez de una por pantalla (cubre parte de E12) | — | S | Pendiente |
+| R5 | Limpieza central de `locks` huérfanos y de `teacherMeetingSlots`, en vez de una por pantalla (cubre parte de E12) | — | S | Hecho |
 | F5 | Deshacer y rehacer en `update()` | — | M | Pendiente |
-| R6 | Guardar la generación con una acción del almacén, e invalidarla si se movieron bloques durante el cálculo (parte de E12) | — | S | Pendiente |
+| R6 | Guardar la generación con una acción del almacén, e invalidarla si se movieron bloques durante el cálculo (parte de E12) | — | S | Hecho |
 | T6 | CSP con `wasm-unsafe-eval` en `vercel.json` | — | S–M | Pendiente |
-| T7, T8 | Acciones de GitHub fijadas por SHA; versiones y SHA-256 del motor | — | S | Pendiente |
+| T7, T8 | Acciones de GitHub fijadas por SHA; versiones y SHA-256 del motor | — | S | Hecho |
 | T4 | Colegio real anonimizado como referencia de rendimiento | 2 y 3 | M | Pendiente |
 | F4 | Varias semillas, en paralelo o una tras otra, eligiendo el mejor resultado | 2 | M | Pendiente |
 
@@ -103,6 +103,8 @@ Otras menores, sin identificador:
 - Auditoría de accesibilidad (T9).
 
 ## Plan de acción
+
+**Estado:** la fase A está aplicada (18 de noviembre de 2026). Las fases B a D siguen pendientes.
 
 | Fase | Contenido | Criterio de cierre | Estimación |
 |---|---|---|---|

@@ -4,17 +4,29 @@ const VERSION = new URL(self.location.href).searchParams.get('v') || 'dev';
 const CACHE = `horarios-web-${VERSION}`;
 const ENGINE = ['engine/fet-cl.js', 'engine/fet-cl.wasm', 'engine/fet-worker.js', 'engine/fet_es.qm'];
 
+const fresh = (u) => new Request(u, { cache: 'no-cache' });
+
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    // La página y los archivos que enlaza (JS y CSS con hash), más el motor.
-    const res = await fetch('./', { cache: 'no-cache' });
-    const html = await res.clone().text();
-    await cache.put('./', res);
-    const linked = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1])
-      .filter((u) => !/^(https?:|data:|#)/.test(u));
-    await Promise.all([...new Set([...linked, ...ENGINE])].map((u) =>
-      cache.add(new Request(u, { cache: 'no-cache' })).catch(() => undefined)));
+    try {
+      const res = await fetch(fresh('./'));
+      if (!res.ok) throw new Error(`página: ${res.status}`);
+      const html = await res.clone().text();
+      // Todo lo que produjo el build (lista generada por vite.config.ts) y el motor. Si falta algo, la instalación
+      // falla y sigue la versión anterior: mejor eso que descubrir sin conexión que no se puede generar o abrir un Excel.
+      const list = await fetch(fresh('precache.json'));
+      if (!list.ok) throw new Error(`precache.json: ${list.status}`);
+      await cache.addAll([...new Set([...(await list.json()), ...ENGINE])].map(fresh));
+      // Lo que index.html enlaza desde public/ (íconos, manifiesto): prescindible.
+      const linked = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1])
+        .filter((u) => !/^(https?:|data:|#)/.test(u));
+      await Promise.all(linked.map((u) => cache.add(fresh(u)).catch(() => undefined)));
+      await cache.put('./', res);
+    } catch (e) {
+      await caches.delete(CACHE);
+      throw e;
+    }
   })());
 });
 
@@ -50,9 +62,10 @@ self.addEventListener('fetch', (event) => {
     })());
     return;
   }
-  // Archivos: lo guardado (el caché es por versión) y, si falta, la red.
+  // Archivos: lo guardado (el caché es por versión) y, si falta, la red. ignoreVary: lo guardado al instalar se pidió
+  // sin el encabezado Origin que llevan los módulos y estilos de la página; con "Vary: Origin" no coincidiría.
   event.respondWith((async () => {
-    const hit = await caches.match(req, { ignoreSearch: url.pathname.endsWith('sw.js') ? false : true });
+    const hit = await caches.match(req, { ignoreSearch: url.pathname.endsWith('sw.js') ? false : true, ignoreVary: true });
     if (hit) return hit;
     const res = await fetch(req);
     if (res.ok && res.type === 'basic') (await caches.open(CACHE)).put(req, res.clone());

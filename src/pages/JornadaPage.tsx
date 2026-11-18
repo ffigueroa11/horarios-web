@@ -24,23 +24,15 @@ export function JornadaPage() {
     if (j < 0 || j >= ps.length) return;
     [ps[i], ps[j]] = [ps[j], ps[i]];
   });
-  const removePeriod = (id: string) => update((d) => {
-    d.school.periods = d.school.periods.filter((x) => x.id !== id);
-    d.school.closed = d.school.closed.filter((k) => !k.endsWith(`:${id}`));
-  });
+  // Los tramos cerrados, la disponibilidad, el consejo y los fijados de un bloque o día eliminado los limpia migrateProject.
+  const removePeriod = (id: string) => update((d) => { d.school.periods = d.school.periods.filter((x) => x.id !== id); });
   const addPeriod = () => update((d) => {
     const last = d.school.periods[d.school.periods.length - 1];
     const n = d.school.periods.filter((x) => x.kind === 'clase').length + 1;
     const start = last?.end || '08:00'; // un .fet importado puede traer bloques sin hora
     d.school.periods.push({ id: newId(), label: `${n}° bloque`, start, end: addMinutes(start, 45), kind: 'clase' });
   });
-  const setDays = (n: number) => update((d) => {
-    d.school.days = DEFAULT_DAYS.concat(['Sábado']).slice(0, n);
-    const keep = (k: string) => Number(k.split(':')[0]) < n;
-    d.school.closed = d.school.closed.filter(keep);
-    d.teachers.forEach((t) => { t.unavailable = t.unavailable.filter(keep); });
-    for (const [k, v] of Object.entries(d.locks)) if (v.day >= n) delete d.locks[k];
-  });
+  const setDays = (n: number) => update((d) => { d.school.days = DEFAULT_DAYS.concat(['Sábado']).slice(0, n); });
 
   return (
     <>

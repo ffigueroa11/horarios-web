@@ -20,6 +20,15 @@ describe('respaldos', () => {
     expect(back.rules.teacherMeetingSlots).toEqual([]);
     expect(back.locks).toEqual({});
   });
+  it('conserva la semilla del horario y descarta una mal formada', () => {
+    const p = exampleProject();
+    p.timetable = { generatedAt: '2026-03-01T11:00:00.000Z', seconds: 1, placements: [], seed: 123 };
+    expect(parseBackup(makeBackup([p]))[0].timetable?.seed).toBe(123);
+    (p.timetable as any).seed = 'x';
+    const [back] = parseBackup(makeBackup([p]));
+    expect(back.timetable).not.toBeNull();
+    expect(back.timetable).not.toHaveProperty('seed');
+  });
   it('rechaza archivos que no son respaldos con un mensaje claro', () => {
     expect(() => parseBackup('no es json')).toThrow('no es un archivo .json válido');
     expect(() => parseBackup('{"app":"otra"}')).toThrow('otra aplicación');
