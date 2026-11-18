@@ -41,6 +41,14 @@ export function parseBlocks(text: string): number[] | null {
   return parts;
 }
 
+/** "7 h: 3 bloques de 2 h y 1 de 1 h". */
+export function describeBlocks(list: number[]): string {
+  const total = list.reduce((a, b) => a + b, 0);
+  const bySize = [...new Set(list)].sort((a, b) => b - a).map((size) => ({ size, n: list.filter((x) => x === size).length }));
+  const parts = bySize.map(({ size, n }, i) => (i === 0 ? `${n} ${n === 1 ? 'bloque' : 'bloques'} de ${size} h` : `${n} de ${size} h`));
+  return `${total} h: ${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}` : parts[0]}`;
+}
+
 export const hours = (blocks: number[]) => blocks.reduce((a, b) => a + b, 0);
 
 /** Horas semanales del profesor (una opción de electivo cuenta una vez aunque reúna varios cursos). */

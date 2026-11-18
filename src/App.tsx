@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { needsBackup, useCurrent, useProjects } from './store/projects';
+import { isStale, needsBackup, useCurrent, useProjects } from './store/projects';
 import { validate, type Issue, type Step } from './domain/validate';
 import { ProyectosPage } from './pages/ProyectosPage';
 import { JornadaPage } from './pages/JornadaPage';
@@ -80,9 +80,23 @@ export default function App() {
     if (list.length) return <span className="badge warn">{list.length}</span>;
     if (step === 'cursos') return <span className="badge">{project.courses.length}</span>;
     if (step === 'profesores') return <span className="badge">{project.teachers.length}</span>;
-    if (step === 'horario' && project.timetable) return <span className="badge ok">✓</span>;
     return null;
   };
+  // Estado de cada paso en el menú: ✓ si ya tiene lo necesario, en rojo si tiene errores. Electivos y Preferencias son
+  // opcionales: no quedan "pendientes".
+  const done: Partial<Record<Route, boolean>> = {
+    jornada: project.school.days.length > 0 && project.school.periods.some((x) => x.kind === 'clase'),
+    cursos: project.courses.length > 0,
+    asignaturas: project.subjects.length > 0,
+    profesores: project.teachers.length > 0,
+    carga: project.courses.length > 0 && project.courses.every((c) => project.assignments.some((a) => a.courseId === c.id)),
+    electivos: project.electives.length > 0,
+    generar: !!project.timetable && !isStale(project),
+    horario: !!project.timetable,
+  };
+  const stepState = (step: Route) => (count(step).some((i) => i.level === 'error') ? 'error' : done[step] ? 'done' : '');
+  const next = ALL[ALL.indexOf(route === 'salas' ? 'asignaturas' : route) + 1];
+  const nextLabel = STEPS.flatMap((ph) => ph.items).find((it) => it.id === next)?.label;
 
   let page: ReactNode;
   switch (route) {
@@ -132,7 +146,13 @@ export default function App() {
               ...ph.items.map((it) => (
                 <li key={it.id}>
                   <a href={`#${it.id}`} aria-current={route === it.id || (route === 'salas' && it.id === 'asignaturas') ? 'page' : undefined}>
-                    <span className="num">{++n}</span>{it.label}{badge(it.id === 'asignaturas' ? 'asignaturas' : it.id)}
+                    {(() => {
+                      const num = ++n, state = stepState(it.id);
+                      return <span className={`num ${state}`} aria-hidden="true">{state === 'done' ? '✓' : num}</span>;
+                    })()}
+                    {it.label}
+                    {stepState(it.id) === 'done' && <span className="sr-only"> (listo)</span>}
+                    {badge(it.id === 'asignaturas' ? 'asignaturas' : it.id)}
                   </a>
                 </li>
               )),
@@ -149,7 +169,13 @@ export default function App() {
         </div>
         </div>
       </aside>
-      <main className="main"><HealthNotices /><ImportReportCard />{page}</main>
+      <main className="main">
+        <HealthNotices /><ImportReportCard />{page}
+        {/* Paso siguiente al terminar la pantalla. En Generar el siguiente paso ya lo ofrece el resultado. */}
+        {next && route !== 'generar' && route !== 'horario' && (
+          <div className="next-step no-print"><a className="btn primary" href={`#${next}`}>Siguiente: {nextLabel} →</a></div>
+        )}
+      </main>
     </div>
   );
 }

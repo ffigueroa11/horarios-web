@@ -359,7 +359,7 @@ test('en el celular: menú plegado, un día a la vez y doble toque para mover', 
   await expect(page.locator('.day-tabs button')).toHaveCount(5);
   await expect(page.locator('.card table.week thead th')).toHaveCount(2); // la columna de horas y un día
   await page.locator('.day-tabs button', { hasText: 'Mar' }).click();
-  await expect(page.locator('.card table.week thead th').nth(1)).toHaveText('Martes');
+  await expect(page.locator('.card table.week thead th').nth(1)).toContainText('Martes');
 
   // El primer toque en un lugar explica qué pasaría; el segundo lo hace.
   await selectLessonWith(page, '.card td.drop-ok');

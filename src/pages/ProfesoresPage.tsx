@@ -9,6 +9,9 @@ export function ProfesoresPage() {
   const p = useCurrent()!;
   const update = useProjects((s) => s.update);
   const [selId, setSelId] = useState<string | null>(p.teachers[0]?.id ?? null);
+  const [query, setQuery] = useState('');
+  const fold = (x: string) => x.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  const shown = p.teachers.filter((x) => fold(x.name).includes(fold(query.trim())));
   const t = p.teachers.find((x) => x.id === selId) ?? null;
   const slots = openSlots(p);
 
@@ -31,14 +34,19 @@ export function ProfesoresPage() {
       {p.teachers.length === 0 ? <div className="empty">Aún no hay profesores.</div> : (
         <div className="grid-2" style={{ gridTemplateColumns: 'minmax(240px, 320px) minmax(0, 1fr)' }}>
           <section className="card" style={{ alignContent: 'start' }}>
-            <table className="data">
+            {p.teachers.length > 6 && (
+              <input className="input" type="search" placeholder="Buscar profesor…" aria-label="Buscar profesor" value={query}
+                onChange={(e) => setQuery(e.target.value)} />
+            )}
+            <table className="data teacher-list">
               <thead><tr><th>Profesor</th><th>Horas</th></tr></thead>
               <tbody>
-                {p.teachers.map((x) => {
+                {shown.length === 0 && <tr><td colSpan={2} className="small muted">Ningún profesor coincide con “{query}”.</td></tr>}
+                {shown.map((x) => {
                   const l = teacherLoad(p, x.id);
                   const over = x.maxHours != null && l > x.maxHours;
                   return (
-                    <tr key={x.id} onClick={() => setSelId(x.id)} style={{ cursor: 'pointer', background: x.id === selId ? 'var(--accent-soft)' : undefined }}>
+                    <tr key={x.id} aria-selected={x.id === selId} onClick={() => setSelId(x.id)} style={{ cursor: 'pointer', background: x.id === selId ? 'var(--accent-soft)' : undefined }}>
                       <td><button type="button" className="btn ghost small" style={{ padding: 0 }} onClick={() => setSelId(x.id)}>{x.name}</button></td>
                       <td><span className={`badge ${over ? 'warn' : ''}`}>{l}{x.maxHours != null ? ` / ${x.maxHours}` : ''}</span></td>
                     </tr>
@@ -92,6 +100,13 @@ export function ProfesoresPage() {
                     onClick: () => setT((x) => { x.unavailable = off ? x.unavailable.filter((y) => y !== k) : [...x.unavailable, k]; }),
                   };
                 }} />
+
+              <div className="legend small" aria-label="Leyenda">
+                <span><i className="swatch" />Disponible</span>
+                <span><i className="swatch off" />No disponible</span>
+                {p.rules.teacherMeetingSlots.length > 0 && <span><i className="swatch off" />Consejo de profesores</span>}
+                {p.school.closed.length > 0 && <span><i className="swatch closed" />Sin clases</span>}
+              </div>
 
               <h3>Clases asignadas</h3>
               {(() => {
