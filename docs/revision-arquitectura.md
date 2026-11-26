@@ -96,13 +96,15 @@ Las que ya tienen identificador están descritas en [mejoras.md](mejoras.md). La
 
 Otras menores, sin identificador:
 
-- `newId` genera 32 bits. El riesgo de colisión es bajo, pero en claves de actividad sería silencioso.
+- `newId` generaba 32 bits; la fase 0 amplía los nuevos identificadores a 128 bits sin modificar los existentes.
 - Carga diferida de las pantallas, para reducir el bundle inicial.
 - Pruebas automáticas de [`firestore.rules`](../firestore.rules), que hoy no tiene.
-- Una sola función `parseActivityKey`: hay 10 `split('#')` repetidos.
+- Centralización de las claves de actividad en `parseActivityKey` en la fase 0.
 - Auditoría de accesibilidad (T9).
 
-## Plan de acción
+## Plan de acción de la revisión original
+
+Para las próximas entregas, consultar el [plan de implementación vigente](plan-implementacion.md).
 
 **Estado:** las fases A, B y C están aplicadas (18 de noviembre de 2026). La D sigue pendiente, y la medición de la
 fase B no muestra, por ahora, motivo para hacerla (ver [resultados](#resultados-de-la-fase-b)). En la C, el inicio de

@@ -339,7 +339,10 @@ Se evaluó y por ahora no se justifica:
   Además, cada Worker consume unos 220 MB. Medido después de T4: en la referencia difícil, las semillas 1 a 5 llegaron
   todas a 507 de 517 bloques en 30 s, así que la semilla no cambia el resultado en ese caso.
 
-## Hoja de ruta sugerida
+## Hoja de ruta histórica
+
+La planificación operativa vigente está en el [plan de implementación](plan-implementacion.md). Esta tabla conserva
+el contexto y las decisiones de la revisión original.
 
 | Fase | Contenido | Estimación |
 |---|---|---|

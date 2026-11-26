@@ -76,6 +76,8 @@ alumno. Su número crece como el producto de los grupos de cada división.
 | Unidad de electivo | `${idFranja}:${idOpción}` | `11aa22bb:33cc44dd` |
 | Actividad | `${idUnidad}#${índiceDelBloque}` | `9f8e7d6c#1` |
 
+Los nuevos identificadores se generan con 128 bits aleatorios (32 caracteres hexadecimales); se conservan los IDs anteriores de 32 bits. `parseActivityKey` interpreta ambos formatos y las unidades de electivos sin depender del largo de sus IDs.
+
 Los fijados y las ubicaciones se guardan por clave de actividad. Si cambia la lista de bloques de una unidad, las claves
 existentes pueden quedar apuntando a un bloque de otra duración o a uno que ya no existe.
 [`lockProblems`](../src/domain/manual.ts#L217) detecta los fijados que ya no se pueden respetar.
@@ -380,5 +382,5 @@ pasos deben fallar si no encuentran lo que buscan, no saltarse la comprobación.
 - Sin cuenta, los datos viven en un solo navegador.
 - Con cuenta, cada horario pertenece a una sola persona: no se comparte entre usuarios.
 
-El análisis completo y las propuestas están en [mejoras.md](mejoras.md). Los cuellos de botella y el plan de acción
-vigente están en [revision-arquitectura.md](revision-arquitectura.md).
+El análisis de hallazgos está en [mejoras.md](mejoras.md) y las mediciones en [revision-arquitectura.md](revision-arquitectura.md).
+La planificación vigente está en [plan-implementacion.md](plan-implementacion.md).
