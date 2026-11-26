@@ -12,10 +12,17 @@ const when = (iso: string) => new Date(iso).toLocaleString('es-CL', { dateStyle:
 export function VersionsPanel({ projectId, name, onClose }: { projectId: string; name: string; onClose: () => void }) {
   const [list, setList] = useState<Version[] | null>(null);
   const [done, setDone] = useState('');
+  const [error, setError] = useState('');
   const importProjects = useProjects((s) => s.importProjects);
   const select = useProjects((s) => s.select);
 
-  useEffect(() => { void listVersions(projectId).then(setList); }, [projectId]);
+  useEffect(() => {
+    let active = true;
+    setList(null); setError('');
+    void listVersions(projectId).then((versions) => { if (active) setList(versions); })
+      .catch(() => { if (active) setError('No se pudieron leer las versiones guardadas. El horario actual no se modificó.'); });
+    return () => { active = false; };
+  }, [projectId]);
 
   const restore = (v: Version) => {
     const copyName = `${v.project.name} (${when(v.at)})`;
@@ -33,7 +40,7 @@ export function VersionsPanel({ projectId, name, onClose }: { projectId: string;
         últimas 15 en este navegador. Restaurar crea una copia aparte: el horario actual no cambia.
       </p>
       {done && <div className="notice ok" role="status">{done}</div>}
-      {list == null ? <p className="small muted">Cargando…</p>
+      {error ? <div className="notice bad" role="alert">{error}</div> : list == null ? <p className="small muted">Cargando…</p>
         : list.length === 0 ? <div className="empty">Todavía no hay versiones guardadas de este horario.</div>
         : (
           <table className="data versions">

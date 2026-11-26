@@ -16,8 +16,8 @@ e [ia.md](ia.md) mantienen sus hallazgos, resultados y diseños históricos.
 
 | Fase | Entrega | Estado |
 |---|---|---|
-| 0 | Saneamiento técnico y documentación | En revisión |
-| 1 | Seguridad y persistencia | Pendiente |
+| 0 | Saneamiento técnico y documentación | Completada (PR #13) |
+| 1 | Seguridad y persistencia | En desarrollo |
 | 2 | Diagnóstico avanzado de generación (F3) | Pendiente |
 | 3 | Herramientas de uso diario (F13, F14) | Pendiente |
 | 4 | Ampliación del modelo académico | Pendiente, según demanda |

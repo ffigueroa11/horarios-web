@@ -5,7 +5,9 @@ import { cloudEnabled } from '../cloud/config';
 import { countPending, SyncEngine, type SyncMeta, type SyncStatus } from '../cloud/engine';
 import type { Project } from '../domain/types';
 import { useHealth } from './health';
-import { ANON_KEY, clearAccount, savedAccount, setAccount, STORE_KEY, storeFlushed, useProjects } from './projects';
+import { ANON_KEY, clearAccount, savedAccount, setAccount, STORE_KEY, storeFlushed, closeProjectWrites, useProjects } from './projects';
+
+import { closeVersionWrites } from './versions';
 
 type Firebase = typeof import('../cloud/firebase');
 const loadFirebase = (): Promise<Firebase> => import('../cloud/firebase');
@@ -191,24 +193,24 @@ export async function initAccount() {
 
 export async function signIn(email: string, password: string) {
   const fb = await loadFirebase();
-  const user = await fb.signIn(email, password);
   await storeFlushed();
+  const user = await fb.signIn(email, password);
   setAccount({ uid: user.uid, email: user.email });
   location.reload();
 }
 
 export async function signInWithGoogle() {
   const fb = await loadFirebase();
-  const user = await fb.signInWithGoogle();
   await storeFlushed();
+  const user = await fb.signInWithGoogle();
   setAccount({ uid: user.uid, email: user.email });
   location.reload();
 }
 
 export async function signUp(email: string, password: string) {
   const fb = await loadFirebase();
-  const user = await fb.signUp(email, password);
   await storeFlushed();
+  const user = await fb.signUp(email, password);
   setAccount({ uid: user.uid, email: user.email });
   location.reload();
 }
@@ -243,7 +245,8 @@ export async function unsyncedCount(): Promise<number> {
 async function forgetLocalAccount() {
   leaving = true;
   engine?.stop();
-  await Promise.all([del(STORE_KEY), del(META_KEY)]);
+  await Promise.all([closeProjectWrites(), closeVersionWrites()]);
+  await Promise.all([del(STORE_KEY), del(META_KEY), del(`${STORE_KEY}:versiones`)]);
   localStorage.removeItem(SKIP_ADOPT_KEY);
   localStorage.removeItem(SAVED_AT_KEY);
   clearAccount();
@@ -318,6 +321,7 @@ export function skipAdoption() {
 }
 
 export async function authErrorMessage(e: unknown): Promise<string> {
+  if (e instanceof Error && !(e as { code?: string }).code) return e.message;
   try {
     return (await loadFirebase()).authErrorMessage(e);
   } catch {

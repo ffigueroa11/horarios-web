@@ -32,8 +32,25 @@ const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(S
 const TAB_ID = newId();
 
 let lastWrite: Promise<unknown> = Promise.resolve();
-/** Se cumple cuando lo último que cambió en los horarios ya está en IndexedDB. */
-export const storeFlushed = () => lastWrite.then(() => undefined, () => undefined);
+let writesClosed = false;
+/** Solo se cumple si el último estado se guardó; los flujos destructivos no deben ignorar un fallo. */
+export async function storeFlushed(): Promise<void> {
+  let pending: Promise<unknown>;
+  do {
+    pending = lastWrite;
+    try { await pending; } catch {
+      if (pending === lastWrite) throw new Error('No se pudo guardar en este navegador. Descarga un respaldo antes de continuar.');
+    }
+  } while (pending !== lastWrite);
+  const health = useHealth.getState();
+  if (health.readFailed || health.saveError) throw new Error('No se pudo guardar en este navegador. Descarga un respaldo antes de continuar.');
+}
+
+/** Impide nuevas escrituras al borrar los datos de una cuenta. Espera también las ya iniciadas. */
+export async function closeProjectWrites(): Promise<void> {
+  writesClosed = true;
+  await lastWrite.catch(() => undefined);
+}
 
 const idbStorage: StateStorage = {
   getItem: async (name) => {
@@ -46,13 +63,16 @@ const idbStorage: StateStorage = {
   },
   setItem: async (name, value) => {
     // Si no se pudo leer al iniciar, no se escribe: se sobrescribirían los datos guardados con un estado vacío.
-    if (useHealth.getState().readFailed) return;
+    if (writesClosed || useHealth.getState().readFailed) return;
+    const write = lastWrite.catch(() => undefined).then(() => set(name, value));
+    lastWrite = write;
     try {
-      lastWrite = set(name, value);
-      await lastWrite;
+      await write;
+      if (lastWrite !== write) return;
       useHealth.getState().setSaveError(null);
       channel?.postMessage({ type: 'saved', from: TAB_ID });
     } catch (e) {
+      if (lastWrite !== write) return;
       const quota = (e as Error)?.name === 'QuotaExceededError';
       useHealth.getState().setSaveError(quota
         ? 'El navegador no tiene espacio para guardar. Libera espacio o elimina horarios que no uses, y descarga un respaldo.'
