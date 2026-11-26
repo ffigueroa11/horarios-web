@@ -1,7 +1,7 @@
 // Traduce un Project al formato XML de FET (.fet). FET usa nombres como identificadores,
 // así que se generan nombres únicos y se guarda el mapa de vuelta (Id de actividad → bloque).
 import type { ActivityKey, Project } from './types';
-import { activityKey, slotKey } from './types';
+import { activityKey, parseActivityKey, slotKey } from './types';
 import { courseStudentSets, effectiveDivisions, parallelRows, units } from './units';
 import { slotProblem } from './manual';
 
@@ -238,8 +238,9 @@ export function exportFet(p: Project): FetExport {
     const lock = p.locks[key];
     if (!lock || lock.day >= dayNames.length || !periodNames.has(lock.periodId)) continue;
     // Un fijado que ya no cabe (cambió la jornada o las reglas) haría que FET rechace todo: se omite.
-    const unit = unitsById.get(key.split('#')[0]);
-    if (!unit || slotProblem(p, unit, Number(key.split('#')[1]), lock.day, lock.periodId)) continue;
+    const { unitId, index } = parseActivityKey(key);
+    const unit = unitsById.get(unitId);
+    if (!unit || !(index < unit.blocks.length) || slotProblem(p, unit, index, lock.day, lock.periodId)) continue;
     w(`<ConstraintActivityPreferredStartingTime><Weight_Percentage>100</Weight_Percentage><Activity_Id>${id}</Activity_Id><Preferred_Day>${esc(dayNames[lock.day])}</Preferred_Day><Preferred_Hour>${esc(periodNames.get(lock.periodId)!)}</Preferred_Hour><Permanently_Locked>false</Permanently_Locked><Active>true</Active><Comments></Comments></ConstraintActivityPreferredStartingTime>`);
   }
   w('</Time_Constraints_List>');

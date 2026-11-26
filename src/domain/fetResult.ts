@@ -1,5 +1,6 @@
 // Interpreta lo que escribe fet-cl: el horario (activities.xml) y el resultado (logs/result.txt).
 import type { ActivityKey, Placement, Project } from './types';
+import { parseActivityKey } from './types';
 import type { FetExport } from './fetExport';
 import { findEffectiveGroup, unitById, unitIdOf, type Unit } from './units';
 
@@ -97,9 +98,9 @@ export function describeUnit(p: Project, u: Unit): string {
 
 /** Describe una actividad: "Matemática · 1° Medio A · Prof. Soto (bloque 2 de 4, 2 h)". */
 export function describeActivity(p: Project, key: ActivityKey): string {
-  const idx = Number(key.split('#')[1]);
+  const idx = parseActivityKey(key).index;
   const u = unitById(p).get(unitIdOf(key));
-  if (!u) return 'una actividad eliminada';
+  if (!u || !(idx < u.blocks.length)) return 'una actividad eliminada';
   const part = u.blocks.length > 1 ? ` (bloque ${idx + 1} de ${u.blocks.length}, ${u.blocks[idx]} h)` : ` (${u.blocks[idx]} h)`;
   return `${describeUnit(p, u)}${part}`;
 }

@@ -3,6 +3,7 @@
 // franja de electivos es una unidad cuyos alumnos vienen de varios cursos. La exportación a FET, la
 // revisión previa, las vistas y el ajuste manual trabajan sobre unidades, sin distinguir el origen.
 import type { Course, CourseGroup, Division, Id, Project } from './types';
+import { parseActivityKey } from './types';
 
 export interface Audience {
   courseId: Id;
@@ -70,7 +71,7 @@ export function units(p: Project): Unit[] {
 }
 
 export const unitById = (p: Project) => new Map(units(p).map((u) => [u.id, u]));
-export const unitIdOf = (key: string) => key.split('#')[0];
+export const unitIdOf = (key: string) => parseActivityKey(key).unitId;
 
 /**
  * Unidades que deben ir a la misma hora, bloque por bloque:

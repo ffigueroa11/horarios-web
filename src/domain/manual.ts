@@ -4,7 +4,7 @@
 // días distintos, cursos sin horas libres, empezar en el primer bloque y ventanas de profesores).
 // Las reglas "preferibles" no se revisan.
 import type { ActivityKey, Placement, Project } from './types';
-import { activityKey, slotKey } from './types';
+import { activityKey, parseActivityKey, slotKey } from './types';
 import { courseStudentSets, effectiveDivisions, parallelRows, unitById, unitIdOf, type Unit } from './units';
 
 export interface Lesson {
@@ -24,7 +24,7 @@ export function lessons(p: Project): Lesson[] {
   for (const pl of p.timetable?.placements ?? []) {
     const unit = byId.get(unitIdOf(pl.key));
     const startIdx = per.get(pl.periodId);
-    const idx = Number(pl.key.split('#')[1]);
+    const idx = parseActivityKey(pl.key).index;
     if (!unit || startIdx == null || !(idx < unit.blocks.length)) continue;
     out.push({ pl, unit, idx, dur: unit.blocks[idx], startIdx });
   }
@@ -69,7 +69,7 @@ const rowsOf = (p: Project) => (memo ? (memo.rows ??= parallelRows(p)) : paralle
 /** Bloques que se mueven juntos con este (grupos en paralelo, opciones de una franja de electivos). */
 export function companions(p: Project, key: ActivityKey): ActivityKey[] {
   const uid = unitIdOf(key);
-  const idx = Number(key.split('#')[1]);
+  const idx = parseActivityKey(key).index;
   const row = rowsOf(p).find((r) => r.unitIds.includes(uid) && idx < r.blocks);
   return row ? row.unitIds.map((id) => activityKey(id, idx)) : [key];
 }
@@ -366,7 +366,7 @@ export function lockProblems(p: Project, describe: (key: ActivityKey) => string)
   const placed: { key: ActivityKey; unit: Unit; day: number; from: number; to: number }[] = [];
   for (const [key, lock] of Object.entries(p.locks)) {
     const unit = byId.get(unitIdOf(key));
-    const idx = Number(key.split('#')[1]);
+    const idx = parseActivityKey(key).index;
     if (!unit || !(idx < unit.blocks.length)) continue; // bloque eliminado: no se exporta
     const where = `${p.school.days[lock.day] ?? 'día eliminado'}, ${p.school.periods.find((x) => x.id === lock.periodId)?.label ?? 'bloque eliminado'}`;
     const problem = slotProblem(p, unit, idx, lock.day, lock.periodId);
