@@ -34,7 +34,10 @@ cuenta, los datos del colegio no salen del navegador; con una cuenta opcional, s
 
 - [Guía de uso](docs/guia-de-uso.md): para quienes arman el horario de un colegio.
 - [Arquitectura](docs/arquitectura.md): cómo funciona por dentro, para quien modifica el código.
-- [Análisis de mejoras](docs/mejoras.md): errores detectados, propuestas y hoja de ruta.
+- [Análisis de mejoras](docs/mejoras.md): errores detectados y registro histórico de propuestas.
+- [Plan de implementación](docs/plan-implementacion.md): hoja de ruta vigente y criterios de cierre.
+- [Revisión de arquitectura](docs/revision-arquitectura.md): mediciones y decisiones técnicas.
+- [Propuesta de asistencia con IA](docs/ia.md): diseño aún no implementado.
 - [Motor de generación](engine/README.md): cómo se compila FET a WebAssembly.
 
 ## Desarrollo

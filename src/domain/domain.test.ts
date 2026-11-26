@@ -6,7 +6,7 @@ import { describeActivity, fetMessages, parseActivitiesXml, parseResult } from '
 import { courseLoad, describeBlocks, longestRun, openSlots, parseBlocks, stepsDone, teacherLoad, validate } from './validate';
 import { units } from './units';
 import { checkMove, continueWith } from './manual';
-import { activityKey, migrateProject, newId, slotKey } from './types';
+import { activityKey, migrateProject, newId, parseActivityKey, slotKey } from './types';
 
 describe('jornada', () => {
   it('cuenta bloques abiertos y el tramo continuo más largo', () => {
@@ -86,7 +86,7 @@ describe('identificadores', () => {
     const original = crypto.randomUUID;
     Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
     try {
-      expect(newId()).toMatch(/^[0-9a-f]{8}$/);
+      expect(newId()).toMatch(/^[0-9a-f]{32}$/);
       expect(new Set(Array.from({ length: 200 }, newId)).size).toBe(200);
     } finally {
       Object.defineProperty(crypto, 'randomUUID', { value: original, configurable: true });
@@ -379,5 +379,19 @@ describe('historial de versiones', () => {
     expect(needsAutosave(list, 'a', at(20))).toBe(false);
     expect(needsAutosave(list, 'a', at(30))).toBe(true);
     expect(needsAutosave(list, 'b', at(1))).toBe(true);
+  });
+});
+
+
+describe('claves de actividad', () => {
+  it('acepta identificadores antiguos, nuevos y de electivos', () => {
+    for (const unitId of ['9f8e7d6c', newId(), '11aa22bb:33cc44dd', `${newId()}:${newId()}`]) {
+      expect(parseActivityKey(activityKey(unitId, 2))).toEqual({ unitId, index: 2 });
+    }
+  });
+  it('rechaza claves incompletas, negativas o ambiguas', () => {
+    for (const key of ['abc', '#0', 'abc#', 'abc#-1', 'abc#1.5', 'abc#1#2', 'abc#01', 'abc#9007199254740992']) {
+      expect(parseActivityKey(key)).toEqual({ unitId: '', index: NaN });
+    }
   });
 });

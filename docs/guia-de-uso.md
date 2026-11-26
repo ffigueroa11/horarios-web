@@ -44,8 +44,8 @@ división. Si marcas **Clases de los grupos en paralelo**, sus clases van a la m
 la carga: la primera asignatura de un grupo con la primera del otro, y así sucesivamente, por lo que deben tener los
 mismos bloques.
 
-> Eliminar un curso también elimina su carga, y no se puede deshacer. La app pide confirmar e indica cuántas clases se
-> pierden. Descarga un respaldo antes de hacer cambios grandes.
+> Eliminar un curso también elimina su carga. La app pide confirmar e indica cuántas clases se
+> pierden. Puedes usar **Deshacer** mientras el historial de edición siga disponible en la pestaña. Descarga un respaldo antes de hacer cambios grandes.
 
 ### 3. Asignaturas y salas
 
@@ -55,8 +55,8 @@ horario.
 Registra solo las **salas especiales**, las que se comparten entre cursos, como el gimnasio o un laboratorio. Una sala
 indicada en una asignatura evita que dos cursos la usen al mismo tiempo.
 
-> Eliminar una asignatura también la quita de la carga de todos los cursos y de los electivos. La app pide confirmar y
-> no se puede deshacer.
+> Eliminar una asignatura también la quita de la carga de todos los cursos y de los electivos. La app pide confirmar.
+> Puedes usar **Deshacer** mientras el historial de edición siga disponible en la pestaña.
 
 ### 4. Profesores
 
@@ -264,8 +264,8 @@ Revisa el informe con calma. No todo tiene equivalente:
 
 ## Sin conexión
 
-Después de la primera visita, la app abre y genera horarios sin internet. Las funciones de Excel pueden no estar
-disponibles sin conexión si no las has usado antes en esa versión; usa CSV o conéctate un momento.
+Una vez que termina la instalación del caché sin conexión, la app puede abrirse, generar horarios e importar y exportar
+Excel sin internet, aunque no hayas usado Excel antes. Si la instalación aún no termina, vuelve a conectarte.
 
 Cuando hay una versión nueva, aparece **Actualizar ahora**.
 

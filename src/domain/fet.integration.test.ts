@@ -8,7 +8,7 @@ import { describeActivity, parseActivitiesXml, parsePartial, parseResult } from 
 import { unmetPreferences } from './preferences';
 import { fetArgs } from '../engine/args';
 import { hasEngine, runEngine } from './nodeEngine.testutil';
-import { slotKey, type Project } from './types';
+import { parseActivityKey, slotKey, type Project } from './types';
 import { teacherLoad, validate } from './validate';
 import { courseStudentSets, units } from './units';
 import { applyMove, checkMove, companions, lessons } from './manual';
@@ -54,9 +54,9 @@ function checkTimetable(p: Project, placed: ReturnType<typeof parseActivitiesXml
   const occupied = new Map<string, string>(); // `${quien}|${dia}|${tramo}` → actividad
   const daily = new Map<string, number>();
   for (const pl of placed) {
-    const [uid, idx] = pl.key.split('#');
+    const { unitId: uid, index: idx } = parseActivityKey(pl.key);
     const u = byId.get(uid)!;
-    const dur = u.blocks[Number(idx)];
+    const dur = u.blocks[idx];
     const start = per.get(pl.periodId)!;
     for (let k = 0; k < dur; k++) {
       const period = p.school.periods[start + k];
@@ -121,7 +121,7 @@ describe.skipIf(!hasEngine)('motor FET (WebAssembly)', () => {
     const allowed = new Set(p.rules.subjectWindows[0].periodIds);
     const byId = new Map(units(p).map((u) => [u.id, u]));
     for (const pl of placed)
-      if (byId.get(pl.key.split('#')[0])!.subjectId === edf.id) expect(allowed.has(pl.periodId)).toBe(true);
+      if (byId.get(parseActivityKey(pl.key).unitId)!.subjectId === edf.id) expect(allowed.has(pl.periodId)).toBe(true);
   }, 180_000);
 
   it('respeta los bloques fijados al regenerar', async () => {
@@ -223,7 +223,7 @@ describe.skipIf(!hasEngine)('motor FET (WebAssembly)', () => {
     const lines = out.softConflicts.split(/\r?\n/);
     const ids = (l: string) => [...l.matchAll(/\bid\s*=\s*(\d+)\s*\(/gi)].map((m) => ex.activityById.get(Number(m[1]))!);
     const fetWindows = lines.filter((l) => /preferred time slots/.test(l)).flatMap(ids);
-    const fetSpread = lines.filter((l) => /min days between/.test(l)).flatMap(ids).map((k) => k.split('#')[0]);
+    const fetSpread = lines.filter((l) => /min days between/.test(l)).flatMap(ids).map((k) => parseActivityKey(k).unitId);
     const unmet = unmetPreferences(p);
     expect(unmet.windows.length).toBeGreaterThan(0);
     expect(unmet.spread.length).toBeGreaterThan(0);

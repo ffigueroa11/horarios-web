@@ -238,13 +238,25 @@ function pruneOrphans(p: Project) {
   for (const e of p.electives)
     if (e.courseIds.length > 0) for (const o of e.options) blocks.set(`${e.id}:${o.id}`, e.blocks.length);
   for (const [key, lock] of Object.entries(p.locks)) {
-    const [unitId, idx] = key.split('#');
+    const { unitId, index } = parseActivityKey(key);
     // `!lock`: un fijado dañado en el almacenamiento (los respaldos ya pasan por checkProject).
-    if (!lock || !(Number(idx) < (blocks.get(unitId) ?? 0)) || !validSlot(slotKey(lock.day, lock.periodId))) delete p.locks[key];
+    if (!lock || !(index < (blocks.get(unitId) ?? 0)) || !validSlot(slotKey(lock.day, lock.periodId))) delete p.locks[key];
   }
 }
 
 export const slotKey = (day: number, periodId: Id) => `${day}:${periodId}`;
 export const activityKey = (assignmentId: Id, index: number): ActivityKey => `${assignmentId}#${index}`;
+/** Descompone claves de carga o electivo sin depender del largo de sus IDs.
+ * Una clave inválida devuelve un índice NaN y no identifica ninguna unidad. */
+export function parseActivityKey(key: ActivityKey): { unitId: string; index: number } {
+  const separator = key.indexOf('#');
+  const raw = key.slice(separator + 1);
+  const index = Number(raw);
+  if (separator <= 0 || !/^(0|[1-9]\d*)$/.test(raw) || !Number.isSafeInteger(index)) {
+    return { unitId: '', index: NaN };
+  }
+  return { unitId: key.slice(0, separator), index };
+}
+
 // getRandomValues, a diferencia de randomUUID, también existe en sitios servidos por HTTP (ej. la red de un colegio).
-export const newId = () => [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, '0')).join('');
+export const newId = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, '0')).join('');

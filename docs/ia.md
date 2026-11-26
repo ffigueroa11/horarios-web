@@ -1,5 +1,7 @@
 # Asistencia con IA a costo cero
 
+> Propuesta técnica histórica, no implementada. El orden vigente de trabajo está en el [plan de implementación](plan-implementacion.md).
+
 Propuesta del 17 de noviembre de 2026 para agregar IA a la app sin servidores ni costos de API, ni para el proyecto ni
 para los colegios. Complementa a [arquitectura.md](arquitectura.md), que explica cómo funciona el código, y a
 [mejoras.md](mejoras.md), que lleva el registro de errores y propuestas.
@@ -89,13 +91,13 @@ export interface AIProvider {
   actual.** Si los pesos de un modelo quedaran ahí, se volverían a descargar en cada versión de la app. WebLLM y Chrome
   usan sus propios cachés y el handler `fetch` ignora pedidos a otros dominios, así que hoy no hay problema, pero debe
   quedar como invariante.
-- **El chunk de `src/ai/` no queda precacheado.** El service worker solo guarda lo que enlaza `index.html`; el chunk se
-  guarda la primera vez que se usa, porque es del mismo origen. Basta así: las vías B y C necesitan internet de todos
-  modos.
-- **No hay CSP.** Antes de guardar claves, hay que agregar en [vercel.json](../vercel.json) un
-  `Content-Security-Policy` con `connect-src` limitado a `'self'`, los dominios de Firebase y los de los proveedores.
-  Así, si alguien logra inyectar código, no puede enviar la clave a otro servidor. Hay que probar el inicio de sesión de
-  Firebase después del cambio.
+- **El build genera `precache.json`** con todos los módulos, incluidos los de carga diferida. El service worker los
+  precarga al instalarse. Si se incorpora IA, revisar el tamaño de los módulos y mantener los pesos de los modelos
+  fuera de este precaché; no descargarlos sin autorización.
+- **Ya existe CSP en Vercel.** Antes de activar proveedores externos, ampliar de forma mínima `connect-src` en
+  [vercel.json](../vercel.json), revisar la política del despliegue alternativo y probar Firebase. La CSP reduce vías
+  de exfiltración, pero no protege por sí sola una clave accesible al código de la página; priorizar claves de sesión,
+  autorización explícita y dominios permitidos por el proveedor.
 - **zod no está instalado.** Se propone `zod/mini` (v4), importado solo desde `src/ai/` para que el bundle principal no
   crezca, y `z.toJSONSchema()` para generar los esquemas que piden Gemini y Nano.
 
@@ -257,8 +259,7 @@ const Parche = z.object({ ops: z.array(PatchOp).max(20), dudas: z.array(z.string
   `noSoportado`.
 - "Mañana" y "tarde" se resuelven en `domain` según `periods` (por ejemplo, la tarde son los bloques posteriores al
   almuerzo). Esa decisión no se le deja al modelo.
-- `applyPatch` hace un solo `update()`, y después se revisa `lockProblems`, porque `migrateProject` no limpia los
-  fijados.
+- `applyPatch` hace un solo `update()`, y después se revisa `lockProblems`, porque `migrateProject` elimina fijados huérfanos, pero no todos los que pasan a ser incompatibles con una regla.
 - `tramoCerrado` modifica `School.closed` y `consejoProfesores` modifica `Rules.teacherMeetingSlots` (no `School`).
   Ambas usan claves `${día}:${idTramo}` y solo afectan tramos de tipo `clase`. Son cambios a la jornada: la tarjeta
   advierte que afectan a todos los cursos o a todos los docentes, y después se revisan `lockProblems` y `validate`
@@ -299,7 +300,9 @@ src/ai/                    # solo se carga con import('./ai/run') desde un botó
 src/store/ai.ts            # proveedor elegido; nunca en Project, en el respaldo ni en la nube
 ```
 
-## Hoja de ruta
+## Hoja de ruta de IA (propuesta histórica)
+
+El [plan de implementación](plan-implementacion.md) determina cuándo ejecutar estas entregas y sus dependencias.
 
 | Fase | Entrega | Riesgo | Cómo probar |
 |---|---|---|---|
