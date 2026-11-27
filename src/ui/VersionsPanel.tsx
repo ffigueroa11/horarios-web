@@ -18,7 +18,6 @@ export function VersionsPanel({ projectId, name, onClose }: { projectId: string;
 
   useEffect(() => {
     let active = true;
-    setList(null); setError('');
     void listVersions(projectId).then((versions) => { if (active) setList(versions); })
       .catch(() => { if (active) setError('No se pudieron leer las versiones guardadas. El horario actual no se modificó.'); });
     return () => { active = false; };

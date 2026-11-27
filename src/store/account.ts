@@ -1,6 +1,6 @@
 // Cuenta opcional y sincronización. Sin sesión iniciada este módulo no carga Firebase ni se conecta a ningún servidor.
 import { create } from 'zustand';
-import { del, get, set } from 'idb-keyval';
+import { delMany, get, set, update } from 'idb-keyval';
 import { cloudEnabled } from '../cloud/config';
 import { countPending, SyncEngine, type SyncMeta, type SyncStatus } from '../cloud/engine';
 import type { Project } from '../domain/types';
@@ -115,7 +115,11 @@ function startSync(fb: Firebase, uid: string) {
     // cerrara justo ahí, la versión antigua parecería un cambio local y sobrescribiría la nube.
     saveMeta: async (meta: SyncMeta) => { await storeFlushed(); await set(META_KEY, meta); },
   };
-  const current = new SyncEngine(fb.cloudBackend(uid), local, {
+  const backend = fb.cloudBackend(uid);
+  const current = new SyncEngine({ ...backend, put: async (doc) => {
+    await storeFlushed();
+    return backend.put(doc);
+  } }, local, {
     status: (sync, detail) => { useAccount.setState({ sync, syncDetail: detail ?? '' }); shareStatus(); },
     notice: (message) => useAccount.setState((s) => (s.notices.includes(message) ? s : { notices: [...s.notices, message] })),
     saved: (savedAt) => {
@@ -237,16 +241,16 @@ export async function checkVerified(): Promise<boolean> {
 
 /** Cuántos horarios se perderían al cerrar sesión ahora. */
 export async function unsyncedCount(): Promise<number> {
-  const projects = useProjects.getState().projects;
   await engine?.flush().catch(() => undefined);
-  return countPending(projects, (await get<SyncMeta>(META_KEY)) ?? {});
+  const meta = await get<SyncMeta>(META_KEY);
+  return countPending(useProjects.getState().projects, meta ?? {});
 }
 
 async function forgetLocalAccount() {
   leaving = true;
   engine?.stop();
   await Promise.all([closeProjectWrites(), closeVersionWrites()]);
-  await Promise.all([del(STORE_KEY), del(META_KEY), del(`${STORE_KEY}:versiones`)]);
+  await delMany([STORE_KEY, META_KEY, `${STORE_KEY}:versiones`]);
   localStorage.removeItem(SKIP_ADOPT_KEY);
   localStorage.removeItem(SAVED_AT_KEY);
   clearAccount();
@@ -271,9 +275,18 @@ export async function adoptAnonProjects() {
   const list = await readAnonProjects();
   if (list.length > 0) useProjects.getState().importProjects(list);
   await storeFlushed();
-  await del(ANON_KEY);
+  const adopted = new Map(list.map((p) => [p.id, JSON.stringify(p)]));
+  await update<string>(ANON_KEY, (raw) => {
+    if (!raw) return JSON.stringify({ state: { projects: {}, currentId: null }, version: 3 });
+    const snapshot = JSON.parse(raw);
+    for (const [id, project] of Object.entries(snapshot.state.projects)) {
+      if (adopted.get(id) === JSON.stringify(project)) delete snapshot.state.projects[id];
+    }
+    if (!snapshot.state.projects[snapshot.state.currentId]) snapshot.state.currentId = null;
+    return JSON.stringify(snapshot);
+  });
   useProjects.getState().select(null);
-  useAccount.setState({ anonCount: 0 });
+  await refreshAnonCount();
 }
 
 function savedText(at: number | null): string {
@@ -295,10 +308,12 @@ const ONLY_HERE = 'Tus cambios están seguros en este navegador, pero todavía n
 
 /** Dónde está guardado lo último que hizo el usuario. */
 export function useSyncView(): SyncView {
+  const localFailure = useHealth((s) => s.saveError ?? s.storageError);
   const phase = useAccount((s) => s.phase);
   const sync = useAccount((s) => s.sync);
   const syncDetail = useAccount((s) => s.syncDetail);
   const savedAt = useAccount((s) => s.savedAt);
+  if (localFailure) return { tone: 'bad', text: 'Guardado local sin confirmar', detail: localFailure };
   if (phase === 'local') {
     return { tone: 'neutral', text: 'Guardado solo en este navegador', detail: 'Si borras los datos de navegación se pierde. Descarga un respaldo de vez en cuando.' };
   }
