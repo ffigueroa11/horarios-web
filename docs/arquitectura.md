@@ -183,6 +183,33 @@ rechaza las ventanas de profesores, las horas libres de alumnos y el inicio en e
 ([medición](mejoras.md#e7-textos-que-no-coinciden-con-el-comportamiento)). Hoy solo "repartir en días" y "bloques
 permitidos" permiten elegir.
 
+## Diagnóstico y alternativas
+
+Cuando no hay horario, [`diagnose.ts`](../src/domain/diagnose.ts) explica por qué sin llamar al motor, y
+[`relax.ts`](../src/domain/relax.ts) con [`store/relax.ts`](../src/store/relax.ts) prueban cambios con el motor.
+
+- **Demostrado frente a hipótesis.** Un hallazgo demostrado es una condición necesaria que los datos no cumplen: horas
+  frente a bloques libres (con máximo diario, máximo de días y días ya ocupados por fijados), bloques de k horas frente a
+  ⌊L/k⌋ por tramo seguido libre, bloques que deben ir en días distintos frente a días que los admiten, bloques
+  permitidos, salas y el horario común de clases en paralelo. Cada conteo relaja el problema real, así que nunca afirma
+  una imposibilidad falsa, pero no detecta todas. Lo demás (poco margen, reglas estrictas combinadas) es hipótesis y
+  nunca usa la palabra "imposible". **Al agregar una comprobación demostrada, verifica que no aparezca en los colegios
+  de referencia** (`diagnose.test.ts`).
+- **No bloquea la generación.** La pantalla muestra el diagnóstico después de un `impossible` o `timeout` y, antes de
+  generar, si hay algo demostrado. Con errores en la revisión previa no se muestra.
+- **Cambios cerrados.** `Change` es un dato, no una función: `applyChange` lo aplica sobre una copia o un borrador de
+  `update()`, `describeChange` lo explica y `relaxPlan` los ordena: primero lo que señalan los hallazgos demostrados,
+  luego pasar a preferible, liberar fijados cercanos, aflojar reglas globales y, al final, liberar todos los fijados.
+- **Ejecución.** `store/relax.ts` evalúa una variante a la vez con una semilla fija y un tiempo corto, sobre una copia
+  tomada al empezar. No importa `store/projects` ni usa `useGeneration.start()`. Si el diagnóstico no demostró nada,
+  evalúa también los datos sin cambios: si eso funciona, la causa era la semilla, no una regla.
+- **Resultados.** `funciona` (`ok`), `no-basta` (`impossible`), `sin-resolver` (`timeout`) y `rechazada`
+  (`invalid`). "Sin resolver" nunca se presenta como descartado; se ofrece reintentar con más tiempo.
+- **Un cálculo a la vez.** [`engineLock`](../src/store/engineLock.ts) impide que la generación y la evaluación usen el
+  motor al mismo tiempo (cada Worker usa unos 220 MB).
+- **Aplicar.** Solo tras confirmar en la pantalla: `update()` con `applyChange` (`touch: false` al liberar fijados) y
+  luego generar con la misma semilla, que repite el horario encontrado. Se puede deshacer.
+
 ## Ajuste manual
 
 [`manual.ts`](../src/domain/manual.ts) responde si un bloque puede ir a un lugar, sin llamar al motor:
@@ -346,6 +373,9 @@ también la política de página para los alias. La directiva `frame-ancestors` 
 | [`domain.test.ts`](../src/domain/domain.test.ts) | Jornada, validación, exportación, divisiones, electivos, mensajes de FET y fijados | `npm test` |
 | [`backup.test.ts`](../src/domain/backup.test.ts), [`importCarga.test.ts`](../src/domain/importCarga.test.ts), [`fetImport.test.ts`](../src/domain/fetImport.test.ts) | Importaciones y respaldos | `npm test` |
 | [`fet.integration.test.ts`](../src/domain/fet.integration.test.ts), [`manual.integration.test.ts`](../src/domain/manual.integration.test.ts) | Generación real con el motor en Node, y sus resultados verificados | `npm test` |
+| [`diagnose.test.ts`](../src/domain/diagnose.test.ts), [`relax.test.ts`](../src/domain/relax.test.ts), [`store/relax.test.ts`](../src/store/relax.test.ts) | Sin hallazgos demostrados falsos en los colegios de referencia; variantes sobre copias, orden, cancelación y exclusión con la generación (motor simulado) | `npm test` |
+| [`relax.integration.test.ts`](../src/domain/relax.integration.test.ts) | Alternativas con el motor real: franja sin horario común y colegio difícil | `npm test` |
+| [`e2e/diagnostico.spec.ts`](../e2e/diagnostico.spec.ts) | Diagnóstico, evaluar, confirmar y detener en el navegador | `npm run build`, luego `npm run e2e` |
 | [`projects.test.ts`](../src/store/projects.test.ts) | Cuándo un horario queda desactualizado al importar, duplicar y editar | `npm test` |
 | [`engine.test.ts`](../src/cloud/engine.test.ts), [`account.test.ts`](../src/store/account.test.ts) | Sincronización con una nube en memoria, y espacios de datos por cuenta | `npm test` |
 | [`large.test.ts`](../src/domain/large.test.ts) | Que las referencias se lean sin errores; con `LARGE=1`, tiempos en un colegio sintético y en dos reales anonimizados ([`fixtures/`](../src/domain/fixtures/)) | `LARGE=1 npx vitest run src/domain/large.test.ts` |

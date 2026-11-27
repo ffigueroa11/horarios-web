@@ -254,7 +254,7 @@ Ordenadas por valor frente a esfuerzo. El valor para los colegios es una hipóte
 |---|---|---|---|---|
 | F1 | **Horario parcial al agotarse el tiempo** (aplicada) | Ver qué alcanzó a ubicarse orienta mejor que un mensaje de error | Lee `horario-highest/horario_activities.xml`; en un archivo real, 507 de 517 bloques, igual al máximo que informa FET | S–M |
 | F2 | **Informe de preferencias no cumplidas** (aplicada) | El mensaje de éxito no decía cuáles fallaron | Se calcula desde el horario, no desde `horario_soft_conflicts.txt` (ver [arquitectura](arquitectura.md#resultados)); una prueba contrasta ambos | S–M |
-| F3 | **Asistente "¿qué regla lo impide?"** | Responde la pregunta real cuando no hay horario | Volver a generar quitando una regla a la vez, con tiempo acotado y en otro Worker | M |
+| F3 | **Asistente "¿qué regla lo impide?"** (aplicada: [diagnóstico y alternativas](arquitectura.md#diagnóstico-y-alternativas)) | Responde la pregunta real cuando no hay horario | Volver a generar quitando una regla a la vez, con tiempo acotado y en otro Worker | M |
 | F4 | **Elegir entre varios horarios** | FET se detiene en el primero válido, no en el mejor | Generar varios con distintas semillas y comparar ventanas y preferencias. Depende de F2 | M |
 
 La semilla ya se guarda en `Timetable` (`seed`): con los mismos datos y la misma semilla, el motor repite el horario.

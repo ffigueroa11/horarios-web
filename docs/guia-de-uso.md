@@ -125,6 +125,10 @@ mientras avanza.
 Si alguna regla preferible no se cumplió, el resultado lo dice y lista qué clases quedaron con más de un bloque el mismo
 día o fuera de los bloques permitidos. El horario es válido igual.
 
+Si la app ya puede demostrar que no existe ningún horario posible, por ejemplo porque los profesores de una franja de
+electivos nunca coinciden libres, lo muestra en el **Diagnóstico** antes de generar. Ver
+[Cuando no se puede generar](#cuando-no-se-puede-generar).
+
 ### 9. Ver y ajustar
 
 Mira el horario por curso, profesor o sala.
@@ -163,7 +167,30 @@ bloques fijados se mantienen y el resto se reorganiza.
 
 ### "Con estas reglas el horario es imposible" o "No se encontró un horario en el tiempo máximo"
 
-Prueba en este orden, y genera después de cada cambio:
+Debajo del resultado aparece el **Diagnóstico**. Separa dos tipos de hallazgos:
+
+- **Demostrado** ("Imposible con estos datos"): la app contó horas, bloques seguidos y días y comprobó que ningún
+  horario cumple a la vez las reglas obligatorias. Más tiempo de cálculo no lo resuelve: corrige lo que indica.
+- **Hipótesis** ("Posibles dificultades"): un profesor, una sala o una franja con poco margen, o una combinación de reglas
+  estrictas. Puede explicar el problema, pero no está comprobado.
+
+Cada hallazgo dice qué profesores, cursos y asignaturas afecta, qué hacer y lleva al paso que hay que revisar. Los
+marcados **Relacionado con lo pendiente** tocan al bloque que no se pudo ubicar o a los que quedaron sin lugar.
+
+**Evaluar alternativas** prueba con el motor, uno a la vez, cambios de una sola regla: dejar una regla como preferible,
+liberar bloques fijados, suponer que un profesor está disponible, subir un máximo. Cada uno se prueba sobre una copia y
+con el mismo punto de partida, por unos segundos (puedes elegir 15, 30 o 60). El resultado de cada uno es:
+
+- **Funciona**: con ese cambio el motor encontró un horario completo.
+- **No basta**: el motor concluyó que con ese cambio tampoco hay horario.
+- **Sin resolver**: se acabó el tiempo. **No significa que el cambio no sirva**: usa **Buscar con más tiempo**.
+
+La evaluación se detiene en el primer cambio que funciona; **Probar las demás** sigue con el resto y **Detener** la
+interrumpe. Mientras evalúa no se puede generar. **Tus datos no cambian** hasta que presionas **Aplicar este cambio…** y
+lo confirmas; entonces se aplica, se genera con el mismo punto de partida de la evaluación y se puede **Deshacer**. Si
+el cambio es suponer que un profesor está disponible, confírmalo antes con esa persona.
+
+Si prefieres revisar a mano, prueba en este orden y genera después de cada cambio:
 
 1. **Vuelve a intentar.** Cada intento sigue un camino distinto.
 2. **Aumenta el tiempo máximo.**
