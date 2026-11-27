@@ -18,7 +18,8 @@ e [ia.md](ia.md) mantienen sus hallazgos, resultados y diseños históricos.
 |---|---|---|
 | 0 | Saneamiento técnico y documentación | Completada (PR #13) |
 | 1 | Seguridad y persistencia | Integrada (PR #14); pendiente la validación en el alojamiento |
-| 2 | Diagnóstico avanzado de generación (F3) | En revisión (rama `fase-2/diagnostico-avanzado`) |
+| 2 | Diagnóstico avanzado de generación (F3) | Implementada en `fase-2/diagnostico-avanzado`, sin PR; espera el hotfix de Firebase |
+| — | Hotfix: Firebase 13.4.0 con dependencias coherentes | Rama `hotfix/firebase-build` publicada; PR por abrir e integrar |
 | 3 | Herramientas de uso diario (F13, F14) | Pendiente |
 | 4 | Ampliación del modelo académico | Pendiente, según demanda |
 | 5 | Asistencia opcional con IA | Pendiente, según resultados |
@@ -65,6 +66,23 @@ Implementado el 26 de noviembre:
   fijados. Una franja sin horario común, que el motor solo agota, se demuestra imposible antes de generar.
 - Verificación local: lint, tipos y build correctos; 173 pruebas aprobadas (7 omitidas); Playwright 53 aprobadas en
   los cuatro perfiles. `npm run test:firestore` no se ejecutó en local por falta de Java 21; queda a cargo de CI.
+
+Estado al 26 de noviembre: los cinco commits están en `origin/fase-2/diagnostico-avanzado` (último `eb070c7`) y la
+vista previa de Vercel compila. Falta: integrar `main` después del hotfix, volver a verificar, abrir el PR y medir el
+tiempo por alternativa con los `.fet` reales.
+
+### Hotfix de Firebase
+
+El PR #12 de Dependabot (firebase 13.2.0 → 13.4.0 y otras ocho actualizaciones) no compila en Vercel:
+`"_setTrustedScriptSrc" is not exported by "@firebase/app"`. `main` no está afectado. firebase 13.4.0 fija
+`@firebase/app` 0.16.7, pero los demás módulos lo piden como dependencia par `0.x` y npm deja la 0.16.5 en la raíz.
+
+- `hotfix/firebase-build` (desde `main`): firebase `^13.4.0` con `npm dedupe` (una sola `@firebase/app` 0.16.7) y
+  `src/cloud/firebaseVersions.test.ts`, que falla si un lockfile vuelve a mezclar versiones.
+- Verificación local: lint, tipos y build correctos; 149 pruebas aprobadas (7 omitidas); Playwright 48 aprobadas en los
+  cuatro perfiles; `npm audit --omit=dev` sin vulnerabilidades. La vista previa de Vercel de la rama compila.
+- Pendiente: abrir el PR, CI completa (incluido `test:firestore`), probar a mano el inicio de sesión y la
+  sincronización en la vista previa, integrar y luego llevar `main` a la fase 2. Dependabot debería rehacer el PR #12.
 
 ### Fase 3: uso diario
 
