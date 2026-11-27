@@ -26,6 +26,11 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      - name: Probar reglas y adaptador con Firestore local
+        run: |
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          npm run test:firestore
       - run: npm run build
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

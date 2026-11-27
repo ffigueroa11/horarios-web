@@ -15,7 +15,7 @@ service cloud.firestore {
       return d.keys().hasOnly(['revision', 'schema', 'data', 'updatedAt'])
         && d.keys().hasAll(['revision', 'schema', 'data', 'updatedAt'])
         && d.revision is int
-        && d.schema is int
+        && d.schema is int && d.schema >= 1
         && d.updatedAt == request.time
         && (d.data == null || (d.data is string && d.data.size() <= 1000000));
     }
