@@ -359,6 +359,10 @@ Con Java 21 en el PATH, `npm run test:firestore` inicia Auth y Firestore locales
 el alta, la verificación de correo, el acceso, las revisiones y las eliminaciones con el SDK. Al cambiar las reglas o el adaptador, repite también el flujo
 con dos navegadores y cuentas de prueba en el entorno de validación.
 
+El SDK de Firestore 13.2.0 usa gRPC en Node. El `override` de `package.json` fija `@grpc/grpc-js` 1.14.7
+para evitar las alertas de la serie 1.9 que solicita el SDK. Al actualizar Firebase, revisa si puedes retirar ese
+ajuste con `npm audit --omit=dev` y `npm run test:firestore`.
+
 Las pruebas de navegador fijan `Math.random` para que la semilla, y por lo tanto el horario, sea siempre la misma. Sus
 pasos deben fallar si no encuentran lo que buscan, no saltarse la comprobación. La grilla interactiva se selecciona con
 `.card td.lesson`, porque la página también contiene una copia oculta para imprimir.

@@ -35,6 +35,11 @@
     "write-excel-file": "^4.1.1",
     "zustand": "^5.0.16"
   },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "1.14.7"
+    }
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
