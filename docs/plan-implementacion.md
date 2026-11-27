@@ -16,8 +16,8 @@ e [ia.md](ia.md) mantienen sus hallazgos, resultados y diseños históricos.
 
 | Fase | Entrega | Estado |
 |---|---|---|
-| 0 | Saneamiento técnico y documentación | En revisión |
-| 1 | Seguridad y persistencia | Pendiente |
+| 0 | Saneamiento técnico y documentación | Completada (PR #13) |
+| 1 | Seguridad y persistencia | En desarrollo |
 | 2 | Diagnóstico avanzado de generación (F3) | Pendiente |
 | 3 | Herramientas de uso diario (F13, F14) | Pendiente |
 | 4 | Ampliación del modelo académico | Pendiente, según demanda |
@@ -33,10 +33,16 @@ e [ia.md](ia.md) mantienen sus hallazgos, resultados y diseños históricos.
 ### Fase 1: seguridad y persistencia
 
 - Configurar protección de main y comprobaciones obligatorias en GitHub.
-- Probar las reglas y el adaptador de Firebase con emuladores; incluir acceso cruzado, correo no verificado, revisiones y eliminación.
-- Prevenir sobrescrituras entre pestañas, incluidas las del historial de versiones; probar fallos de escritura y recuperación.
-- Homologar la CSP de despliegues alternativos y verificar autenticación y generación.
+- Reglas y adaptador de Firebase cubiertos por `npm run test:firestore`, incluido en CI con el emulador local.
+- Guardado entre pestañas e historial con transacciones IndexedDB. Las pruebas cubren concurrencia, fallos de
+  escritura y recuperación. Playwright abre dos pestañas y comprueba los horarios después de recargar.
+- CSP compartida entre Vercel, vista previa y el build alternativo. Playwright verifica la generación.
+  Pendiente en el alojamiento de validación: inicio de sesión con Google y correo, y sincronización entre dos navegadores.
 - Cierre: pruebas de concurrencia, reglas y compatibilidad, CI en verde, revisión de configuración externa.
+
+Verificación local del 26 de noviembre: lint, tipos y build correctos, 148 pruebas aprobadas en la suite general
+y 3 con Auth y Firestore. Playwright pasó 48 casos en los cuatro perfiles. El cierre sigue pendiente de la CI remota,
+la revisión de protección de rama y la validación en el alojamiento.
 
 ### Fase 2: diagnóstico avanzado (F3)
 
@@ -75,11 +81,13 @@ npm ci
 npm run lint
 npm run typecheck
 npm test
+npm run test:firestore  # requiere Java 21
 npm run build
 npx playwright install
 npm run e2e
 ```
 
-El workflow de CI realiza lint, pruebas, build y Playwright en Chromium, Firefox, WebKit y móvil.
+El workflow de CI realiza lint, pruebas de dominio y persistencia, integración con los emuladores de Auth y Firestore,
+build y Playwright en Chromium, Firefox, WebKit y móvil.
 La fase 0 no requiere cambios en el esquema. F4 (múltiples semillas) permanece diferida hasta tener evidencia de beneficio.
 Las estimaciones se revisan al comenzar cada fase; no son compromisos de calendario.

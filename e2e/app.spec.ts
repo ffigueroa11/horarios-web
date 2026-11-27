@@ -170,6 +170,28 @@ test('eliminar un curso o una asignatura pide confirmar y dice cuánta carga se 
   await expect(page.getByLabel('Sigla')).toHaveCount(before - 1);
 });
 
+test('dos pestañas que crean horarios antes de recibir avisos conservan ambos al recargar', async ({ page, context }) => {
+  await context.addInitScript(() => { Object.defineProperty(window, 'BroadcastChannel', { value: undefined }); });
+  const other = await context.newPage();
+  await Promise.all([page.goto('./'), other.goto('./')]);
+  const create = (tab: Page) => tab.getByRole('button', { name: 'Probar con un liceo de ejemplo' });
+  await expect(create(page)).toBeVisible();
+  await expect(create(other)).toBeVisible();
+  await Promise.all([create(page).click(), create(other).click()]);
+  await expect.poll(() => page.evaluate(() => new Promise<number>((resolve, reject) => {
+    const open = indexedDB.open('keyval-store');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const read = open.result.transaction('keyval').objectStore('keyval').get('horarios-web');
+      read.onsuccess = () => { open.result.close(); resolve(Object.keys(JSON.parse(read.result).state.projects).length); };
+      read.onerror = () => reject(read.error);
+    };
+  }))).toBe(2);
+  await page.reload();
+  await goHome(page);
+  await expect(page.locator('.project')).toHaveCount(2);
+});
+
 test('un horario guardado con datos dañados no deja la app atascada', async ({ page }, info) => {
   test.skip(info.project.name === 'movil', 'igual que en escritorio');
   await openExample(page);

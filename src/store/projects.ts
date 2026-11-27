@@ -1,7 +1,8 @@
 // Estado de la aplicación. Todo se guarda automáticamente en IndexedDB del navegador (local-first).
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
-import { del, get, set } from 'idb-keyval';
+import { del, get, update } from 'idb-keyval';
+import { mergeProjects } from './mergeProjects';
 import type { Id, Project, Timetable } from '../domain/types';
 import { migrateProject, newId } from '../domain/types';
 import { emptyProject, exampleProject } from '../domain/defaults';
@@ -32,13 +33,55 @@ const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(S
 const TAB_ID = newId();
 
 let lastWrite: Promise<unknown> = Promise.resolve();
-/** Se cumple cuando lo último que cambió en los horarios ya está en IndexedDB. */
-export const storeFlushed = () => lastWrite.then(() => undefined, () => undefined);
+let saving = false;
+let writesClosed = false;
+let baseline: string | null = null;
+let applyingSnapshot = false;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', (event) => {
+    if (!writesClosed && (saving || useHealth.getState().saveError)) event.preventDefault();
+  });
+}
+
+function applySnapshot(raw: string) {
+  const snapshot = JSON.parse(raw);
+  if (snapshot.version !== 3) throw new Error('Recarga la página para abrir esta versión de los horarios.');
+  const projects = snapshot.state.projects as Record<Id, Project>;
+  const current = useProjects.getState();
+  for (const [id, project] of Object.entries(projects)) {
+    if (JSON.stringify(current.projects[id]) === JSON.stringify(project)) projects[id] = current.projects[id];
+  }
+  baseline = raw;
+  applyingSnapshot = true;
+  try {
+    useProjects.setState({ projects, currentId: current.currentId && projects[current.currentId] ? current.currentId : null });
+  } finally { applyingSnapshot = false; }
+}
+/** Solo se cumple si el último estado se guardó; los flujos destructivos no deben ignorar un fallo. */
+export async function storeFlushed(): Promise<void> {
+  let pending: Promise<unknown>;
+  do {
+    pending = lastWrite;
+    try { await pending; } catch {
+      if (pending === lastWrite) throw new Error('No se pudo guardar en este navegador. Descarga un respaldo antes de continuar.');
+    }
+  } while (pending !== lastWrite);
+  const health = useHealth.getState();
+  if (health.readFailed || health.saveError) throw new Error('No se pudo guardar en este navegador. Descarga un respaldo antes de continuar.');
+}
+
+/** Impide nuevas escrituras al borrar los datos de una cuenta. Espera también las ya iniciadas. */
+export async function closeProjectWrites(): Promise<void> {
+  writesClosed = true;
+  await lastWrite.catch(() => undefined);
+}
 
 const idbStorage: StateStorage = {
   getItem: async (name) => {
     try {
-      return (await get<string>(name)) ?? null;
+      baseline = (await get<string>(name)) ?? null;
+      return baseline;
     } catch (e) {
       useHealth.getState().setStorageError(`No se pudieron leer los horarios guardados (${(e as Error).message || e}).`);
       return null;
@@ -46,13 +89,27 @@ const idbStorage: StateStorage = {
   },
   setItem: async (name, value) => {
     // Si no se pudo leer al iniciar, no se escribe: se sobrescribirían los datos guardados con un estado vacío.
-    if (useHealth.getState().readFailed) return;
+    if (applyingSnapshot || writesClosed || useHealth.getState().readFailed) return;
+    let merged = value;
+    saving = true;
+    const write = lastWrite.catch(() => undefined).then(async () => {
+      await update<string>(name, (stored) => {
+        merged = mergeProjects(baseline, value, stored);
+        return merged;
+      });
+      baseline = value;
+      if (lastWrite === write && merged !== value) applySnapshot(merged);
+    });
+    lastWrite = write;
     try {
-      lastWrite = set(name, value);
-      await lastWrite;
+      await write;
+      if (lastWrite !== write) return;
+      saving = false;
       useHealth.getState().setSaveError(null);
       channel?.postMessage({ type: 'saved', from: TAB_ID });
     } catch (e) {
+      if (lastWrite !== write) return;
+      saving = false;
       const quota = (e as Error)?.name === 'QuotaExceededError';
       useHealth.getState().setSaveError(quota
         ? 'El navegador no tiene espacio para guardar. Libera espacio o elimina horarios que no uses, y descarga un respaldo.'
@@ -193,7 +250,8 @@ export const useProjects = create<State>()(
       name: STORE_KEY,
       version: 3,
       // v2: divisiones de curso. v3: electivos entre cursos y reglas de horas diarias/consejo.
-      migrate: (persisted) => {
+      migrate: (persisted, version) => {
+        if (version > 3) throw new Error('Los horarios se guardaron con una versión más nueva de la aplicación.');
         const st = persisted as { projects?: Record<Id, Project>; currentId?: Id | null };
         for (const p of Object.values(st.projects ?? {})) migrateProject(p);
         return st as State;
@@ -216,10 +274,16 @@ export const useProjects = create<State>()(
   ),
 );
 
-channel?.addEventListener('message', (e: MessageEvent<{ type: string; from: string }>) => {
+channel?.addEventListener('message', async (e: MessageEvent<{ type: string; from: string }>) => {
   if (e.data?.type !== 'saved' || e.data.from === TAB_ID) return;
-  useHealth.getState().setOtherTab(true);
-  void useProjects.persist.rehydrate();
+  try {
+    await storeFlushed();
+    const pending = lastWrite;
+    const raw = await get<string>(STORE_KEY);
+    if (!raw || pending !== lastWrite || writesClosed || !useProjects.getState().hydrated) return;
+    if (raw !== baseline) applySnapshot(raw);
+    useHealth.getState().setOtherTab(true);
+  } catch { /* Los cambios sin guardar siguen disponibles para respaldar o reintentar. */ }
 });
 
 /** ¿Se puede deshacer o rehacer en el horario abierto? */

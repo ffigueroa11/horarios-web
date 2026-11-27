@@ -17,6 +17,7 @@ márcalo ahí.
 npm run dev                 # http://localhost:5173
 npm run check               # lint + pruebas + build (lo mismo que el primer trabajo de CI)
 npm test                    # vitest run: dominio + generación real con el motor en Node
+npm run test:firestore       # reglas y adaptador con el proyecto demo local, requiere Java 21
 npx vitest run src/domain/manual.integration.test.ts   # un archivo
 npx vitest run -t "texto del test"                     # por nombre
 npm run lint                # oxlint src
@@ -75,7 +76,7 @@ pages/, ui/ (React) ──> store/ (zustand + IndexedDB) ──> engine/ (Worker
   conocer la nube confirmada por el servidor, no se sincroniza si falló la lectura local, los eliminados quedan con
   `data: null` y solo una pestaña sincroniza (`navigator.locks`). `cloud/firebase.ts` es el único archivo que toca
   Firebase, y el SDK se carga con `import()` dinámico.
-- La seguridad está en `firestore.rules`, que no tiene pruebas automáticas (los emuladores necesitan Java). Si cambias
+- La seguridad está en `firestore.rules`. CI ejecuta `npm run test:firestore` con el emulador local. Si cambias
   las reglas o `firebase.ts`, avisa que hay que repetir a mano el flujo con dos navegadores.
 - Los mensajes al usuario deben indicar qué hacer y no usar términos de FET. Las expresiones que leen la salida del
   motor deben aceptar inglés y español.

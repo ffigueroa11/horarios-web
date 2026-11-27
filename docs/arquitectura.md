@@ -216,7 +216,10 @@ Tres decisiones de diseño:
 - **Protección de datos:** si la lectura inicial falla, se bloquea la escritura para no sobrescribir lo guardado con un
   estado vacío ([`health.ts`](../src/store/health.ts)).
 - **Varias pestañas:** un `BroadcastChannel` avisa de cada guardado, y las demás pestañas recargan los datos conservando
-  su horario abierto. Si dos pestañas editan a la vez, gana la última que guarda.
+  su horario abierto. Cada escritura compara la base de esa pestaña, su edición y los proyectos actuales dentro de
+  una transacción IndexedDB. Los cambios en proyectos distintos se combinan. Si dos ediciones divergen, una queda
+  como «copia de otra pestaña». Si una eliminación coincide con una edición, la copia conserva el contenido editado.
+  Tras un fallo de escritura, la pestaña conserva su edición en memoria para reintentar o descargar un respaldo.
 - **Respaldos:** [`backup.ts`](../src/domain/backup.ts) usa un formato propio, versión 2, que no se mueve junto con la
   versión del almacén. Un archivo de una versión más nueva se rechaza. `checkProject` rechaza lo que haría fallar a la
   app y repara lo prescindible, como un horario guardado mal formado. **Al agregar un campo al modelo, agrega también su
@@ -333,7 +336,8 @@ La nueva versión espera a que el usuario acepte "Actualizar ahora".
 ([`vite.config.ts`](../vite.config.ts)), así que todas las pruebas de navegador corren con la política, y una de ellas
 falla si algo se bloquea al generar o exportar. **Al agregar un dominio externo, agrégalo a la política.** El inicio de
 sesión con Firebase no tiene prueba automática: al cambiar la política, pruébalo a mano en un despliegue.
-`public/_headers` (Cloudflare Pages, Netlify) no tiene la política.
+El build genera `dist/_headers` para Cloudflare Pages y Netlify desde las mismas reglas. El HTML compilado incluye
+también la política de página para los alias. La directiva `frame-ancestors` se envía por encabezado HTTP.
 
 ## Pruebas
 
@@ -349,10 +353,15 @@ sesión con Firebase no tiene prueba automática: al cambiar la política, prué
 | [`e2e/app.spec.ts`](../e2e/app.spec.ts) | Flujos en navegadores reales | `npm run build`, luego `npm run e2e` |
 
 Las pruebas de integración corren el motor en Node con [`nodeEngine.testutil.ts`](../src/domain/nodeEngine.testutil.ts)
-y se omiten solas si falta. `ui/` y `pages/` no tienen pruebas unitarias. El adaptador
-[`firebase.ts`](../src/cloud/firebase.ts) y las reglas no tienen pruebas automáticas, porque requieren los emuladores de
-Firebase, que necesitan Java. Se comprobaron una vez contra el proyecto real, con cuentas desechables: **al cambiar las
-reglas o el adaptador, repite a mano el flujo con dos navegadores.**
+y se omiten solas si falta. `npm test` incluye transacciones IndexedDB con `fake-indexeddb`, fallos de cuota,
+recuperación, datos ilegibles y versiones concurrentes. Playwright comprueba dos pestañas sobre la misma base real.
+Con Java 21 en el PATH, `npm run test:firestore` inicia Auth y Firestore locales para `demo-horarios-web`. Comprueba
+el alta, la verificación de correo, el acceso, las revisiones y las eliminaciones con el SDK. Al cambiar las reglas o el adaptador, repite también el flujo
+con dos navegadores y cuentas de prueba en el entorno de validación.
+
+El SDK de Firestore 13.2.0 usa gRPC en Node. El `override` de `package.json` fija `@grpc/grpc-js` 1.14.7
+para evitar las alertas de la serie 1.9 que solicita el SDK. Al actualizar Firebase, revisa si puedes retirar ese
+ajuste con `npm audit --omit=dev` y `npm run test:firestore`.
 
 Las pruebas de navegador fijan `Math.random` para que la semilla, y por lo tanto el horario, sea siempre la misma. Sus
 pasos deben fallar si no encuentran lo que buscan, no saltarse la comprobación. La grilla interactiva se selecciona con

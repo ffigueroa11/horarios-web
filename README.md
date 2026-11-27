@@ -167,14 +167,15 @@ contraseña y no enlace por correo porque el plan Spark solo permite 5 de esos c
 Conecta el repositorio en Cloudflare Pages con: comando `npm run build`, carpeta `dist`, variable
 `NODE_VERSION=22`. El pie de página enlaza al repositorio indicado en `package.json`; si publicas una copia
 modificada, define `VITE_SOURCE_URL=https://github.com/<usuario>/<repositorio>` para que enlace a tu código. El archivo
-`public/_headers` ya define el caché.
+`dist/_headers` se genera durante el build con las reglas de caché y las políticas de seguridad de la página y del motor.
 
 ## Datos y privacidad
 
 Todo se guarda en IndexedDB del navegador; la app pide al navegador guardarlo de forma persistente. No usa
 cookies ni analítica. Desde "Inicio" se descarga un respaldo `.json` (uno o todos los
 horarios) que se puede importar en otro equipo. Si la app está abierta en dos pestañas, la segunda se
-actualiza con los cambios de la primera.
+actualiza con los cambios de la primera. Si ambas editan simultáneamente el mismo horario, busca en Inicio la
+«copia de otra pestaña» para comparar las ediciones. Los cambios en horarios distintos se guardan juntos.
 
 **Sin cuenta**, la app no carga Firebase ni envía los datos a ningún servidor. **Con una cuenta**, el correo y los
 horarios, con los nombres de los profesores, se guardan en Firebase (Google). Firebase Authentication procesa sus datos

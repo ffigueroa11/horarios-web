@@ -80,8 +80,8 @@ export async function deleteAccount(password: string | null, onConfirmed: () => 
   await deleteUser(user);
 }
 
-export function cloudBackend(uid: string): CloudBackend {
-  const projects = collection(db, 'users', uid, 'projects');
+export function cloudBackend(uid: string, database = db): CloudBackend {
+  const projects = collection(database, 'users', uid, 'projects');
   return {
     watch: (onDocs, onError) => onSnapshot(projects, { includeMetadataChanges: true }, (snap) => {
       const docs = snap.docChanges().filter((c) => c.type !== 'removed').map((c): RemoteDoc => {
@@ -90,7 +90,7 @@ export function cloudBackend(uid: string): CloudBackend {
       });
       onDocs(docs, !snap.metadata.fromCache);
     }, onError),
-    put: (d) => runTransaction(db, async (tx) => {
+    put: (d) => runTransaction(database, async (tx) => {
       const ref = doc(projects, d.id);
       const current = await tx.get(ref);
       const revision = current.exists() ? Number(current.data().revision) || 0 : 0;

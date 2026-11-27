@@ -18,6 +18,7 @@
     "lint": "oxlint src",
     "typecheck": "tsc -b",
     "test": "vitest run",
+    "test:firestore": "firebase emulators:exec --only auth,firestore --project demo-horarios-web \"vitest run src/cloud/firestore.test.ts\"",
     "e2e": "playwright test",
     "e2e:chromium": "playwright test --project=chromium",
     "preview": "vite preview",
@@ -34,6 +35,11 @@
     "write-excel-file": "^4.1.1",
     "zustand": "^5.0.16"
   },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "1.14.7"
+    }
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
@@ -41,6 +47,8 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "fake-indexeddb": "^6.2.8",
+    "firebase-tools": "^15.37.0",
     "oxlint": "^1.89.0",
     "typescript": "~7.0.2",
     "vite": "^8.3.5",
