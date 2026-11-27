@@ -21,7 +21,9 @@ cuenta, los datos del colegio no salen del navegador; con una cuenta opcional, s
    profesores, bloques permitidos por asignatura. Repartir en días y bloques permitidos pueden ser obligatorios o
    preferibles; las demás reglas son siempre obligatorias.
 6. **Generar**: revisión previa con errores y avisos claros, cálculo con progreso, y explicación del problema
-   (con los mensajes de FET en español) cuando el horario no es posible.
+   (con los mensajes de FET en español) cuando el horario no es posible. Un diagnóstico separa lo demostrado
+   (imposible con estos datos) de las hipótesis, y evalúa con el motor alternativas de una sola regla, que solo se
+   aplican al confirmarlas.
 7. **Ver y ajustar**: vistas por curso, profesor y sala; mover bloques (clic o arrastrar) sin crear choques;
    fijar bloques y regenerar el resto; imprimir; exportar a Excel, CSV y `.fet` (para FET de escritorio).
 8. **Respaldos**: descarga e importación de `.json`, con recordatorio si hay cambios sin respaldar.
@@ -73,6 +75,8 @@ src/
     fetExport.ts     Proyecto → XML .fet (nombres únicos, restricciones FET)
     fetResult.ts     Salida de FET → ubicaciones; mensajes en español
     manual.ts        Mover bloques a mano sin choques
+    diagnose.ts      Por qué no hay horario: hallazgos demostrados e hipótesis, sin el motor
+    relax.ts         Alternativas de una sola regla: aplicar, describir, ordenar y leer el resultado
     backup.ts        Respaldos .json con validación
     importCarga.ts   Importar la carga desde Excel/CSV/texto pegado
     fetImport.ts     XML .fet → Project, con informe de lo que no se pudo traspasar

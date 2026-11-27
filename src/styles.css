@@ -320,3 +320,11 @@ pre.log { margin: 0; max-height: 220px; overflow: auto; padding: 10px; backgroun
 .week td.lesson.drop-swap > div::after { content: '⇄'; position: absolute; right: 5px; bottom: 3px; font-size: .9rem; font-weight: 700; }
 .week td.multi.drop-swap .chip-lesson { outline: 2px dashed var(--ink); outline-offset: -3px; }
 .week td.drop-swap { cursor: alias; }
+
+/* Diagnóstico de la generación: hallazgos y alternativas. */
+.findings { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.finding { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line-strong); border-radius: var(--radius); background: var(--surface-2); min-width: 0; overflow-wrap: anywhere; }
+.finding.demostrado { border-left-color: var(--bad); }
+.finding.hipotesis { border-left-color: var(--warn); }
+.finding .evidence { margin: 0; padding-left: 18px; color: var(--muted); }
+section.card h3 { margin-top: 4px; }

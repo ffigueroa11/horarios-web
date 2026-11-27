@@ -17,8 +17,9 @@ e [ia.md](ia.md) mantienen sus hallazgos, resultados y diseños históricos.
 | Fase | Entrega | Estado |
 |---|---|---|
 | 0 | Saneamiento técnico y documentación | Completada (PR #13) |
-| 1 | Seguridad y persistencia | En desarrollo |
-| 2 | Diagnóstico avanzado de generación (F3) | Pendiente |
+| 1 | Seguridad y persistencia | Integrada (PR #14); pendiente la validación en el alojamiento |
+| 2 | Diagnóstico avanzado de generación (F3) | Implementada en `fase-2/diagnostico-avanzado`, con `main` incorporado; PR por abrir |
+| — | Hotfix: Firebase 13.4.0 con dependencias coherentes | Integrado (PR #15) |
 | 3 | Herramientas de uso diario (F13, F14) | Pendiente |
 | 4 | Ampliación del modelo académico | Pendiente, según demanda |
 | 5 | Asistencia opcional con IA | Pendiente, según resultados |
@@ -51,6 +52,38 @@ la revisión de protección de rama y la validación en el alojamiento.
 - Mostrar solución encontrada, imposible según FET o intento sin resolver; nunca presentar timeout como demostración de imposibilidad.
 - No alterar ni guardar el proyecto original al experimentar. El usuario confirma cualquier cambio.
 - Cierre: pruebas unitarias, integración con FET, fixture difícil y E2E.
+
+Implementado el 26 de noviembre:
+
+- `domain/diagnose.ts` cuenta horas, bloques seguidos (⌊L/k⌋ por tramo libre), días con máximo de días y fijados,
+  repartir en días (condición de Hall por duración), bloques permitidos, salas y el horario común de clases en
+  paralelo y electivos. Lo demostrado es una condición necesaria incumplida; lo demás es hipótesis. Las pruebas
+  comprueban que no hay hallazgos demostrados en el ejemplo, en el colegio sintético ni en los dos reales anonimizados.
+- `domain/relax.ts` define 12 tipos de cambio cerrados; `store/relax.ts` los evalúa uno a la vez con la semilla
+  20261126, 15 s por defecto (hasta 120 s al reintentar), máximo 12 variantes, un Worker por variante y `engineLock`
+  compartido con la generación. Nada se guarda; aplicar pasa por `update()` tras confirmar y genera con la misma semilla.
+- Con el motor: el colegio difícil, que agota el tiempo sin cambios, se resuelve en menos de 2 s al liberar sus 293
+  fijados. Una franja sin horario común, que el motor solo agota, se demuestra imposible antes de generar.
+- Verificación local: lint, tipos y build correctos; 173 pruebas aprobadas (7 omitidas); Playwright 53 aprobadas en
+  los cuatro perfiles. `npm run test:firestore` no se ejecutó en local por falta de Java 21; queda a cargo de CI.
+
+Estado al 26 de noviembre: la rama incorpora `main` con el hotfix de Firebase (PR #15), sin conflictos. Verificación
+después de incorporarlo: lint, tipos y build correctos; 174 pruebas aprobadas (7 omitidas), incluida la de versiones de
+Firebase; Playwright 53 aprobadas en los cuatro perfiles. Falta: abrir el PR con la CI completa (incluido
+`test:firestore`) y medir el tiempo por alternativa con los `.fet` reales.
+
+### Hotfix de Firebase
+
+El PR #12 de Dependabot (firebase 13.2.0 → 13.4.0 y otras ocho actualizaciones) no compila en Vercel:
+`"_setTrustedScriptSrc" is not exported by "@firebase/app"`. `main` no está afectado. firebase 13.4.0 fija
+`@firebase/app` 0.16.7, pero los demás módulos lo piden como dependencia par `0.x` y npm deja la 0.16.5 en la raíz.
+
+- `hotfix/firebase-build` (desde `main`): firebase `^13.4.0` con `npm dedupe` (una sola `@firebase/app` 0.16.7) y
+  `src/cloud/firebaseVersions.test.ts`, que falla si un lockfile vuelve a mezclar versiones.
+- Verificación local: lint, tipos y build correctos; 149 pruebas aprobadas (7 omitidas); Playwright 48 aprobadas en los
+  cuatro perfiles; `npm audit --omit=dev` sin vulnerabilidades. La vista previa de Vercel de la rama compila.
+- Integrado en `main` con el PR #15 e incorporado a la fase 2. Queda probar a mano el inicio de sesión y la
+  sincronización en el alojamiento, y revisar que Dependabot rehaga el PR #12 sin Firebase.
 
 ### Fase 3: uso diario
 

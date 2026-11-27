@@ -6,43 +6,15 @@
 //   importación. "generada" (492 bloques, sin fijados) trae un horario generado con la semilla 7, para medir el ajuste
 //   manual sin el motor. "difícil" (517 bloques, 293 fijados) agota el tiempo: sirve para medir el motor (F4, F3).
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { exampleProject } from './defaults';
 import { exportFet } from './fetExport';
 import { parseResult } from './fetResult';
-import { parseBackup } from './backup';
 import { validate } from './validate';
-import { newId, type Project } from './types';
+import type { Project } from './types';
 import { lessons, checkMove, companions, placeTargets } from './manual';
 import { fetArgs } from '../engine/args';
 import { hasEngine, runEngine } from './nodeEngine.testutil';
+import { largeSchool, reference } from './cases.testutil';
 import { countPending, hash, payload, projectHash, type SyncMeta } from '../cloud/engine';
-
-export function largeSchool(copies = 6): Project {
-  const base = exampleProject();
-  const p = structuredClone(base);
-  p.courses = []; p.teachers = []; p.assignments = []; p.electives = [];
-  for (const s of p.subjects) s.roomId = null; // un laboratorio no alcanza para 24 cursos
-  for (let k = 0; k < copies; k++) {
-    const tMap = new Map(base.teachers.map((t) => [t.id, { ...structuredClone(t), id: newId(), name: `${t.name} ${k + 1}` }]));
-    const cMap = new Map(base.courses.map((c) => [c.id, { ...structuredClone(c), id: newId(), name: `${c.name} ${k + 1}` }]));
-    p.teachers.push(...tMap.values());
-    p.courses.push(...cMap.values());
-    for (const a of base.assignments) {
-      const c = cMap.get(a.courseId)!;
-      const groupId = a.groupId ? c.divisions[0].groups[base.courses.find((x) => x.id === a.courseId)!.divisions[0].groups.findIndex((g) => g.id === a.groupId)].id : null;
-      p.assignments.push({ ...a, id: newId(), courseId: c.id, teacherId: a.teacherId ? tMap.get(a.teacherId)!.id : null, groupId });
-    }
-    for (const e of base.electives)
-      p.electives.push({ ...structuredClone(e), id: newId(), courseIds: e.courseIds.map((id) => cMap.get(id)!.id),
-        options: e.options.map((o) => ({ ...o, id: newId(), teacherId: o.teacherId ? tMap.get(o.teacherId)!.id : null })) });
-  }
-  return p;
-}
-
-export const reference = (name: 'generada' | 'dificil'): Project =>
-  parseBackup(readFileSync(resolve(__dirname, `fixtures/referencia-${name}.json`), 'utf8'))[0];
 
 /**
  * Como al seleccionar un bloque en "Ver y ajustar": revisa todos los lugares de la semana. Devuelve ms por selección.
