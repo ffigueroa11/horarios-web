@@ -8,6 +8,7 @@ import { fetArgs } from '../engine/args';
 import { runFet, type FetProgress, type RunHandle } from '../engine/runFet';
 import { useProjects } from './projects';
 import { saveVersion } from './versions';
+import { engineLock } from './engineLock';
 
 type Status = 'idle' | 'loading' | 'running' | 'done' | 'error' | 'cancelled';
 
@@ -24,7 +25,8 @@ interface GenState {
   error: string;
   seconds: number;
   handle: RunHandle | null;
-  start: (p: Project, timeLimit: number) => void;
+  /** `seed` repite un resultado ya visto (por ejemplo, el de una alternativa); si falta, se elige al azar. */
+  start: (p: Project, timeLimit: number, seed?: number) => void;
   cancel: () => void;
   reset: () => void;
 }
@@ -32,18 +34,26 @@ interface GenState {
 export const useGeneration = create<GenState>()((set, get) => ({
   status: 'idle', projectId: null, startedAt: 0, progress: null, total: 0, log: [], outcome: null, partial: null, error: '', seconds: 0, handle: null,
 
-  start: (p, timeLimit) => {
+  start: (p, timeLimit, fixedSeed) => {
     if (get().status === 'loading' || get().status === 'running') return;
     const ex = exportFet(p);
     const total = ex.activityById.size;
-    const seed = Math.floor(Math.random() * 1_000_000_000);
+    const seed = fixedSeed ?? Math.floor(Math.random() * 1_000_000_000);
     // Se usa la hora de inicio: si el usuario edita datos mientras se calcula, el horario queda marcado como desactualizado.
     const generatedAt = new Date().toISOString();
-    const handle = runFet(ex.xml, fetArgs(timeLimit, seed), {
-      started: () => set({ status: 'running' }),
-      progress: (pr) => set({ progress: pr }),
-      log: (line) => set((s) => ({ log: s.log.length > 400 ? [...s.log.slice(-300), line] : [...s.log, line] })),
-    });
+    // Mientras se evalúan alternativas no se genera: un solo cálculo del motor a la vez.
+    if (!engineLock.take('generacion')) return;
+    let handle: RunHandle;
+    try {
+      handle = runFet(ex.xml, fetArgs(timeLimit, seed), {
+        started: () => set({ status: 'running' }),
+        progress: (pr) => set({ progress: pr }),
+        log: (line) => set((s) => ({ log: s.log.length > 400 ? [...s.log.slice(-300), line] : [...s.log, line] })),
+      });
+    } catch (e) {
+      engineLock.release('generacion');
+      throw e;
+    }
     set({ status: 'loading', projectId: p.id, startedAt: performance.now(), progress: null, total, log: [], outcome: null, partial: null, error: '', seconds: 0, handle });
 
     handle.promise.then((run) => {
@@ -65,7 +75,7 @@ export const useGeneration = create<GenState>()((set, get) => ({
     }).catch((e: Error) => {
       if (e.name === 'AbortError') set({ status: 'cancelled', handle: null });
       else set({ status: 'error', error: e.message, handle: null });
-    });
+    }).finally(() => engineLock.release('generacion'));
   },
 
   cancel: () => get().handle?.cancel(),
