@@ -456,7 +456,6 @@ export function diagnose(p: Project, ctx: DiagnoseContext = {}): Diagnosis {
           `Bloques en que todos están disponibles${windowMask(p, rowUnits[0].subjectId) ? ' (y permitidos)' : ''}: ${free}.`,
           gap.size === 0 ? `Deben ir en ${sizes.length} días distintos y uno de sus profesores puede venir ${plural(gap.fit, 'día', 'días')}.`
             : gap.size === 1 ? `Horas: ${gap.need}, caben ${gap.fit}.` : `Clases de ${gap.size} h o más: ${gap.need}; espacios seguidos comunes: ${gap.fit}.`,
-          ...(teachers.length ? [`Profesores: ${teachers.map((t) => t.name).join(', ')}.`] : []),
         ],
         action: 'Amplía la disponibilidad de los profesores de estas clases en los mismos bloques, o cambia a un profesor.',
         entities: ent, changes: gap.size === 0 || spreadHard ? [...changes, { kind: 'spread-preferible' }] : changes,

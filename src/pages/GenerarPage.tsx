@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useCurrent, useProjects } from '../store/projects';
 import { units } from '../domain/units';
 import { useGeneration } from '../store/generation';
-import type { Issue } from '../domain/validate';
+import { validate, type Issue } from '../domain/validate';
+import { diagnose } from '../domain/diagnose';
+import { applyChange, changeTouches, type Change } from '../domain/relax';
+import { useRelax } from '../store/relax';
+import { DiagnosisPanel } from '../ui/DiagnosisPanel';
+import { STEP_LABEL } from '../ui/steps';
 import { describeActivity } from '../domain/fetResult';
 import { hasPreferences, unmetPreferences } from '../domain/preferences';
 import type { Route } from '../App';
 import { PageHead } from '../ui/common';
 import { PartialTimetable } from '../ui/PartialTimetable';
 import { UnmetPreferencesReport } from '../ui/UnmetPreferencesReport';
-
-const STEP_LABEL: Record<string, string> = {
-  jornada: 'Jornada', cursos: 'Cursos', asignaturas: 'Asignaturas y salas', salas: 'Asignaturas y salas',
-  profesores: 'Profesores', carga: 'Carga académica', electivos: 'Electivos', reglas: 'Preferencias', horario: 'Ver y ajustar',
-};
 
 const LIMITS = [
   { s: 60, label: '1 minuto' }, { s: 300, label: '5 minutos' }, { s: 600, label: '10 minutos' }, { s: 1800, label: '30 minutos' },
@@ -34,6 +34,8 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
   const g = useGeneration();
   const update = useProjects((s) => s.update);
   const [limit, setLimit] = useState(300);
+  const [applied, setApplied] = useState('');
+  const relaxRunning = useRelax((s) => s.phase === 'running');
   const busy = g.status === 'loading' || g.status === 'running';
   const mine = g.projectId === p.id;
   const elapsed = useElapsed(busy, g.startedAt);
@@ -52,6 +54,21 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
   const o = g.outcome;
   const unmet = o?.kind === 'ok' && hasPreferences(p) ? unmetPreferences(p) : null;
   const allMet = !!unmet && unmet.spread.length + unmet.windows.length === 0;
+
+  // Diagnóstico: después de una generación que no terminó (si los datos no cambiaron desde entonces) o, antes de
+  // generar, cuando ya se demuestra que no hay horario posible. Con errores en la revisión no se muestra: van primero.
+  const failed = mine && g.status === 'done' && (o?.kind === 'impossible' || o?.kind === 'timeout')
+    && (!g.partial || p.updatedAt <= g.partial.generatedAt);
+  const dx = useMemo(() => (errors.length > 0 ? null : diagnose(p, failed && o
+    ? { outcome: o, missing: g.partial?.missing, placed: g.partial?.placements.length }
+    : {})), [p, errors.length, failed, o, g.partial]);
+  const showDx = !!dx && !busy && (failed || dx.proven > 0);
+  const applyAndGenerate = (change: Change, title: string, seed: number) => {
+    update((d) => applyChange(d, change), { touch: changeTouches(change) });
+    setApplied(title);
+    const fresh = useProjects.getState().projects[p.id];
+    if (fresh && !validate(fresh).some((i) => i.level === 'error')) g.start(fresh, limit, seed);
+  };
 
   return (
     <>
@@ -94,9 +111,10 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
         <div className="row">
           {busy && mine
             ? <button type="button" className="btn danger big" onClick={g.cancel}>Detener</button>
-            : <button type="button" className="btn primary big" disabled={errors.length > 0 || busy} onClick={() => g.start(p, limit)}>
+            : <button type="button" className="btn primary big" disabled={errors.length > 0 || busy || relaxRunning} onClick={() => { setApplied(''); g.start(p, limit); }}>
                 {p.timetable ? 'Generar de nuevo' : 'Generar horario'}</button>}
           {errors.length > 0 && !busy && <span className="small muted">Corrige lo marcado en la revisión para poder generar.</span>}
+          {relaxRunning && !busy && <span className="small muted">Se están evaluando alternativas. Espera o detén la evaluación.</span>}
         </div>
         <details className="advanced small">
           <summary>Tiempo máximo: {LIMITS.find((x) => x.s === limit)?.label}</summary>
@@ -106,6 +124,7 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
             </select></label>
         </details>
         {busy && !mine && <div className="notice warn">Se está generando otro horario. Espera a que termine.</div>}
+        {applied && <div className="notice ok" role="status"><b>Cambio aplicado: {applied}.</b><span>Se genera con la misma semilla de la evaluación. Puedes deshacerlo con «Deshacer».</span></div>}
 
         {mine && g.status !== 'idle' && (
           <div style={{ display: 'grid', gap: 14 }}>
@@ -134,14 +153,16 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
             {o.activity
               ? <span>El bloque que no se pudo ubicar es <b>{describeActivity(p, o.activity)}</b>{o.placedMax != null ? ` (se lograron ubicar ${o.placedMax} de ${total})` : ''}.</span>
               : <span>No se pudo identificar un bloque específico.</span>}
-            <span>Qué revisar:</span>
+            {showDx
+              ? <span>El <a href="#dx-title">diagnóstico</a>, más abajo, revisa la disponibilidad, los días, los bloques seguidos, las reglas y los fijados, y permite evaluar alternativas.{o.kind === 'timeout' && ' También puedes volver a intentar con más tiempo: cada intento sigue un camino distinto.'}</span>
+              : <><span>Qué revisar:</span>
             <ul style={{ margin: 0, paddingLeft: 18 }}>
               <li>La disponibilidad y el máximo de días del profesor de ese bloque.</li>
               <li>Si la asignatura tiene una regla de bloques permitidos o una sala especial muy ocupada.</li>
               <li>Si es parte de una franja de electivos o de grupos en paralelo: todas sus opciones deben caber a la misma hora.</li>
               <li>Dejar como “preferible” la regla de repartir en días distintos o la de bloques permitidos (las demás son siempre obligatorias), o subir el máximo de ventanas.</li>
               {o.kind === 'timeout' && <li>Volver a intentar con más tiempo: cada intento sigue un camino distinto.</li>}
-            </ul>
+            </ul></>}
           </div>
         )}
         {mine && g.status === 'done' && g.partial && (
@@ -172,6 +193,8 @@ export function GenerarPage({ issues, go }: { issues: Issue[]; go: (r: Route) =>
           <details><summary className="small muted">Registro del motor</summary><pre className="log">{g.log.join('\n')}</pre></details>
         )}
       </section>
+
+      {showDx && <DiagnosisPanel project={p} dx={dx!} busy={busy} onGenerate={(seed) => { setApplied(''); g.start(p, limit, seed); }} onApply={applyAndGenerate} />}
     </>
   );
 }
